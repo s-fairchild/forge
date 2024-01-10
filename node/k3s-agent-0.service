@@ -12,9 +12,14 @@ Restart=always
 RestartSec=30
 TimeoutStartSec=600
 TimeoutStopSec=70
+KillSignal=SIGTERM
+KillMode=mixed
 ExecStart=/usr/bin/podman run \
-	--network=rick:ip=10.91.0.10 \
-	--network=service \
+	--name=k3s-rick-agent-0 \
+	-h k3s-rick-agent-0 \
+	--network=nodes \
+	--network=services \
+	--systemd=always \
 	--tz=UTC \
 	--cidfile=%t/%n.ctr-id \
 	--cgroups=no-conmon \
@@ -23,12 +28,11 @@ ExecStart=/usr/bin/podman run \
 	-d \
 	--replace \
 	--pull missing \
-	--name k3s-rick-agent-0 \
-	-h k3s-rick-agent-0 \
 	--device /dev/dri/card1:/dev/dri/card1 \
 	--device /dev/dri/renderD128:/dev/dri/renderD128 \
+	-v /etc/machine-id:/etc/machine-id:ro \
 	-v k3s-agent-0-kubelet:/var/lib/kubelet \
-	-v k3s-agent-0-pod_logs:/var/log/pods \
+	-v k3s-agent-0-pod-logs:/var/log/pods \
 	-v k3s-agent-0-data:/var/lib/rancher/k3s \
 	-v k3s-agent-0-etc-rancher:/etc/rancher \
 	-v /usr/local/etc/k3s/k3s-agent-0.yaml:/etc/rancher/k3s/config.yaml \
