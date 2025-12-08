@@ -176,6 +176,7 @@ raspberry_pis:
               DROP_INS:
                 PATH: /etc/containers/systemd/k3s.image.d
                 FILES: 
+
           CONTAINERS:
             AGENT:
               FILES:
@@ -186,6 +187,8 @@ raspberry_pis:
                   OVERRIDES_CONF: /etc/containers/systemd/k3s-agent@.container.d/override.conf
                   EXEC_CONF: /etc/containers/systemd/k3s-agent@.container.d/exec.conf
                   EXEC_EXTRA_ARGS_CONF: /etc/containers/systemd/k3s-agent@.container.d/exec-extra-args.conf
+                  ADD_HOST_CONF: /etc/containers/systemd/k3s-agent@.container.d/add-host.conf
+                  LIMITS_CONF: /etc/containers/systemd/k3s-agent@.container.d/limits.conf
             AGENT_1:
               PATH: /etc/containers/systemd/k3s-agent@1.container.d
               FILES:

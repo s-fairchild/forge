@@ -24,29 +24,21 @@ spec:
       - name: ffmpeg
         image: docker.io/steve51516/ffmpeg-rpi:latest
         securityContext:
-          # TODO limit permissions to only those required
-          # TODO configure seccomp profiles for vc4 device on rpi4
           privileged: true
         restartPolicy: Always
         args:
         - -f
         - v4l2
         - -framerate
-        - "25"
+        - "10"
+        # - -input_format
+        # - yuyv422
         - -video_size
         - 1280x720
         - -i
         - /dev/video0
         - -c:v
         - h264_v4l2m2m
-        - -preset
-        - medium
-        - -crf
-        - "23"
-        - -c:a
-        - pcm_s16le
-        - -b:a
-        - 128k
         - -f
         - v4l2
         - /dev/video30

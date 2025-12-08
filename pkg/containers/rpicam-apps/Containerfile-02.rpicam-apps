@@ -1,0 +1,37 @@
+FROM --platform=arm64 builder AS rpicam-apps
+
+ARG PREFIX
+# ARG BUILD_TARGET="/tmp/rpicam-apps"
+ARG BUILD_TARGET="${PREFIX}/src/rpicam-apps"
+ARG RPICAM_APPS_VERSION
+ADD https://git@github.com/raspberrypi/rpicam-apps.git#${RPICAM_APPS_VERSION} ${BUILD_TARGET}
+WORKDIR ${BUILD_TARGET}
+
+# Defaults specified in buildarg.conf
+# Can be overridden by pass --build-arg=ARG=value to podman build
+#
+# Reference: https://www.raspberrypi.com/documentation/computers/camera_software.html#rpicam-apps-meson-flag-reference
+ARG NEON_FLAGS
+ARG ENABLE_LIBAV
+ARG ENABLE_DRM
+ARG ENABLE_HAILO
+ARG DOWNLOAD_HAILO_MODELS
+ARG ENABLE_EGL
+ARG ENABLE_QT
+ARG ENABLE_OPENCV
+ARG ENABLE_TFLITE
+ARG PKG_CONFIG_PATH="${PREFIX}/lib/aarch64-linux-gnu"
+ARG BUILD_THREADS
+
+ARG LIBCAMERA
+RUN --mount=from=${LIBCAMERA},src=${PKG_CONFIG_PATH},target=${PKG_CONFIG_PATH} \
+    --mount=from=${LIBCAMERA},src=${PREFIX}/include/libcamera,target=${PREFIX}/include/libcamera \
+    PKG_CONFIG_PATH=${PKG_CONFIG_PATH} meson setup build \
+                --pkg-config-path=/usr/bin/pkg-config --pkgconfig.relocatable --libdir=lib \
+                -Denable_libav=${ENABLE_LIBAV} -Denable_drm=${ENABLE_DRM} -Denable_egl=${ENABLE_EGL} \
+                -Denable_opencv=${ENABLE_OPENCV} -Denable_tflite=${ENABLE_TFLITE} -Denable_qt=${ENABLE_QT} \
+                -Denable_hailo=${ENABLE_HAILO} -Dneon_flags=${NEON_FLAGS} || cat ${PREFIX}/src/rpicam-apps/build/meson-logs/meson-log.txt \
+    && meson compile \
+                -j ${BUILD_THREADS} \
+                -C build \
+    && meson install -C build

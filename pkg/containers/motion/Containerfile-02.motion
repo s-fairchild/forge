@@ -1,0 +1,27 @@
+FROM builder AS motion
+
+ARG TARGETARCH
+ARG TARGETOS
+ARG BUILD_THREADS
+ARG PKG_CONFIG_PATH
+ARG PREFIX
+
+ARG MOTION_VERSION
+ARG BUILD_TARGET="${PREFIX}/src/motion"
+ADD https://github.com/Motion-Project/motion.git#${MOTION_VERSION} ${BUILD_TARGET}
+WORKDIR ${BUILD_TARGET}
+
+ARG MAKE_OPTIONS_EXCLUDE
+ARG MAKE_FLAGS
+# https://motion-project.github.io/motion_build.html
+# https://motion-project.github.io/motion_build.html#Configure_Script
+RUN autoreconf -fiv \
+    # Toolchain options
+    && PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./configure --build=${TARGETARCH} --prefix=${PREFIX} \
+    # Excluded options
+    # https://motion-project.github.io/motion_build.html#Configure_Script
+    ${MAKE_OPTIONS_EXCLUDE} \
+    # https://motion-project.github.io/motion_build.html#Make
+    && make -j${BUILD_THREADS} ${MAKE_FLAGS} \
+    # https://motion-project.github.io/motion_build.html#Make_Install
+    && make install

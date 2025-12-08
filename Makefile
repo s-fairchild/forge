@@ -129,53 +129,54 @@ k3s-token-upload:
 							 ${ssh_id} \
 							 ${vm_ip_address}
 
-### Containerfile Builds ###
-# TODO create targets for pushing these images to docker.io and/or a local registry
+### Containerfile Start ###
+
+ctr_repo_remote := "docker.io/steve51516"
+ctr_repo_local := "localhost/steve51516"
 
 container-build-archlinuxarm-base:
-	podman build \
-			--format=docker \
-			-t arm64/archlinuxarm:latest \
-			-f pkg/containers/armlinuxarm/Containerfile
+	ctr_image_alarm="archlinuxarm"
+
+	podman build --format=docker -t ${ctr_repo_local}/$${ctr_image_alarm}:arm64 -f pkg/containers/$${ctr_image_alarm}/Containerfile
+
+	podman tag ${ctr_repo_local}/$${ctr_image_alarm}:arm64 ${ctr_repo_remote}/$${ctr_image_alarm}:arm64
+	podman tag ${ctr_repo_local}/$${ctr_image_alarm}:arm64 ${ctr_repo_remote}/$${ctr_image_alarm}:latest
 
 container-build-ffmpeg-rpi: container-build-archlinuxarm-base
-	podman build \
-			--format=docker \
-			-t arm64/ffmpeg-rpi:latest \
-			-f pkg/containers/ffmpeg-rpi/Containerfile
+	ctr_image_ffmpeg_rpi="ffmpeg-rpi"
 
-container-push-ffmpeg-rpi: container-build-ffmpeg-rpi
-	podman image \
-			tag \
-			localhost/arm64/ffmpeg-rpi:latest \
-			docker.io/steve51516/ffmpeg-rpi:latest
-
-	podman push docker.io/steve51516/ffmpeg-rpi:latest
+	podman build --format=docker -t ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 -f pkg/containers/$${ctr_image_ffmpeg_rpi}/Containerfile \
+	&& podman tag ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 ${ctr_repo_remote}/$${ctr_image_ffmpeg_rpi}:arm64 \
+	&& podman tag ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 ${ctr_repo_remote}/$${ctr_image_ffmpeg_rpi}:latest
 
 container-build-rpicam-apps:
+	ctr_image_rpicam_apps="rpicam-apps"
 	podman build \
 			--format=docker \
-			-t rpicam-apps:arm64 \
-			-f pkg/containers/rpicam-apps/Containerfile
+			-t ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
+			-f pkg/containers/$${ctr_image_rpicam_apps}/Containerfile
+
+	podman tag ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
+				${ctr_repo_remote}/$${ctr_image_rpicam_apps}:arm64
+
+	podman tag ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
+				${ctr_repo_remote}/$${ctr_image_rpicam_apps}:latest
 
 container-build-motion:
+	motion_version_default="4.7.1"
+	motion_version="$${MOTION_VERSION:-$${motion_version_default}}"
+	ctr_image_motion="motion"
+
 	podman build \
 			--format=docker \
-			-t motion:v$${MOTION_VERSION:-"4.7.1"} \
-			--build-arg=MOTION_VERSION=$${MOTION_VERSION:-"4.7.1"} \
-			-f pkg/containers/motion/Containerfile
+			-t ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
+			--build-arg=MOTION_VERSION=$${motion_version} \
+			-f pkg/containers/$${ctr_image_motion}/Containerfile
 
-motion_version := "v${MOTION_VERSION}"
-container-push-motion:
-	podman image \
-			tag \
-			localhost/motion:${motion_version} \
-			docker.io/steve51516/motion:${motion_version}
+	podman tag ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
+				${ctr_repo_remote}/$${ctr_image_motion}:v$${motion_version}
 
-	podman image \
-			tag \
-			localhost/motion:${motion_version} \
-			docker.io/steve51516/motion:latest
-	
-	podman push docker.io/steve51516/motion:${motion_version}
-	podman push docker.io/steve51516/motion:latest
+	podman tag ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
+				${ctr_repo_remote}/$${ctr_image_motion}:latest
+
+### Containerfile End ###

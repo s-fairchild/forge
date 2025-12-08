@@ -70,9 +70,9 @@
     content: |
       [Container]
       # https://www.raspberrypi.com/documentation/computers/camera_software.html#device-nodes-when-using-libcamera
-      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_0 }}:{{ REMOTE.DEVICE.FILES.VIDEO_0 }}:rwm
-      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_1 }}:{{ REMOTE.DEVICE.FILES.VIDEO_1 }}:rwm
-      AddDevice=-{{ REMOTE.DEVICE.FILES.VIDEO_30 }}:{{ REMOTE.DEVICE.FILES.VIDEO_30 }}:rwm
+      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_0 }}:rw
+      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_1 }}:rw
+      AddDevice=-{{ REMOTE.DEVICE.FILES.VIDEO_30 }}:rw
     dest: "{{ REMOTE.ETC.QUADLET.PATH }}/k3s-agent@{{ K3S.INSTANCE }}.container.d/devices.conf"
     owner: root
     group: root
@@ -82,20 +82,6 @@
     - quadlet.containers
     - quadlet.containers.agent
     - quadlet.containers.agent.conf.devices
-
-- name: Copy k3s-agent@<K3S.INSTANCE>.container.d/override.conf - K3S.INSTANCE - {{ K3S.INSTANCE }}
-  ansible.builtin.copy:
-    content: |
-      [Service]
-    dest: "{{ REMOTE.ETC.QUADLET.PATH }}/k3s-agent@{{ K3S.INSTANCE }}.container.d/devices.conf"
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - quadlet
-    - quadlet.containers
-    - quadlet.containers.agent
-    - quadlet.containers.agent.conf.override
 
 - name: Create directory k3s-agent@.container.d - "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.PATH }}"
   ansible.builtin.file:
@@ -107,19 +93,19 @@
     - quadlet.containers
     - quadlet.containers.agent
 
-- name: Copy add-hosts.conf into {{ REMOTE.ETC.QUADLET.PATH }}
+- name: Copy add-host.conf into {{ REMOTE.ETC.QUADLET.PATH }}
   ansible.builtin.copy:
     content: |
       [Container]
       AddHost=k3s-apiserverlb-0:10.11.0.1
-    dest: "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.FILES.ADD_HOSTS }}"
+    dest: "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.FILES.ADD_HOST_CONF }}"
     owner: root
     group: root
     mode: '0644'
   tags:
     - quadlet
     - quadlet.containers.agent
-    - quadlet.containers.agent.add-hosts
+    - quadlet.containers.agent.add-host
 
 - name: Copy k3s-agent@.container.d/limits.conf - K3S.INSTANCE - "{{ K3S.INSTANCE }}"
   ansible.builtin.copy:
@@ -130,7 +116,7 @@
       # https://github.com/raspberrypi/linux/pull/6524
       Memory={{ PODMAN.LIMITS.MEMORY }}
       PodmanArgs=--cpus={{ PODMAN.LIMITS.CPU }}
-    dest: "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.FILES.LIMITS }}"
+    dest: "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.FILES.LIMITS_CONF }}"
     owner: root
     group: root
     mode: '0644'

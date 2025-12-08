@@ -1,0 +1,29 @@
+FROM builder AS ffmpeg
+
+ARG TARGETARCH
+ARG TARGETOS
+ARG BUILD_THREADS
+ARG PREFIX
+
+ARG FFMPEG_VERSION
+ARG BUILD_TARGET="$PREFIX/src/ffmpeg"
+ADD https://github.com/FFmpeg/FFmpeg.git#${FFMPEG_VERSION} ${BUILD_TARGET}
+WORKDIR ${BUILD_TARGET}
+
+RUN \
+    # Toolchain options
+    ./configure --arch=${TARGETARCH} --target-os=${TARGETOS} --prefix=${PREFIX} \
+    --env="LIBVA_DRIVER_NAME=iHD" --extra-version=${FFMPEG_VERSION} --enable-shared \
+    --enable-pthreads --enable-runtime-cpudetect \
+    # External library support 
+    --enable-vaapi --enable-libx264 --enable-libx265 --enable-libwebp \
+    --enable-postproc --enable-libxml2 --enable-libxvid \
+    --enable-libzimg --enable-libzvbi --enable-gray --enable-libtwolame \
+    # Intel GPU options
+    --enable-libvpx  --enable-libmfx --enable-opencl --enable-vulkan \
+    # Excluded options
+    --disable-x86asm  --disable-doc \
+    # Licensing options
+    --enable-gpl --enable-version3 --enable-nonfree \
+    && make -j"${BUILD_THREADS}" \
+    && make install

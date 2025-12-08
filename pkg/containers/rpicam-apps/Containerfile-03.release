@@ -1,0 +1,67 @@
+ARG IMAGE_REGISTRY
+ARG IMAGE_REPOSITORY
+ARG IMAGE_TAG
+FROM --platform=arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+
+# TODO maybe add these packages?
+# x264 x265
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      DEBIAN_FRONTEND=noninteractive apt-get update \
+      && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+      # Runtime libraries required by rpicam-apps
+      && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+                        libexif12 libjpeg62 libtiff6 libpng16-16 \
+                        libdw1 libunwind8 libboost-program-options1.88.0
+
+ARG PREFIX
+ARG PKG_CONFIG_PATH="${PREFIX}/lib/aarch64-linux-gnu"
+ARG LIBCAMERA
+
+# --from=${LIBCAMERA} is an image reference added via --build-context
+COPY --from=${LIBCAMERA} \
+    --link \
+        ${PREFIX}/bin ${PREFIX}/bin
+COPY --from=${LIBCAMERA} \
+    --link \
+        ${PREFIX}/share ${PREFIX}/share
+COPY --from=${LIBCAMERA} \
+    --link \
+        ${PKG_CONFIG_PATH} ${PKG_CONFIG_PATH}
+
+# --from=rpicam-apps here is a stage reference
+COPY --from=rpicam-apps \
+    --link \
+        ${PREFIX}/bin ${PREFIX}/bin
+COPY --from=rpicam-apps \
+    --link \
+        ${PREFIX}/lib ${PKG_CONFIG_PATH}
+
+RUN ldconfig --verbose \
+    # --exclude doesn't appear to be supported by podman build
+    # This is a production image, not intended for further development.
+    && rm -rf ${PKG_CONFIG_PATH}/pkgconfig
+
+ARG RPICAM_APPS_VERSION
+ARG NEON_FLAGS
+ARG ENABLE_LIBAV
+ARG ENABLE_DRM
+ARG ENABLE_HAILO
+ARG DOWNLOAD_HAILO_MODELS
+ARG ENABLE_EGL
+ARG ENABLE_QT
+ARG ENABLE_OPENCV
+ARG ENABLE_TFLITE
+
+LABEL rpicam-vids.version=${RPICAM_APPS_VERSION}
+LABEL rpicam-vids.build-options.neon_flags=${NEON_FLAGS}
+LABEL rpicam-vids.build-options.libav=${ENABLE_LIBAV}
+LABEL rpicam-vids.build-options.drm=${ENABLE_DRM}
+LABEL rpicam-vids.build-options.hailo=${ENABLE_HAILO}
+LABEL rpicam-vids.build-options.download-hailo-models=${DOWNLOAD_HAILO_MODELS}
+LABEL rpicam-vids.build-options.egl=${ENABLE_EGL}
+LABEL rpicam-vids.build-options.qt=${ENABLE_QT}
+LABEL rpicam-vids.build-options.openvc=${ENABLE_OPENCV}
+LABEL rpicam-vids.build-options.tflite=${ENABLE_TFLITE}
+
+ENTRYPOINT ["rpicam-vid"]

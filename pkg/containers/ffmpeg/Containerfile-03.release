@@ -1,0 +1,23 @@
+ARG IMAGE_REGISTRY
+ARG IMAGE
+ARG IMAGE_TAG
+
+FROM ${IMAGE_REGISTRY}/${IMAGE}:${IMAGE_TAG} AS ffmpeg-release
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+      DEBIAN_FRONTEND=noninteractive apt-get update \
+      && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+      && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+            # FFmpeg required shared libraries
+            libxcb1 libxcb-shm0 libasound2t64 libsndio7.0 libsdl2-2.0-0 libxv1 libva-drm2 \
+            libzimg2 ocl-icd-libopencl1 libmfx1 libvpx9 libwebpmux3 libzvbi0t64 \
+            libtwolame0 libx264-164 libx265-199 libxvidcore4 libva-x11-2
+
+ARG PREFIX
+ENV LD_LIBRARY_PATH="$PREFIX/lib"
+
+COPY --link --from=ffmpeg ${PREFIX}/bin ${PREFIX}/bin
+COPY --link --from=ffmpeg ${PREFIX}/lib ${PREFIX}/lib
+
+ENTRYPOINT [ "ffmpeg" ]

@@ -22,6 +22,22 @@
         group: root
         mode: '0400'
 
+    - name: Install core/dosfstools (Required to run fsck.vfat on boot partition)
+      community.general.pacman:
+        name: core/dosfstools
+        state: present
+      tags:
+        - packages.install
+        - packages.install.dosfstools
+
+    - name: Install extra/sysstat
+      community.general.pacman:
+        name: extra/sysstat
+        state: present
+      tags:
+        - packages.install
+        - packages.install.sysstat
+
     - name: Install core/iptables-nft
       community.general.pacman:
         name: core/iptables-nft
@@ -52,6 +68,14 @@
       tags:
         - packages.install
         - v4l2loopback
+
+    - name: Install core/usbutils
+      community.general.pacman:
+        name: core/usbutils
+        state: present
+      tags:
+        - packages.install
+        - packages.install.usbutils
 
     - name: Configure zram-generator
       ansible.builtin.copy:

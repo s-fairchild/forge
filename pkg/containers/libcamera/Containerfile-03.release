@@ -1,0 +1,58 @@
+ARG IMAGE_REGISTRY
+ARG IMAGE_REPOSITORY
+ARG IMAGE_TAG
+FROM --platform=arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+
+ARG PREFIX
+COPY --link --from=libcamera ${PREFIX}/bin ${PREFIX}/bin
+COPY --link --from=libcamera ${PREFIX}/libexec/libcamera ${PREFIX}/libexec/libcamera
+COPY --link --from=libcamera ${PREFIX}/share/libcamera ${PREFIX}/share/libcamera
+COPY --link --from=libcamera ${PREFIX}/share/libpisp ${PREFIX}/share/libpisp
+COPY --link --from=libcamera ${PREFIX}/lib/aarch64-linux-gnu ${PREFIX}/lib/aarch64-linux-gnu
+# Source include files for use by builds leveraging this image
+# TODO determine if rpicam-apps needs these include files. If not, don't copy them
+COPY --link --from=libcamera ${PREFIX}/include ${PREFIX}/include
+
+# LIBCAMERA_DATA_DIR
+VOLUME [ "${PREFIX}/etc/libcamera" ]
+# LIBCAMERA_DATA_DIR
+VOLUME [ "${PREFIX}/share/libcamera" ]
+# IPA_CONFIG_DIR
+VOLUME [ "${PREFIX}/etc/libcamera/ipa", "${PREFIX}/share/libcamera/ipa" ]
+
+RUN ldconfig --verbose
+
+ARG LIBCAMERA_VERSION
+ARG LIBCAMERA_VERSION_GIT
+# Version info labels
+LABEL libcamera.version=${LIBCAMERA_VERSION}
+LABEL libcamera.git.tag=${LIBCAMERA_VERSION_GIT}
+
+# https://www.raspberrypi.com/documentation/computers/camera_software.html#building-libcamera
+ARG BUILD_TYPE
+ARG TEST
+ARG ENABLE_PIPELINES
+ARG ENABLE_IPAS
+ARG ENABLE_V4L2
+ARG ENABLE_GSTREAMER
+ARG ENABLE_LC_COMPLIANCE
+ARG ENABLE_CAM
+ARG ENABLE_QCAM
+ARG ENABLE_DOCUMENTATION
+ARG ENABLE_PYCAMERA
+# Build options labels
+LABEL libcamera.build-options.buildtype=${BUILD_TYPE}
+LABEL libcamera.build-options.prefix=${PREFIX}
+LABEL libcamera.build-options.pkgconfig.relocatable=true
+LABEL libcamera.build-options.test=${TEST}
+LABEL libcamera.build-options.pipelines=${ENABLE_PIPELINES}
+LABEL libcamera.build-options.ips=${ENABLE_IPAS}
+LABEL libcamera.build-options.v4l2=${ENABLE_V4L2}
+LABEL libcamera.build-options.gstreamer=${ENABLE_GSTREAMER}
+LABEL libcamera.build-options.lc-compliance=${ENABLE_LC_COMPLIANCE}
+LABEL libcamera.build-options.cam=${ENABLE_CAM}
+LABEL libcamera.build-options.qcam=${ENABLE_QCAM}
+LABEL libcamera.build-options.documentation=${ENABLE_DOCUMENTATION}
+LABEL libcamera.build-options.pycamera=${ENABLE_PYCAMERA}
+
+ENTRYPOINT [ "/usr/local/bin/libcamerify" ]
