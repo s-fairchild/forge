@@ -1,0 +1,16 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: mariadb-operator
+  namespace: kube-system
+spec:
+  # https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/Chart.yaml
+  chart: https://%{KUBERNETES_API}%/static/charts/mariadb-operator-crds-25.10.3.tgz
+  set:
+    global.systemDefaultRegistry: ""
+  valuesSecrets:
+  - name: mariadb-operator-crd-values
+    ignoreUpdates: false
+    keys:
+      - values

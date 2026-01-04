@@ -1,0 +1,13 @@
+---
+resources:
+- namespace.yaml
+- helmcharts/mariadb-operator.yaml
+- certificate/webhook-certificate.yaml
+
+secretGenerator:
+- name: mariadb-operator-crd-values
+  namespace: kube-system
+  files:
+  - values=mariadb-operator-crd-values.yaml
+  options:
+    disableNameSuffixHash: true
