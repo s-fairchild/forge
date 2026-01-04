@@ -1,7 +1,7 @@
 ARG IMAGE_REGISTRY
 ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
+FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -12,8 +12,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             libxcb1 libxcb-shm0 libasound2t64 libsndio7.0 libsdl2-2.0-0 libxv1 libva-drm2 \
             libzimg2 ocl-icd-libopencl1 libmfx-gen1.2 libvpx9 libwebpmux3 libzvbi0t64 \
             libtwolame0 libx264-164 libx265-215 libxvidcore4 libva-x11-2 \
-            # Motion required shared libraries
-            libjpeg-tools libmicrohttpd12t64 libsqlite3-0
+            # Optional features runtime libraries
+            libjpeg-tools libjpeg62-turbo libmicrohttpd12t64 \
+            libswscale8 libavutil59 libavdevice61 libavformat61 \
+            # SQLite3 database functionality
+            libsqlite3-0 \
+            # MariaDB support
+            libmariadb3 \
+            # PostgreSQL support
+            libpq5
 
 ARG PREFIX
 ARG FFMPEG
@@ -34,13 +41,23 @@ COPY --from=motion \
     --link \
         ${PREFIX}/etc/motion ${PREFIX}/etc/motion
 
-ARG MAKE_OPTIONS_EXCLUDE
+ARG CONFIGURE_EXCLUDE
 ARG MAKE_FLAGS
 ARG MOTION_VERSION
 
-LABEL motion.make.options-exclude="${MAKE_OPTIONS_EXCLUDE}"
-LABEL motion.make.flags="${MAKE_FLAGS}"
-LABEL motion.version="${MOTION_VERSION}"
+LABEL motion.make.configure.exclude=${CONFIGURE_EXCLUDE}
+LABEL motion.make.flags=${MAKE_FLAGS}
+LABEL motion.version=${MOTION_VERSION}
+
+LABEL motion.features.MySQL="true"
+LABEL motion.features.PostgreSQL="true"
+LABEL motion.features.SQLite3="true"
+LABEL motion.features.MariaDB="true"
+LABEL motion.features.ffmpeg="true"
+LABEL motion.features.libcamera="true"
+LABEL motion.features.webp="true"
+LABEL motion.features.="true"
+LABEL motion.features.="true"
 
 ENV LD_LIBRARY_PATH="$PREFIX/lib"
 ENTRYPOINT [ "motion" ]

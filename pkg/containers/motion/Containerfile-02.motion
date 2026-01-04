@@ -3,7 +3,8 @@ FROM builder AS motion
 ARG TARGETARCH
 ARG TARGETOS
 ARG BUILD_THREADS
-ARG PKG_CONFIG_PATH
+ARG PKG_CONFIG_PATH_SUFFIX
+ARG PKG_CONFIG_PATH="${PREFIX}/${PKG_CONFIG_PATH_SUFFIX}"
 ARG PREFIX
 
 ARG MOTION_VERSION
@@ -11,17 +12,40 @@ ARG BUILD_TARGET="${PREFIX}/src/motion"
 ADD https://github.com/Motion-Project/motion.git#${MOTION_VERSION} ${BUILD_TARGET}
 WORKDIR ${BUILD_TARGET}
 
-ARG MAKE_OPTIONS_EXCLUDE
+ARG CONFIGURE_EXCLUDE
 ARG MAKE_FLAGS
+ARG FFMPEG
+ARG FFMPEG_PKG_CONFIG_SRC="/usr/local/lib/pkgconfig"
+ARG FFMPEG_PKG_CONFIG_DEST="/tmp/${PKG_CONFIG_PATH_SUFFIX}"
+
+ARG FFMPEG_FFPLAY_BIN
+ARG FFMPEG_FFPLAY_BIN_PATH="${PREFIX}/${FFMPEG_FFPLAY_BIN}"
+
+ARG FFMPEG_BIN
+ARG FFMPEG_BIN_PATH="${PREFIX}/${FFMPEG_BIN}"
+
+ARG FFMPEG_FFPROBE_BIN
+ARG FFMPEG_FFPROBE_BIN_PATH="${PREFIX}/${FFMPEG_FFPROBE_BIN}"
+
 # https://motion-project.github.io/motion_build.html
 # https://motion-project.github.io/motion_build.html#Configure_Script
-RUN autoreconf -fiv \
+#
+# --from=${FFMPEG} is an image reference added via --build-context
+RUN --mount=from=${FFMPEG},src=${FFMPEG_PKG_CONFIG_SRC},target=${FFMPEG_PKG_CONFIG_DEST} \
+    --mount=from=${FFMPEG},src=${FFMPEG_BIN_PATH},target=${FFMPEG_BIN_PATH} \
+    --mount=from=${FFMPEG},src=${FFMPEG_FFPLAY_BIN_PATH},target=${FFMPEG_FFPLAY_BIN_PATH} \
+    --mount=from=${FFMPEG},src=${FFMPEG_FFPROBE_BIN_PATH},target=${FFMPEG_FFPROBE_BIN_PATH} \
+    autoreconf -fiv \
     # Toolchain options
-    && PKG_CONFIG_PATH=${PKG_CONFIG_PATH} ./configure --build=${TARGETARCH} --prefix=${PREFIX} \
-    # Excluded options
-    # https://motion-project.github.io/motion_build.html#Configure_Script
-    ${MAKE_OPTIONS_EXCLUDE} \
+    && PKG_CONFIG_PATH=${PKG_CONFIG_PATH} \
+    ./configure --build=${TARGETARCH} \
+                --prefix=${PREFIX} \
+                --with-ffmpeg=${FFMPEG_PKG_CONFIG_DEST} \
+                # Excluded options
+                # https://motion-project.github.io/motion_build.html#Configure_Script
+                ${CONFIGURE_EXCLUDE} \
     # https://motion-project.github.io/motion_build.html#Make
-    && make -j${BUILD_THREADS} ${MAKE_FLAGS} \
+    && make -j${BUILD_THREADS} \
+            ${MAKE_FLAGS} \
     # https://motion-project.github.io/motion_build.html#Make_Install
     && make install

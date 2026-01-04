@@ -17,9 +17,7 @@ ARG MAKE_EXCLUDE
 ARG MAKE_HWACCELS
 ARG MAKE_EXTERNAL_LIBRARIES
 
-RUN \
-    # Toolchain options
-    ./configure --arch=${TARGETARCH} --target-os=${TARGETOS} --prefix=${PREFIX} \
+RUN ./configure --arch=${TARGETARCH} --target-os=${TARGETOS} --prefix=${PREFIX} \
     --extra-version=${FFMPEG_VERSION} \
     ${CONFIGURE_GENERAL} \
     ${CONFIGURE_ENV} \

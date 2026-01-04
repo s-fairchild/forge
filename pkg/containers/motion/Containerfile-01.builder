@@ -12,12 +12,17 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             libva-dev libmfx-gen-dev libwebp-dev \
             # Required packages
             libzip-dev libjpeg-dev libmicrohttpd-dev libavformat-dev \
-            libavcodec-dev libavutil-dev libswscale-dev libavdevice-dev \
-            # # These driver dev files maybe needed, we'll see
+            libavcodec-dev libjpeg62-turbo-dev \
             # Optional packages
-            # SQLite3 database functionality
-            libsqlite3-dev \
             # Webp Image Support
             libwebp-dev \
             # FFMpeg Functionality(Required for creating movies, using network cameras, etc.)
-            libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libavdevice-dev
+            libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libavdevice-dev \
+            # SQLite3 database functionality
+            libsqlite3-dev \
+            # MySQL support
+            default-libmysqlclient-dev \
+            # MariaDB support
+            libmariadb-dev \
+            # PostgreSQL support
+            libpq-dev
