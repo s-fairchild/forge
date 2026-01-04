@@ -10,20 +10,26 @@ ARG BUILD_TARGET="$PREFIX/src/ffmpeg"
 ADD https://github.com/FFmpeg/FFmpeg.git#${FFMPEG_VERSION} ${BUILD_TARGET}
 WORKDIR ${BUILD_TARGET}
 
+ARG CONFIGURE_GENERAL
+ARG CONFIGURE_ENV
+ARG CONFIGURE_LICENSE
+ARG MAKE_EXCLUDE
+ARG MAKE_HWACCELS
+ARG MAKE_EXTERNAL_LIBRARIES
+
 RUN \
     # Toolchain options
     ./configure --arch=${TARGETARCH} --target-os=${TARGETOS} --prefix=${PREFIX} \
-    --env="LIBVA_DRIVER_NAME=iHD" --extra-version=${FFMPEG_VERSION} --enable-shared \
-    --enable-pthreads --enable-runtime-cpudetect \
+    --extra-version=${FFMPEG_VERSION} \
+    ${CONFIGURE_GENERAL} \
+    ${CONFIGURE_ENV} \
     # External library support 
-    --enable-vaapi --enable-libx264 --enable-libx265 --enable-libwebp \
-    --enable-postproc --enable-libxml2 --enable-libxvid \
-    --enable-libzimg --enable-libzvbi --enable-gray --enable-libtwolame \
+    ${MAKE_EXTERNAL_LIBRARIES} \
     # Intel GPU options
-    --enable-libvpx  --enable-libmfx --enable-opencl --enable-vulkan \
+    ${MAKE_HWACCELS} \
     # Excluded options
-    --disable-x86asm  --disable-doc \
+    ${MAKE_EXCLUDE} \
     # Licensing options
-    --enable-gpl --enable-version3 --enable-nonfree \
+    ${CONFIGURE_LICENSE} \
     && make -j"${BUILD_THREADS}" \
     && make install

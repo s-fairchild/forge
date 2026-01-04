@@ -1,9 +1,7 @@
-# Default build args are provided in argfile.conf
 ARG IMAGE_REGISTRY
-ARG IMAGE
+ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-
-FROM ${IMAGE_REGISTRY}/${IMAGE}:${IMAGE_TAG} AS builder
+FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -16,6 +14,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             libva-dev libwebp-dev libtwolame-dev libxvidcore-dev libzimg-dev libzvbi-dev \
             libdrm-dev libwebp7 libwebpmux3 libwebpdemux2 libxvidcore4 libxml2-dev libva-drm2 \
             libxcb-shm0-dev libxcb1-dev libasound2-dev libsndio-dev libsdl2-dev libxv-dev \
+            libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libavdevice-dev \
             # Intel OpenCL
             # Starting from Ubuntu 19.04 Intel media stack components are available for installation via apt-get.
             # Reference: [Intel media stack on Ubuntu](https://github.com/Intel-Media-SDK/MediaSDK/wiki/Intel-media-stack-on-Ubuntu)

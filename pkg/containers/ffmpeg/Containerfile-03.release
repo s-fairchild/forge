@@ -1,8 +1,7 @@
 ARG IMAGE_REGISTRY
-ARG IMAGE
+ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-
-FROM ${IMAGE_REGISTRY}/${IMAGE}:${IMAGE_TAG} AS ffmpeg-release
+FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -19,5 +18,23 @@ ENV LD_LIBRARY_PATH="$PREFIX/lib"
 
 COPY --link --from=ffmpeg ${PREFIX}/bin ${PREFIX}/bin
 COPY --link --from=ffmpeg ${PREFIX}/lib ${PREFIX}/lib
+
+ARG FFMPEG_VERSION
+ARG CONFIGURE_GENERAL
+ARG CONFIGURE_ENV
+ARG CONFIGURE_LICENSE
+
+ARG MAKE_EXCLUDE
+ARG MAKE_HWACCELS
+ARG MAKE_EXTERNAL_LIBRARIES
+
+LABEL ffmpeg.version=${FFMPEG_VERSION}
+LABEL ffmpeg.configure.general=${CONFIGURE_GENERAL}
+LABEL ffmpeg.configure.env=${CONFIGURE_ENV}
+LABEL ffmpeg.configure.license=${CONFIGURE_LICENSE}
+
+LABEL ffmpeg.make.exclude=${MAKE_EXCLUDE}
+LABEL ffmpeg.make.hwaccels=${MAKE_HWACCELS}
+LABEL ffmpeg.make.external-libaries=${MAKE_EXTERNAL_LIBRARIES}
 
 ENTRYPOINT [ "ffmpeg" ]
