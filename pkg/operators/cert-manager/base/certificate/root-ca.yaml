@@ -7,10 +7,10 @@ metadata:
 spec:
   isCA: true
   commonName: root-ca.rick.expresso.lan
-  dnsNames:
-    - "rick.expresso.lan"
-    - "app.rick.expresso.lan"
   secretName: root-ca
+  dnsNames:
+  - "rick.expresso.lan"
+  - "root-ca.rick.expresso.lan"
   privateKey:
     algorithm: ECDSA
     size: 256

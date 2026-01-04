@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - helmcharts/cert-manager.yaml
+- certificate/root-ca.yaml
