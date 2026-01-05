@@ -23,7 +23,7 @@ spec:
       - name: motion
         # https://github.com/Motion-Project/motion/releases/tag/release-4.7.1
         # https://motion-project.github.io/4.6.0/motion_config.html
-        image: docker.io/steve51516/motion:v4.7.1
+        image: docker.io/steve51516/motion:release-4.7.1
         ports:
         - containerPort: 8081
           name: stream
@@ -32,10 +32,20 @@ spec:
           privileged: true
         volumeMounts:
         - name: motion-conf
-          mountPath: /root/.motion/
+          mountPath: /root/.motion
+          # mountPropagation: HostToContainer
+          readOnly: true
+        - name: camera-conf
+          mountPath: /etc/motion/conf.d
+          # Allows for sending reload signal to the motion process
+          # Re-reading the updated config files
+          # mountPropagation: HostToContainer
           readOnly: true
         - name: media
-          mountPath: /var/motion/
+          mountPath: /var/motion
+          # Allows for sending reload signal to the motion process
+          # Re-reading the updated config files
+          mountPropagation: Bidirectional
         resources:
           requests:
             memory: "1G"
@@ -47,6 +57,11 @@ spec:
       - name: motion-conf
         configMap:
           name: motion-conf-cm
+          optional: true
+      - name: camera-conf
+        configMap:
+          name: camera-conf-cm
+          optional: true
       - name: media
         persistentVolumeClaim:
           claimName: media-pvc

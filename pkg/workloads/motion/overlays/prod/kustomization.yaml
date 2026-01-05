@@ -2,14 +2,27 @@
 resources:
   - ../../base
 
+# TODO find the correct patch operation to append database.conf into motion.conf (base)
 patches:
   - path: deployment.yaml
   - path: pvc/media-pvc.yaml
 
 configMapGenerator:
-  - name: camera1-conf-cm
+  - name: camera-conf-cm
     namespace: motion
+    behavior: create
     files:
     - configmap/camera1.conf
     options:
       disableNameSuffixHash: true
+
+  # - name: database-conf-cm
+  # - name: motion-conf-cm
+  # - name: camera-conf-cm
+    # namespace: motion
+    # behavior: merge
+    # files:
+    # - camera2.conf=configmap/database.conf
+    # options:
+      # disableNameSuffixHash: true
+
