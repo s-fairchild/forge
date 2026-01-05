@@ -3,10 +3,10 @@
 !manage_igntion.env
 *.pub
 *.ign
+*.ign.gz
+# TODO get rid of these tmp file writes
 deploy/ignition/*
 deploy/butane/.*.tmp
-*.iso
-*.iso.sig
 deploy/manifests/*
 *.txt
 .ansible

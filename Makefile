@@ -56,21 +56,51 @@ ignition-serve-http-rpi4:
 ignition-serve-http-rpi02w-0: ignition-gen-rpi02w-0
 	hack/ignition/deploy/serve_ignition.sh rpi02w-0
 
-stream := "stable"
-coreos-installer-image := "quay.io/coreos/coreos-installer:release"
 # TODO add --post-install to setup btrfs subvolumes
-installer-download-live-baremetal:
-	podman --remote=false run \
-			--security-opt label=disable \
-			--pull=always \
-			--rm \
-			-v ./deploy/iso:/data \
-			-w /data \
-			${coreos-installer-image} \
-			download \
-				-s ${stream} \
-				-p metal \
-				-f iso
+installer-download-baremetal:
+	coreos-installer download \
+		--stream stable \
+		--platform metal \
+		--format iso \
+		--directory deploy/coreos-installer/iso
+
+installer-butane-check-base:
+	butane --check \
+		--strict \
+		--files-dir deploy/butane/base/coreos-installer \
+			< deploy/butane/base/coreos-installer/install.bu
+
+installer-butane-check-prod: installer-butane-check-base
+	butane --check \
+		--strict \
+		--files-dir deploy/butane \
+			< deploy/butane/overlays/prod/coreos-installer/install.bu
+
+installer-ignition-gen-base: installer-butane-check-base
+	butane --pretty \
+		--strict \
+		--files-dir deploy/butane/base/coreos-installer \
+			< deploy/butane/base/coreos-installer/install.bu \
+			| gzip -v -9 > deploy/butane/base/coreos-installer/install.ign.gz
+
+	sha512sum deploy/butane/base/coreos-installer/install.ign.gz \
+		> deploy/butane/base/coreos-installer/install.ign.gz.sha512
+
+installer-ignition-gen-prod: installer-butane-check-prod installer-ignition-gen-base
+	sha512sum --check \
+		--strict \
+		--warn \
+		deploy/butane/base/coreos-installer/install.ign.gz.sha512
+
+	butane --pretty \
+		--strict \
+		--files-dir deploy/butane \
+		--output deploy/butane/overlays/prod/coreos-installer/install.ign \
+			< deploy/butane/overlays/prod/coreos-installer/install.bu
+	
+	checksum="$(cat deploy/butane/base/coreos-installer/install.ign.gz.sha512 | cut -d ' ' -f 1)"
+
+installer-ignition-gen-all: installer-ignition-gen-prod
 
 # TODO get the latest iso file from deploy/isos to use here
 unmodified_iso := "fedora-coreos-42.20250803.3.0-live-iso.x86_64.iso"
@@ -79,35 +109,16 @@ output_iso := "baremetal_fetch_remote_ignition.iso"
 # Replace this with the correct drive!
 # iso_dest_drive="/dev/sdc"
 # sudo dd if=deploy/iso/custom/baremetal_fetch_remote_ignition.iso of="$iso_dest_drive" status=progress && sudo sync
-installer-customize-embed-ign:
-	podman --remote=false run \
-			--security-opt label=disable \
-			--pull=always \
-			--rm \
-			-v ./deploy/iso:/data \
-			-v ./hack/coreos-installer:/data/hack \
-			-w /data \
-			${coreos-installer-image} \
-				iso \
+installer-iso-customize: installer-ignition-gen-prod
+	coreos-installer iso \
 				customize \
-					--dest-device /dev/disk/by-id/nvme-WD_Blue_SN570_2TB_22423T802136 \
-					--dest-ignition config/live.ign \
-					--dest-console ttyS0,115200n8 \
-					--dest-console tty0 \
-					--pre-install hack/post-install.sh \
-					-o custom/${output_iso} \
-					./${unmodified_iso}
+				--pre-install hack/post-install.sh \
+				-o deploy/coreos-installer/iso/${output_iso} \
+				./${unmodified_iso}
 
 images := "$(HOME)/.local/share/libvirt/images"
 installer-download-libvirt:
-	podman --remote=false run \
-			--pull=always \
-			--security-opt label=disable \
-			--rm \
-			-v ${images}:/data \
-			-w /data \
-			${coreos-installer-image} \
-				download \
+	coreos-installer download \
 				-s ${stream} \
 				-p qemu \
 				-f qcow2.xz \
