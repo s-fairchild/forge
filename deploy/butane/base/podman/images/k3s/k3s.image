@@ -3,8 +3,8 @@
 Description=Pull image docker.io/rancher/k3s
 
 [Service]
-Restart=on-failure
-RestartSec=30
+Restart=always
+RestartSec=60
 
 [Image]
 Image=docker.io/rancher/k3s:v1.34.2-k3s1

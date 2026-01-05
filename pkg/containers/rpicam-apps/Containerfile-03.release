@@ -1,7 +1,7 @@
 ARG IMAGE_REGISTRY
 ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-FROM --platform=arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+FROM --platform=linux/arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
 # TODO maybe add these packages?
 # x264 x265

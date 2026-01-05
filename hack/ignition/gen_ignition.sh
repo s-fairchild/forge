@@ -10,67 +10,48 @@ if [ "$DEBUG" == "true" ]; then
 fi
 
 main() {
-    local -r main_butane="$1"
-    local -r output_file="${2:-""}"
-
-    # fail early if expected output directory is missing
-    if [ -n "$output_file" ]; then
-        check_dir_exists "$(dirname "$output_file")"
-    fi
+    local -r butane_main="${1?'main butane file must be specified.'}"
 
     # shellcheck disable=SC2034
     local -a ignitions
-    gen_merge_ignitions "$main_butane" ignitions
+    gen_merge_ignitions "$butane_main" ignitions
+    info "Successfully generated ignition.config.merge contents."
 
     # shellcheck disable=SC2034
-    local main_ignition
-    gen_main_ignition "$main_butane" ignitions main_ignition
+    local butane_merged
+    gen_butane_main "$butane_main" \
+                    ignitions \
+                    butane_merged
 
-    log "Done"
-    # TODO add step to replace all variables in butane files processed by yq, Fail if unset
-    output_ignition main_ignition "$output_file"
+    local output_dir
+    create_output_dir output_dir "$butane_main"
+
+    local butane_merged_output_filename
+    gen_file_name "$butane_main" butane_merged_output_filename
+    butane_merged_path="$output_dir/$butane_merged_output_filename"
+    output_file_contents butane_merged "$butane_merged_path"
+    info "Main butane file generated (for reference): $butane_merged_path"
+
+    # shellcheck disable=SC2034
+    # local ignition_final
+    local -r ignition_final="$(gen_ignition butane_merged)"
+
+    local ignition_final_output_file
+    gen_file_name "$butane_main" ignition_final_output_file "$IGNITION_FILE_EXTENSION"
+    ignition_final_path="$output_dir/$ignition_final_output_file"
+    output_file_contents ignition_final "$ignition_final_path"
+
+    info "Main ignition file generated: $ignition_final_path"
+    info "Complete."
 }
 
-# output_ignition()
-# 
-# args:
-# 1) ign - nameref; output ignition file
-# 2) out_file - string; path to write ignition file to. Pass "" for stdout
-output_ignition() {
-    local -n ign="$1"
-    local -r out_file="$2"
+if [ "${__ignition_common_lib_sourced:-false}" == "false" ]; then
+    # declare -r __ignition_common_lib="hack/ignition/lib/common.env"
+    declare -r __ignition_common_lib="hack/ignition/lib/common.env"
+    [ -f "$__ignition_common_lib" ] || "$(echo "$__ignition_common_lib FATAL file not found."; exit 5)"
 
-    if [ -n "$out_file" ]; then
-        log "Writing ignition file to $out_file"
-        echo "$ign" > "$out_file"
-    else
-        echo "$ign"
-    fi
-}
-
-declare lib_sh="hack/ignition/lib/ignition.sh"
-if [ ! -f "$lib_sh" ]; then
-    echo "$lib_sh not found. Are you in the repository root?"
-    exit 1
-fi
-# shellcheck source=lib/ignition.sh
-if ! source "$lib_sh"; then
-    echo "Sourcing $lib_sh failed."
-    exit 1
-fi
-
-# shellcheck disable=SC2034
-# cleanup directory passed to trap
-declare -a TEMP_DATA
-
-# included to provide definitions for shellcheck
-ignition_lib="hack/ignition/lib/ignition.sh"
-if [ -f "$ignition_lib" ]; then
-    # shellcheck source=lib/ignition.sh
-    source "$ignition_lib"
-else
-    echo "$ignition_lib not found. Are you in the repository root?"
-    exit 1
+    # shellcheck source=lib/common.env
+    . "$__ignition_common_lib"
 fi
 
 main "$@"

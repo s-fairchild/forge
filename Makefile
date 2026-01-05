@@ -13,6 +13,7 @@ clean:
 	rm -rf ${manifests_prod_dir}/*
 	rm -rf ${manifests_base_dir}/*
 	rm -rf ${manifests_staging_dir}/*
+	find . -type d -iname "gen_ignition.sh.*" -exec rm -rf {} \;
 
 kube-manifests-gen-base:
 	hack/gen_kube_manifests.sh ${kustomize_base_dir} ${manifests_base_dir} base
@@ -33,7 +34,7 @@ ignition-gen-staging: kube-manifests-gen-staging
 	hack/ignition/gen_ignition.sh deploy/butane/overlays/staging/main.bu ${ignition_dest}/staging_main.ign
 
 ignition-gen-prod: kube-manifests-gen-all
-	hack/ignition/gen_ignition.sh deploy/butane/overlays/prod/main.bu ${ignition_dest}/prod_main.ign
+	DEBUG=$${DEBUG:-} hack/ignition/gen_ignition.sh deploy/butane/overlays/prod/main.bu
 
 ignition-gen-rpi4:
 	hack/ignition/gen_ignition.sh deploy/butane/overlays/rpi4/main.bu ${ignition_dest}/rpi4_main.ign
@@ -56,58 +57,75 @@ ignition-serve-http-rpi4:
 ignition-serve-http-rpi02w-0: ignition-gen-rpi02w-0
 	hack/ignition/deploy/serve_ignition.sh rpi02w-0
 
-stream := "stable"
-coreos-installer-image := "quay.io/coreos/coreos-installer:release"
 # TODO add --post-install to setup btrfs subvolumes
-installer-download-live-baremetal:
-	podman --remote=false run \
-			--security-opt label=disable \
-			--pull=always \
-			--rm \
-			-v ./deploy/iso:/data \
-			-w /data \
-			${coreos-installer-image} \
-			download \
-				-s ${stream} \
-				-p metal \
-				-f iso
+installer-download-baremetal:
+	coreos-installer download \
+		--stream stable \
+		--platform metal \
+		--format iso \
+		--directory deploy/coreos-installer/iso
 
-# TODO get the latest iso file from deploy/isos to use here
-unmodified_iso := "fedora-coreos-42.20250803.3.0-live-iso.x86_64.iso"
-output_iso := "baremetal_fetch_remote_ignition.iso"
+installer-butane-check-base:
+	butane --check \
+		--strict \
+		--files-dir deploy/butane/base/coreos-installer \
+			< deploy/butane/base/coreos-installer/install.bu
+
+installer-butane-check-prod: installer-butane-check-base
+	butane --check \
+		--strict \
+		--files-dir deploy/butane \
+			< deploy/butane/overlays/prod/coreos-installer/install.bu
+
+installer-ignition-gen-base: installer-butane-check-base
+	butane --pretty \
+		--strict \
+		--files-dir deploy/butane/base/coreos-installer \
+			< deploy/butane/base/coreos-installer/install.bu \
+			| gzip -v -9 > deploy/butane/base/coreos-installer/install.ign.gz
+
+	. hack/lib/hash.sh
+	hash_data=deploy/butane/base/coreos-installer/install.ign.gz
+	sha512sum_gen $${hash_data}
+
+installer-ignition-gen-prod: installer-butane-check-prod installer-ignition-gen-base
+	. hack/lib/hash.sh
+	base_ign_checksum_in=deploy/butane/base/coreos-installer/install.ign.gz.sha512
+	sha512sum_check $${base_ign_checksum_in}
+
+	prod_ign_out=deploy/butane/overlays/prod/coreos-installer/install.ign
+	prod_butane_in=deploy/butane/overlays/prod/coreos-installer/install.bu
+	butane --pretty \
+		--strict \
+		--files-dir deploy/butane \
+		--output $${prod_ign_out} \
+			< $${prod_butane_in}
+	
+	hack/bin/ignition-config-hash-upsert.sh \
+		$${base_ign_checksum_in} \
+		$${prod_ign_out}
+
+	sha512sum_gen $${prod_ign_out}
+
+installer-ignition-gen-all: installer-ignition-gen-prod
+
 # Example of writing this image to a drive:
 # Replace this with the correct drive!
-# iso_dest_drive="/dev/sdc"
-# sudo dd if=deploy/iso/custom/baremetal_fetch_remote_ignition.iso of="$iso_dest_drive" status=progress && sudo sync
-installer-customize-embed-ign:
-	podman --remote=false run \
-			--security-opt label=disable \
-			--pull=always \
-			--rm \
-			-v ./deploy/iso:/data \
-			-v ./hack/coreos-installer:/data/hack \
-			-w /data \
-			${coreos-installer-image} \
-				iso \
+# iso_out="/dev/sdc"
+# iso_in="deploy/coreos-installer/iso/fedora-coreos-43.20251214.3.0-live-iso.x86_64.iso"
+# sudo dd if="$iso_in" of="$iso_out" status=progress && sudo sync
+installer-iso-customize: installer-ignition-gen-prod
+	iso="$$(find deploy/coreos-installer/iso -type f -iname "*.iso" | sort -V | head -n1)"
+
+	coreos-installer iso \
 				customize \
-					--dest-device /dev/disk/by-id/nvme-WD_Blue_SN570_2TB_22423T802136 \
-					--dest-ignition config/live.ign \
-					--dest-console ttyS0,115200n8 \
-					--dest-console tty0 \
-					--pre-install hack/post-install.sh \
-					-o custom/${output_iso} \
-					./${unmodified_iso}
+				--pre-install hack/coreos-installer/post-install.sh \
+				-o $${iso/.iso/_custom.iso} \
+				./$${iso}
 
 images := "$(HOME)/.local/share/libvirt/images"
 installer-download-libvirt:
-	podman --remote=false run \
-			--pull=always \
-			--security-opt label=disable \
-			--rm \
-			-v ${images}:/data \
-			-w /data \
-			${coreos-installer-image} \
-				download \
+	coreos-installer download \
 				-s ${stream} \
 				-p qemu \
 				-f qcow2.xz \
@@ -133,50 +151,53 @@ k3s-token-upload:
 
 ctr_repo_remote := "docker.io/steve51516"
 ctr_repo_local := "localhost/steve51516"
+ctr_context_local_dir := "pkg/containers"
+ctr_build_env_dir := "hack/env/podman/build"
+ctr_build_constant_env_file := "hack/lib/podman/build/constants.env"
+ctr_build_script_file := "hack/bin/podman-build.sh"
 
-container-build-archlinuxarm-base:
-	ctr_image_alarm="archlinuxarm"
+DEBUG?=
+export DEBUG
 
-	podman build --format=docker -t ${ctr_repo_local}/$${ctr_image_alarm}:arm64 -f pkg/containers/$${ctr_image_alarm}/Containerfile
+# TODO setup these targets once their respective context directory Containerfiles have been corrected with the new podman-build.sh expected format
+# container-build-archlinuxarm-base:
+#    * TODO rework this image build to be much slimmer. It's currently massive.
+# container-build-ffmpeg-rpi: container-build-archlinuxarm-base
 
-	podman tag ${ctr_repo_local}/$${ctr_image_alarm}:arm64 ${ctr_repo_remote}/$${ctr_image_alarm}:arm64
-	podman tag ${ctr_repo_local}/$${ctr_image_alarm}:arm64 ${ctr_repo_remote}/$${ctr_image_alarm}:latest
+LIBCAMERA_VERSION_GIT_TAG_OVERRIDE?=
+export LIBCAMERA_VERSION_GIT_TAG_OVERRIDE
+container-build-libcamera:
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_LIBCAMERA}.env
 
-container-build-ffmpeg-rpi: container-build-archlinuxarm-base
-	ctr_image_ffmpeg_rpi="ffmpeg-rpi"
+	[ -v LIBCAMERA_VERSION_GIT_TAG_OVERRIDE ] && echo "LIBCAMERA_VERSION_GIT_TAG_OVERRIDE=$${LIBCAMERA_VERSION_GIT_TAG_OVERRIDE}"
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_LIBCAMERA}
 
-	podman build --format=docker -t ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 -f pkg/containers/$${ctr_image_ffmpeg_rpi}/Containerfile \
-	&& podman tag ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 ${ctr_repo_remote}/$${ctr_image_ffmpeg_rpi}:arm64 \
-	&& podman tag ${ctr_repo_local}/$${ctr_image_ffmpeg_rpi}:arm64 ${ctr_repo_remote}/$${ctr_image_ffmpeg_rpi}:latest
-
+RPICAM_APPS_VERSION_TAG_OVERRIDE?=""
+export RPICAM_APPS_VERSION_TAG_OVERRIDE
 container-build-rpicam-apps:
-	ctr_image_rpicam_apps="rpicam-apps"
-	podman build \
-			--format=docker \
-			-t ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
-			-f pkg/containers/$${ctr_image_rpicam_apps}/Containerfile
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_RPICAM_APPS}.env
 
-	podman tag ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
-				${ctr_repo_remote}/$${ctr_image_rpicam_apps}:arm64
+	[ -v RPICAM_APPS_VERSION_TAG_OVERRIDE ] && echo "RPICAM_APPS_VERSION_TAG_OVERRIDE=$${RPICAM_APPS_VERSION_TAG_OVERRIDE}"
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_RPICAM_APPS}
 
-	podman tag ${ctr_repo_local}/$${ctr_image_rpicam_apps}:arm64 \
-				${ctr_repo_remote}/$${ctr_image_rpicam_apps}:latest
+FFMPEG_VERSION_TAG_OVERRIDE?=""
+export RPICAM_APPS_VERSION_TAG_OVERRIDE
+container-build-ffmpeg:
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_FFMPEG}.env
 
+	[ -v FFMPEG_VERSION_TAG_OVERRIDE ] && echo "FFMPEG_VERSION_TAG_OVERRIDE=$${FFMPEG_VERSION_TAG_OVERRIDE}"
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_FFMPEG}
+
+MOTION_VERSION_OVERRIDE?=""
+export MOTION_VERSION_OVERRIDE
 container-build-motion:
-	motion_version_default="4.7.1"
-	motion_version="$${MOTION_VERSION:-$${motion_version_default}}"
-	ctr_image_motion="motion"
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_MOTION}.env
 
-	podman build \
-			--format=docker \
-			-t ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
-			--build-arg=MOTION_VERSION=$${motion_version} \
-			-f pkg/containers/$${ctr_image_motion}/Containerfile
-
-	podman tag ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
-				${ctr_repo_remote}/$${ctr_image_motion}:v$${motion_version}
-
-	podman tag ${ctr_repo_local}/$${ctr_image_motion}:v$${motion_version} \
-				${ctr_repo_remote}/$${ctr_image_motion}:latest
+	[ -v MOTION_VERSION_OVERRIDE ] && echo "MOTION_VERSION_OVERRIDE=$${MOTION_VERSION_OVERRIDE}"
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_MOTION}
 
 ### Containerfile End ###

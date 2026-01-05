@@ -1,3 +1,5 @@
+# TODO Find a solution to restart this oneshot type service if docker pull fails for whatever reason
+#    * Restart=always is not allowed for oneshot type services (which quadlet generates)
 [Unit]
 Description=Pull image docker.io/nginx:stable
 

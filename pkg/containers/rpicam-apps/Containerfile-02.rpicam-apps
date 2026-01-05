@@ -1,4 +1,4 @@
-FROM --platform=arm64 builder AS rpicam-apps
+FROM --platform=linux/arm64 builder AS rpicam-apps
 
 ARG PREFIX
 # ARG BUILD_TARGET="/tmp/rpicam-apps"
