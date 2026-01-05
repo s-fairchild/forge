@@ -5,27 +5,43 @@ set -o errexit \
 
 main () {
     local -r hash_file="${1?'hash file must be provided.'}"
+    local -r upsert_file="${2?'a yaml file must be provided for inserting the parsed hash value.'}"
 
     local verification_hash
     format_hash "$hash_file" verification_hash
 
-    echo "$verification_hash"
+    upsert_hash_value "$upsert_file" "$verification_hash"
 }
 
+# TODO Add logging
 # TODO move these functions into a separate library file to be sourced.
+# TODO import shell-utils utils after library file move
 
 # format_hash()
 format_hash() {
-    local f="$1"
-    local -n hash_str="$2"
+    local file="$1"
+    local -n out="$2"
 
     local checksum
-    parse_hash_extension "$f" checksum
+    parse_hash_extension "$file" checksum
     local type
-    parse_hash_value "$f" type
+    parse_hash_value "$file" type
 
+    # Reference: https://coreos.github.io/butane/config-fcos-v1_5
     # shellcheck disable=SC2034
-    hash_str="$type-$checksum"
+    out="$type-$checksum"
+}
+
+# upsert_hash_value()
+upsert_hash_value() {
+    local -r f="$1"
+    local -rx YQ_VALUE="$2"
+
+    yq -P \
+        -oj \
+        -i \
+        '.ignition.config.merge.[0].verification.hash |= strenv(YQ_VALUE)' \
+        "$f"
 }
 
 # eval_compression()
