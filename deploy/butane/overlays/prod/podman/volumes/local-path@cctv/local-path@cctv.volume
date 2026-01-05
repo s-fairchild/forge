@@ -14,7 +14,7 @@ Label=local-path-class=cctv
 Label=app=k3s
 Type=btrfs
 Device=LABEL=cctv
-Options=compress=zstd:1,subvol=local-path/cctv
+Options=compress=zstd:3,subvol=local-path/cctv
 
 [Install]
 WantedBy=default.target

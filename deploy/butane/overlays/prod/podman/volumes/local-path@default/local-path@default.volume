@@ -13,7 +13,7 @@ Label=local-path-class=default
 Label=app=k3s
 Type=btrfs
 Device=LABEL=var
-Options=compress=zstd:1,subvol=local/lib/k3s/agent/%N/local-path/default
+Options=compress=zstd:3,subvol=local/lib/k3s/agent/%N/local-path/default,ssd,usebackupusebackuproot=on,zoned,discard=async
 
 [Install]
 WantedBy=default.target
