@@ -1,0 +1,12 @@
+[Unit]
+Description=Podman volume %N with btrfs subvolume as backing drive
+
+[Volume]
+Label=storageclass=%I
+Label=storageprovider=%p
+Label=app=k3s
+Label=cluster=%l
+Type=btrfs
+
+[Install]
+WantedBy=default.target
