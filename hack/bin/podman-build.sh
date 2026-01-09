@@ -19,6 +19,7 @@ declare -r podman_build_lib="hack/lib/podman/build/build_multi_stage.sh"
 # declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
 declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
 
+# TODO move sourcing shell-utils into podman build library
 [ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
 # shellcheck source=../../shell-utils/usr/local/lib/utils.sh
 source "$shell_utils_lib"
