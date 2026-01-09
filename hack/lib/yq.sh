@@ -17,14 +17,14 @@ upsert_hash_value() {
 
     [ -f "$f" ] || abort "$f not found."
 
-    local -x YQ_KEY=".ignition.config.merge.[0].verification.hash"
-    log "Editing $f inplace."
-    log "upserting hash into - $f:$YQ_KEY"
+    local -rx YQ_KEY=".ignition.config.merge.[0].verification.hash"
+    log "Editing $f in-place."
+    log "upserting $f:$YQ_KEY:$YQ_VALUE"
 
     yq -P \
         -oj \
         -i \
-        'strenv(YQ_KEY) |= strenv(YQ_VALUE)' \
+        'eval(strenv(YQ_KEY)) |= strenv(YQ_VALUE)' \
         "$f"
 }
 

@@ -13,8 +13,6 @@ main () {
     upsert_hash_value "$upsert_file" "$verification_hash"
 }
 
-# TODO Add logging
-
 declare -r yq_lib="hack/lib/yq.sh"
 [ -f "$yq_lib" ] || "$(echo "cannot source $yq_lib. file not found."; exit 1)"
 # shellcheck source=../lib/yq.sh

@@ -3,8 +3,7 @@
 !manage_igntion.env
 *.pub
 *.ign
-*.ign.gz
-*.ign.gz.sha512
+*.ign.*
 # TODO get rid of these tmp file writes
 deploy/ignition/*
 deploy/butane/.*.tmp
