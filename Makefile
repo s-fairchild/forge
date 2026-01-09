@@ -83,15 +83,14 @@ installer-ignition-gen-base: installer-butane-check-base
 			< deploy/butane/base/coreos-installer/install.bu \
 			| gzip -v -9 > deploy/butane/base/coreos-installer/install.ign.gz
 
-	sha512sum deploy/butane/base/coreos-installer/install.ign.gz \
-		> deploy/butane/base/coreos-installer/install.ign.gz.sha512
+	. hack/lib/hash.sh
+	hash_data=deploy/butane/base/coreos-installer/install.ign.gz
+	sha512sum_gen $${hash_data}
 
 installer-ignition-gen-prod: installer-butane-check-prod installer-ignition-gen-base
+	. hack/lib/hash.sh
 	base_ign_checksum_in=deploy/butane/base/coreos-installer/install.ign.gz.sha512
-	sha512sum --check \
-		--strict \
-		--warn \
-		$${base_ign_checksum_in}
+	sha512sum_check $${base_ign_checksum_in}
 
 	prod_ign_out=deploy/butane/overlays/prod/coreos-installer/install.ign
 	prod_butane_in=deploy/butane/overlays/prod/coreos-installer/install.bu
@@ -105,9 +104,7 @@ installer-ignition-gen-prod: installer-butane-check-prod installer-ignition-gen-
 		$${base_ign_checksum_in} \
 		$${prod_ign_out}
 
-	prod_ign_checksum_out=deploy/butane/overlays/prod/coreos-installer/install.ign.gz.sha512
-	sha512sum $${prod_ign_out} \
-		> $${prod_ign_checksum_out}
+	sha512sum_gen $${prod_ign_out}
 
 installer-ignition-gen-all: installer-ignition-gen-prod
 
