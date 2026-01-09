@@ -108,19 +108,19 @@ installer-ignition-gen-prod: installer-butane-check-prod installer-ignition-gen-
 
 installer-ignition-gen-all: installer-ignition-gen-prod
 
-# TODO get the latest iso file from deploy/isos to use here
-unmodified_iso := "fedora-coreos-42.20250803.3.0-live-iso.x86_64.iso"
-output_iso := "baremetal_fetch_remote_ignition.iso"
 # Example of writing this image to a drive:
 # Replace this with the correct drive!
-# iso_dest_drive="/dev/sdc"
-# sudo dd if=deploy/iso/custom/baremetal_fetch_remote_ignition.iso of="$iso_dest_drive" status=progress && sudo sync
+# iso_out="/dev/sdc"
+# iso_in="deploy/coreos-installer/iso/fedora-coreos-43.20251214.3.0-live-iso.x86_64.iso"
+# sudo dd if="$iso_in" of="$iso_out" status=progress && sudo sync
 installer-iso-customize: installer-ignition-gen-prod
+	iso="$$(find deploy/coreos-installer/iso -type f -iname "*.iso" | sort -V | head -n1)"
+
 	coreos-installer iso \
 				customize \
-				--pre-install hack/post-install.sh \
-				-o deploy/coreos-installer/iso/${output_iso} \
-				./${unmodified_iso}
+				--pre-install hack/coreos-installer/post-install.sh \
+				-o $${iso/.iso/_custom.iso} \
+				./$${iso}
 
 images := "$(HOME)/.local/share/libvirt/images"
 installer-download-libvirt:
