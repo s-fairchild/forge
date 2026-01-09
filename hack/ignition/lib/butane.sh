@@ -45,8 +45,8 @@ gen_main_butane() {
     # shellcheck disable=SC2068
     for i in ${!ignitions_merge[@]}; do
         merge_ignition="${ignitions_merge[$i]}"
-        export pathEnv=".ignition.config.merge[$i].inline" valueEnv="$merge_ignition"
-        working_butane="$(yq -e=1 'eval(strenv(pathEnv)) = strenv(valueEnv)' <<< "$working_butane")"
+        export YQ_pathEnv=".ignition.config.merge[$i].inline" YQ_valueEnv="$merge_ignition"
+        working_butane="$(yq -e=1 'eval(strenv(YQ_pathEnv)) = strenv(YQ_valueEnv)' <<< "$working_butane")"
     done
 
     write_tmp_butane "$m" working_butane "$3"
@@ -61,9 +61,8 @@ write_tmp_butane() {
     local -n butane_contents="$2"
     local -n tmp_file_path="$3"
 
-    prefix="$(get_merge_file_prefix "$1")"
-    tmp_file_path="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".${prefix}_main_butane.XXX")"
-    tmp_file_path="$tmp_file_path/${prefix}_main.bu"
+    tmp_file_path="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".main_butane.XXX")"
+    tmp_file_path="$tmp_file_path/main.bu"
     echo "$butane_contents" > "$tmp_file_path"
 
     TEMP_DATA+=("$tmp_file_path" "$(dirname "$tmp_file_path")")
@@ -87,7 +86,7 @@ verify_config_dest_length() {
 # butane()
 # runs ignition in a container with image quay.io/coreos/butane:release
 # args:
-# @) all arguements are passed to the container
+# @) all arguments are passed to the container
 # TODO script creating ssh keys as podman secrets, mount them as secret files
 # TODO scrub debug logging output. This is getting logged to journald as well by podman log driver.
 # possibly stop using journald podman log driver here?
@@ -95,7 +94,6 @@ butane() {
     image="quay.io/coreos/butane:release"
 
     podman run \
-        --name butane \
         --security-opt label=disable \
         -i \
         --rm \
@@ -106,12 +104,3 @@ butane() {
         "$image" \
         "$@"
 }
-
-# included to provide definitions for shellcheck
-yq_lib="hack/lib/yq.sh"
-if [ ! -f "$yq_lib" ]; then
-    echo "$yq_lib not found. Are you in the repository root?"
-    exit 1
-fi
-# shellcheck source=../../lib/yq.sh
-source "$yq_lib"

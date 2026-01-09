@@ -48,29 +48,14 @@ output_ignition() {
     fi
 }
 
-declare lib_sh="hack/ignition/lib/ignition.sh"
-if [ ! -f "$lib_sh" ]; then
-    echo "$lib_sh not found. Are you in the repository root?"
-    exit 1
-fi
-# shellcheck source=lib/ignition.sh
-if ! source "$lib_sh"; then
-    echo "Sourcing $lib_sh failed."
-    exit 1
-fi
-
 # shellcheck disable=SC2034
 # cleanup directory passed to trap
 declare -a TEMP_DATA
 
-# included to provide definitions for shellcheck
+# ignition_lib="hack/ignition/lib/ignition.sh"
 ignition_lib="hack/ignition/lib/ignition.sh"
-if [ -f "$ignition_lib" ]; then
-    # shellcheck source=lib/ignition.sh
-    source "$ignition_lib"
-else
-    echo "$ignition_lib not found. Are you in the repository root?"
-    exit 1
-fi
+[ -f "$ignition_lib" ] || "$(echo "$ignition_lib not found. Are you in the repository root?"; exit 1)"
+# shellcheck source=lib/ignition.sh
+. "$ignition_lib" 
 
 main "$@"

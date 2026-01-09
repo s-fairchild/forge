@@ -41,7 +41,7 @@ gen_main_ignition() {
 
     # shellcheck disable=SC2034
     if ! ign_out="$(gen_ignition "$relative_tmp_butane_file")"; then
-        abort "failed to generate ignition from deploy/${relative_tmp_butane_file}"
+        abort "failed to generate ignition from ${relative_tmp_butane_file}"
     fi
 }
 
@@ -57,22 +57,14 @@ gen_merge_ignitions() {
     gen_all_ignitions "$2"
 }
 
-# butane is only used by ignition.sh
-lib="hack/ignition/lib/butane.sh"
-if [ -f "$lib" ]; then
-    # shellcheck source=butane.sh
-    source "$lib"
-else
-    echo "$lib not found. Exiting."
-    exit 1
-fi
+# butane_lib="hack/ignition/lib/butane.sh"
+butane_lib="hack/ignition/lib/butane.sh"
+[ -f "$butane_lib" ] || "$(echo "$butane_lib not found. Are you in the repository root?"; exit 1)"
+# shellcheck source=butane.sh
+. "$butane_lib" 
 
-# included to provide definitions for shellcheck
-lib="hack/lib/util.sh"
-if [ -f "$lib" ]; then
-    # shellcheck source=../../lib/util.sh
-    source "$lib"
-else
-    echo "$lib not found. Are you in the repository root?"
-    exit 1
-fi
+# declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
+declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
+[ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
+# shellcheck source=../../../shell-utils/usr/local/lib/utils.sh
+source "$shell_utils_lib"

@@ -1,13 +1,13 @@
 # shellcheck shell=bash
 
 # declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
-declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
+if [ -z "${shell_utils_lib:-}" ]; then
+    declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
 
-[ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
-# shellcheck source=../../shell-utils/usr/local/lib/utils.sh
-source "$shell_utils_lib"
-
-if_debug_set_xtrace
+    [ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
+    # shellcheck source=../../shell-utils/usr/local/lib/utils.sh
+    source "$shell_utils_lib"
+fi
 
 # upsert_hash_value()
 upsert_hash_value() {
