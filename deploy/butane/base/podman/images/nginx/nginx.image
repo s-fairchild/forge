@@ -1,6 +1,10 @@
 [Unit]
 Description=Pull image docker.io/nginx:stable
 
+[Service]
+Restart=always
+RestartSec=60
+
 [Image]
 Image=docker.io/nginx:stable
 
