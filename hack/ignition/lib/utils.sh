@@ -1,25 +1,31 @@
 #!/bin/bash
 
+# declare -r __ignition_utils_sourced="true"
+declare -r __ignition_utils_sourced="true"
+
 # create_output_dir()
 #
 # args:
-# * local -n out_dir="$1"
+# * 1) local -n out_dir="$1"
 #     - Set empty variable. Used to return the created directory.
-# * local -r template="$2"
-#     - template used as the prefix of the directory name.
-# * local -r src_file_path="${3:-'.'}"
+# * 2) local -r src_file_path="${2:-'.'}"
 #     - **Optional**
 #     - Base directory. The new directory will be created under the base.
 #     - Defaults to the current working directory.
 create_output_dir() {
     local -n out_dir="$1"
-    local -r template="$2"
-    local -r src_file_path="${3:-'.'}"
-    log "starting"
+    local -r src_file_path="${2:-'.'}"
+    info "starting"
 
-    tmpdir_base="$(dirname "$src_file_path")"
+    tmpdir="$(dirname "$src_file_path")"
+    [ -d "$tmpdir" ] || fatal "Base output directory not found: $tmpdir"
+
+    tmpdir_ign="${tmpdir}/.ignitions"
+    [ -d "$tmpdir_ign" ] || info "Creating directory: $tmpdir_ign"; mkdir -p "$tmpdir_ign"
+
     # shellcheck disable=SC2034
-    out_dir="$(mktemp --directory --tmpdir="${tmpdir_base}" "${template}.XXXX")"
+    out_dir="$(mktemp --directory --tmpdir="$tmpdir_ign" "$(basename "$0").XXXXXX")"
+    info "Created output directory: $out_dir"
 }
 
 # gen_file_name()
@@ -33,31 +39,23 @@ create_output_dir() {
 #      - **Optional**
 #      - Provide a file extension to use. Replaces the src_file extension if present.
 gen_file_name() {
-    local -n src_file="$1"
+    local -r src_file="$1"
     local -n out="$2"
     local -r file_ext="${3:-}"
-    log "starting"
+    info "starting"
 
     out="${src_file//\//-}"
 
-    if [ -z "$file_ext" ]; then
+    if [ -n "$file_ext" ]; then
         if [[ "$file_ext" =~ ^\\. ]]; then
-            log "file_ext: $file_ext\nfile_ext must be prefixed with a period character: ."
-            return 1
+            fatal "file_ext: $file_ext\nfile_ext must be prefixed with a period character: ."
         fi
 
         prefix="${out%.*}"
         out="${prefix}${file_ext}"
     fi
 
-    local out_prefix
-    create_output_dir out_prefix \
-                    "$out" \
-                    "$src_file"
-    log "Created output directory: $out_prefix"
-
-    out="${out_prefix}/${out}"
-    log "Full generated path: $out"
+    info "Output filename generated: $out"
 }
 
 # output_file_contents()
@@ -69,13 +67,31 @@ gen_file_name() {
 #     - **Optional**
 #     - Output file path. Defaults to stdout.
 output_file_contents() {
-    local -n f="$1"
+    local -n contents="$1"
     local -r out_f="${2:-}"
 
     if [ -n "$out_f" ]; then
-        log "Writing file to $out_f"
-        echo "$f" > "$out_f"
+        info "Writing file to $out_f"
+        printf "%s\n" "$contents" > "$out_f"
     else
-        echo "$f"
+        printf "%s\n" "$contents"
     fi
 }
+
+if ! declare -F REQUIRES_CMDS > /dev/null; then
+    # declare -r __bash_utils_util_base_lib="hack/opt/bash-utils/util/base.sh"
+    declare -r __bash_utils_util_base_lib="hack/opt/bash-utils/util/base.sh"
+    [ -f "$__bash_utils_util_base_lib" ] || "$(echo "$__bash_utils_util_base_lib FATAL file not found."; exit 5)"
+
+    # shellcheck source=../../opt/bash-utils/util/base.sh
+    . "$__bash_utils_util_base_lib"
+fi
+
+if ! declare -F log > /dev/null; then
+    # declare -r __bash_utils_util_logging_lib="hack/opt/bash-utils/util/logging.sh"
+    declare -r __bash_utils_util_logging_lib="hack/opt/bash-utils/util/logging.sh"
+    [ -f "$__bash_utils_util_logging_lib" ] || "$(echo "$__bash_utils_util_logging_lib FATAL file not found."; exit 5)"
+
+    # shellcheck source=../../opt/bash-utils/util/logging.sh
+    . "$__bash_utils_util_logging_lib"
+fi

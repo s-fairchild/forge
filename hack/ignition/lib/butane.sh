@@ -2,6 +2,9 @@
 # tools to be used for processing ignition files
 # should only be used by scripts in hack/ignition/lib
 
+# declare -r __ignition_butane_sourced="true"
+declare -r __ignition_butane_sourced="true"
+
 # gather_butane_files()
 # 
 # Args:
@@ -10,7 +13,7 @@
 gather_butane_files() {
     local -r main_bu="$1"
     local -n files="$2"
-    log "starting"
+    info "starting"
 
     local raw_butane_files
     # TODO simplify conversion into array by using yq output formatting options
@@ -53,7 +56,7 @@ gen_butane_main() {
     # local -r out_dir="$2"
     local -n ignitions_merge="$2"
     local -n butane_out="$3"
-    log "starting"
+    info "starting"
 
     validate_config_dest_length "$2" "$butane_main"
     tmp_butane="$(yq "$butane_main")"
@@ -65,13 +68,13 @@ gen_butane_main() {
         tmp_butane="$(yq -e=1 'eval(strenv(YQ_pathEnv)) = strenv(YQ_valueEnv)' <<< "$tmp_butane")"
     done
 
-    log "Checking merged butane config."
+    info "Checking merged butane config."
     butane --check --strict <<< "$tmp_butane"
     # shellcheck disable=SC2034
     butane_out="$tmp_butane"
 }
 
-# write_tmp_butane()
+# write_butane()
 # args
 # 1) $1 - string; butane file path
 # 2) butane_contents - nameref; final butane file contents
@@ -97,18 +100,12 @@ write_butane() {
 validate_config_dest_length() {
     local -n configs="$1"
     local -r butane_config="$2"
-    log "starting"
+    info "starting"
 
     local -i butane_config_merge_len
     butane_config_merge_len="$(yq '(.ignition.config.merge | length)' "$butane_config")"
     if [ "${#configs[@]}" -ne "$butane_config_merge_len" ]; then
-        log "configs length: ${#configs[@]} != ${butane_config_merge_len}"
+        info "configs length: ${#configs[@]} != ${butane_config_merge_len}"
         return 1
     fi
 }
-
-# declare -r ignition_utils="hack/ignition/lib/utils.sh"
-declare -r ignition_utils="hack/ignition/lib/utils.sh"
-[ -f "$ignition_utils" ] || abort "$ignition_utils not found."
-# shellcheck source=utils.sh
-. "$ignition_utils" 
