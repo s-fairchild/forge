@@ -22,6 +22,8 @@ ignition:
       - inline: deploy/butane/base/coreos/etc/firewalld/firewalld.bu
       - inline: deploy/butane/base/coreos/etc/sysctl.d/systctl.bu
       - inline: deploy/butane/base/coreos/usr/local/lib/lib.bu
+      - inline: deploy/butane/base/root/bashrc.d.bu
+      - inline: deploy/butane/base/home/core/bashrc.d.bu
       - inline: deploy/butane/overlays/prod/storage/disks/disks.bu
       - inline: deploy/butane/overlays/prod/storage/luks/luks.bu
       - inline: deploy/butane/overlays/prod/storage/filesystems/filesystems.bu

@@ -10,42 +10,41 @@ if [ "$DEBUG" == "true" ]; then
 fi
 
 main() {
-    local -r main_butane="$1"
-    local -r output_file="${2:-""}"
+    local -r butane_main="${1?'main butane file must be specified.'}"
 
-    # fail early if expected output directory is missing
-    if [ -n "$output_file" ]; then
-        check_dir_exists "$(dirname "$output_file")"
-    fi
+    while getopts 'k' opt; do
+        case "${opt}" in
+            k)
+
+                ;;
+            *)
+                command ...
+                ;;
+        esac
+    done
 
     # shellcheck disable=SC2034
     local -a ignitions
-    gen_merge_ignitions "$main_butane" ignitions
+    gen_merge_ignitions "$butane_main" ignitions
+    log "Successfully generated ignition.config.merge contents."
 
     # shellcheck disable=SC2034
-    local main_ignition
-    gen_main_ignition "$main_butane" ignitions main_ignition
+    local butane_merged
+    gen_butane_main "$butane_main" \
+                    ignitions \
+                    butane_merged
 
-    log "Done"
-    # TODO add step to replace all variables in butane files processed by yq, Fail if unset
-    output_ignition main_ignition "$output_file"
-}
+    # shellcheck disable=SC2034
+    # local ignition_final
+    local -r ignition_final="$(gen_ignition butane_merged)"
 
-# output_ignition()
-# 
-# args:
-# 1) ign - nameref; output ignition file
-# 2) out_file - string; path to write ignition file to. Pass "" for stdout
-output_ignition() {
-    local -n ign="$1"
-    local -r out_file="$2"
+    local ignition_final_output_file
+    gen_file_name "$butane_main" \
+                    ignition_final_output_file \
+                    "$BUTANE_FILE_EXTENSION"
 
-    if [ -n "$out_file" ]; then
-        log "Writing ignition file to $out_file"
-        echo "$ign" > "$out_file"
-    else
-        echo "$ign"
-    fi
+    output_file_contents ignition_final "$ignition_final_output_file"
+    log "Successfully generated final ignition file: ${ignition_final_output_file}"
 }
 
 # shellcheck disable=SC2034

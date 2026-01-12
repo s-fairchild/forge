@@ -11,8 +11,7 @@ gen_all_ignitions() {
     # shellcheck disable=SC2068
     for i in ${!arr[@]}; do
         conf="${arr[$i]}"
-        log "Generating ignition from $conf"
-        arr[i]="$(gen_ignition "$conf")"
+        arr[i]="$(gen_ignition conf)"
     done
 }
 
@@ -20,29 +19,15 @@ gen_all_ignitions() {
 # args:
 # 1) $1 - string; butane file to process
 gen_ignition() {
-    butane -srp --files-dir=deploy "$1"
-}
-
-# gen_main_ignition()
-# args:
-# 1) main - string; main butane file path
-# 2) ignitions_merge - nameref; array of ignition file contents to insert into .ignition.config.merge[$i].inline
-# 3) ign_out - nameref; empty, for returning the tmp file path
-gen_main_ignition() {
-    local main="$1"
-    # Is this useful? ignition files will be expected to appear in the same place for deploying
-    local -n ign_out="$3"
+    local -n butane_in="$1"
     log "starting"
 
-    local relative_tmp_butane_file
-    gen_main_butane "$main" "$2" relative_tmp_butane_file
+    # The relative directory ignition uses to find "content: local" files
+    # Should be the base directory of the main butane file (deploy).
+    files_dir="${butane_in%%/*}"
 
-    log "$relative_tmp_butane_file"
-
-    # shellcheck disable=SC2034
-    if ! ign_out="$(gen_ignition "$relative_tmp_butane_file")"; then
-        abort "failed to generate ignition from ${relative_tmp_butane_file}"
-    fi
+    log "Generating ignition from: ${butane_in}, files-dir: ${files_dir}"
+    butane -srp --files-dir="$files_dir" "$butane_in"
 }
 
 # gen_merge_configs()
@@ -57,14 +42,26 @@ gen_merge_ignitions() {
     gen_all_ignitions "$2"
 }
 
-# butane_lib="hack/ignition/lib/butane.sh"
-butane_lib="hack/ignition/lib/butane.sh"
-[ -f "$butane_lib" ] || "$(echo "$butane_lib not found. Are you in the repository root?"; exit 1)"
+# declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
+declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
+[ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib not found."; exit 1)"
+# shellcheck source=../../../shell-utils/usr/local/lib/utils.sh
+source "$shell_utils_lib"
+
+# declare -r constants="hack/ignition/lib/constants.env"
+declare -r constants="hack/ignition/lib/constants.env"
+[ -f "$constants" ] || abort "$constants not found."
+# shellcheck source=constants.env
+. "$constants" 
+
+# declare -r butane_lib="hack/ignition/lib/butane.sh"
+declare -r butane_lib="hack/ignition/lib/butane.sh"
+[ -f "$butane_lib" ] || abort "$butane_lib ${ERROR_SOURCE_SUFFIX}"
 # shellcheck source=butane.sh
 . "$butane_lib" 
 
-# declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
-declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
-[ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
-# shellcheck source=../../../shell-utils/usr/local/lib/utils.sh
-source "$shell_utils_lib"
+# declare -r ignition_utils="hack/ignition/lib/utils.sh"
+[ -n "${ignition_utils:-}" ] || declare -r ignition_utils="hack/ignition/lib/utils.sh"
+[ -f "$ignition_utils" ] || abort "$ignition_utils ${ERROR_SOURCE_SUFFIX}"
+# shellcheck source=utils.sh
+. "$ignition_utils" 

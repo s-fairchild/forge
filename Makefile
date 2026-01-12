@@ -33,7 +33,7 @@ ignition-gen-staging: kube-manifests-gen-staging
 	hack/ignition/gen_ignition.sh deploy/butane/overlays/staging/main.bu ${ignition_dest}/staging_main.ign
 
 ignition-gen-prod: kube-manifests-gen-all
-	hack/ignition/gen_ignition.sh deploy/butane/overlays/prod/main.bu ${ignition_dest}/prod_main.ign
+	DEBUG=$${DEBUG:-} hack/ignition/gen_ignition.sh deploy/butane/overlays/prod/main.bu
 
 ignition-gen-rpi4:
 	hack/ignition/gen_ignition.sh deploy/butane/overlays/rpi4/main.bu ${ignition_dest}/rpi4_main.ign
