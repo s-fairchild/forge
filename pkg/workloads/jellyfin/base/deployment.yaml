@@ -44,7 +44,7 @@ spec:
             path: /health
             port: web-client
             scheme: HTTP
-        image: docker.io/linuxserver/jellyfin:10.11.2
+        image: docker.io/linuxserver/jellyfin:10.11.6
         env:
         - name: DISABLE_SERVER_SELECTION
           value: "1"
