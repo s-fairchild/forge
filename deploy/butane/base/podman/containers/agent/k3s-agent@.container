@@ -26,10 +26,10 @@ Environment=K3S_TOKEN_FILE=/run/secrets/k3s-token
 Secret=k3s-token,mode=0400
 Network=kube-agent.network:ip=${NODE_IP},interface_name=agent0
 Volume=/etc/machine-id:/etc/machine-id:ro
-Volume=${NAME}-kubelet:/var/lib/kubelet:Z
-Volume=${NAME}-pod-logs:/var/log/pods:Z
-Volume=${NAME}-data:/var/lib/rancher/k3s:Z
-Volume=${NAME}-rancher:/etc/rancher
+Volume=${NAME}-kubelet:/var/lib/kubelet:Z,rslave
+Volume=${NAME}-pod-logs:/var/log/pods:Z,rslave
+Volume=${NAME}-data:/var/lib/rancher/k3s:Z,rslave
+Volume=${NAME}-rancher:/etc/rancher,rslave
 PodmanArgs=--oom-score-adj=1000 --privileged
 
 [Install]
