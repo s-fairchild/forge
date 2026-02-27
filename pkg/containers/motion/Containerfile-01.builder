@@ -1,28 +1,23 @@
 ARG IMAGE_REGISTRY
 ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
+FROM --platform=${BUILDPLATFORM} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
+
+ARG TZ_COUNTRY
+ARG TZ_CITY
+
+# TODO set the required env variable to enable QSV support.
+# OR setup intel k8s plugin https://github.com/intel/intel-device-plugins-for-kubernetes
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      DEBIAN_FRONTEND=noninteractive apt-get update && apt-get upgrade -y \
-      # Install all common build packages
-      && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-            automake autoconf autopoint libtool build-essential git cmake pkgconf gettext \
-            libva-dev libmfx-gen-dev libwebp-dev \
-            # Required packages
-            libzip-dev libjpeg-dev libmicrohttpd-dev libavformat-dev \
-            libavcodec-dev libjpeg62-turbo-dev \
-            # Optional packages
-            # Webp Image Support
-            libwebp-dev \
-            # FFMpeg Functionality(Required for creating movies, using network cameras, etc.)
-            libavformat-dev libavcodec-dev libavutil-dev libswscale-dev libavdevice-dev \
-            # SQLite3 database functionality
-            libsqlite3-dev \
-            # MySQL support
-            default-libmysqlclient-dev \
-            # MariaDB support
-            libmariadb-dev \
-            # PostgreSQL support
-            libpq-dev
+        # The packages being installed want to know the timezone.
+        ln -s /usr/share/zoneinfo/${TZ_COUNTRY}/${TZ_CITY} /etc/localtime \
+        # Update everything first.
+        && DEBIAN_FRONTEND=noninteractive \
+            apt-get update \
+            && apt-get upgrade -y \
+      # Install QSV driver packages for intel GPU acceleration.
+        && DEBIAN_FRONTEND=noninteractive \
+            apt-get install --no-install-recommends -y \
+            ffmpeg intel-media-va-driver-non-free libmfx-dev intel-gpu-tools vainfo

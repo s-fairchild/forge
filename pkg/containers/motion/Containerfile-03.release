@@ -1,63 +1,14 @@
-ARG IMAGE_REGISTRY
-ARG IMAGE_REPOSITORY
-ARG IMAGE_TAG
-FROM ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+FROM install AS release
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-      DEBIAN_FRONTEND=noninteractive apt-get update \
-      && DEBIAN_FRONTEND=noninteractive apt-get upgrade \
-      && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-            # FFmpeg required shared libraries
-            libxcb1 libxcb-shm0 libasound2t64 libsndio7.0 libsdl2-2.0-0 libxv1 libva-drm2 \
-            libzimg2 ocl-icd-libopencl1 libmfx-gen1.2 libvpx9 libwebpmux3 libzvbi0t64 \
-            libtwolame0 libx264-164 libx265-215 libxvidcore4 libva-x11-2 \
-            # Optional features runtime libraries
-            libjpeg-tools libjpeg62-turbo libmicrohttpd12t64 \
-            libswscale8 libavutil59 libavdevice61 libavformat61 \
-            # SQLite3 database functionality
-            libsqlite3-0 \
-            # MariaDB support
-            libmariadb3 \
-            # PostgreSQL support
-            libpq5
+ARG MOTION_VERSION_TAG
+ARG MOTION_RELEASE_PACKAGE
+ARG TZ_COUNTRY
+ARG TZ_CITY
 
-ARG PREFIX
-ARG FFMPEG
-# --from=${FFMPEG} is an image reference added via --build-context
-COPY --from=${FFMPEG} \
-    --link \
-        ${PREFIX}/bin ${PREFIX}/bin
-COPY --from=${FFMPEG} \
-    --link \
-        ${PREFIX}/lib ${PREFIX}/lib
 
-# https://motion-project.github.io/motion_build.html#Make_Install
-# --from=motion here is a stage reference
-COPY --from=motion \
-    --link \
-        ${PREFIX}/bin/motion ${PREFIX}/bin/motion
-COPY --from=motion \
-    --link \
-        ${PREFIX}/etc/motion ${PREFIX}/etc/motion
+LABEL motion.version=${MOTION_VERSION_TAG}
+LABEL motion.package-installed=${MOTION_RELEASE_PACKAGE}
+LABEL localtime="${TZ_COUNTRY}/${TZ_CITY}"
+LABEL gpu.acceleration="intel-media-va-driver-non-free"
 
-ARG CONFIGURE_EXCLUDE
-ARG MAKE_FLAGS
-ARG MOTION_VERSION
 
-LABEL motion.make.configure.exclude=${CONFIGURE_EXCLUDE}
-LABEL motion.make.flags=${MAKE_FLAGS}
-LABEL motion.version=${MOTION_VERSION}
-
-LABEL motion.features.MySQL="true"
-LABEL motion.features.PostgreSQL="true"
-LABEL motion.features.SQLite3="true"
-LABEL motion.features.MariaDB="true"
-LABEL motion.features.ffmpeg="true"
-LABEL motion.features.libcamera="true"
-LABEL motion.features.webp="true"
-LABEL motion.features.="true"
-LABEL motion.features.="true"
-
-ENV LD_LIBRARY_PATH="$PREFIX/lib"
-ENTRYPOINT [ "motion" ]

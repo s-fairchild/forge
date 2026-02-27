@@ -7,22 +7,20 @@ patches:
   - path: deployment.yaml
   - path: pvc/media-pvc.yaml
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 configMapGenerator:
-  - name: camera-conf-cm
+  - name: camera1-conf-cm
     namespace: motion
     behavior: create
     files:
-    - configmap/camera1.conf
-    options:
-      disableNameSuffixHash: true
-
-  # - name: database-conf-cm
-  # - name: motion-conf-cm
-  # - name: camera-conf-cm
-    # namespace: motion
-    # behavior: merge
-    # files:
-    # - camera2.conf=configmap/database.conf
-    # options:
-      # disableNameSuffixHash: true
-
+      - configmap/camera1.conf
+  
+  - name: motion-conf-cm
+    namespace: motion
+    # merge will also replace the motion.conf key.
+    # This is due to merge only working to merge configmap keys, not the data within the key.
+    behavior: merge
+    files:
+      - configmap/motion.conf

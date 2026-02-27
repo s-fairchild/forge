@@ -1,0 +1,18 @@
+FROM builder AS install
+
+ARG IMAGE_TAG
+ARG MOTION_VERSION_TAG
+ARG TARGETARCH
+
+ARG MOTION_RELEASE_PACKAGE=${IMAGE_TAG}_motion_${MOTION_VERSION_TAG}-1_${TARGETARCH}.deb
+
+ADD --link https://github.com/Motion-Project/motion/releases/download/release-${MOTION_VERSION_TAG}/${MOTION_RELEASE_PACKAGE} /tmp
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+        DEBIAN_FRONTEND=noninteractive \
+            apt-get install --no-install-recommends -y \
+            /tmp/${MOTION_RELEASE_PACKAGE} && \
+            rm /tmp/${MOTION_RELEASE_PACKAGE}
+
+ENTRYPOINT [ "motion" ]

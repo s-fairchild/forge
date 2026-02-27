@@ -23,7 +23,8 @@ spec:
       - name: motion
         # https://github.com/Motion-Project/motion/releases/tag/release-4.7.1
         # https://motion-project.github.io/4.6.0/motion_config.html
-        image: docker.io/steve51516/motion:release-4.7.1
+        # https://hub.docker.com/repository/docker/steve51516/motion/tags
+        image: docker.io/steve51516/motion:4.7.1
         ports:
         - containerPort: 8081
           name: stream
