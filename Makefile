@@ -173,7 +173,7 @@ container-build-libcamera:
 	[ -v LIBCAMERA_VERSION_GIT_TAG_OVERRIDE ] && echo "LIBCAMERA_VERSION_GIT_TAG_OVERRIDE=$${LIBCAMERA_VERSION_GIT_TAG_OVERRIDE}"
 	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_LIBCAMERA}
 
-RPICAM_APPS_VERSION_TAG_OVERRIDE?=""
+RPICAM_APPS_VERSION_TAG_OVERRIDE?=
 export RPICAM_APPS_VERSION_TAG_OVERRIDE
 container-build-rpicam-apps:
 	. ${ctr_build_constant_env_file}
@@ -182,7 +182,7 @@ container-build-rpicam-apps:
 	[ -v RPICAM_APPS_VERSION_TAG_OVERRIDE ] && echo "RPICAM_APPS_VERSION_TAG_OVERRIDE=$${RPICAM_APPS_VERSION_TAG_OVERRIDE}"
 	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_RPICAM_APPS}
 
-FFMPEG_VERSION_TAG_OVERRIDE?=""
+FFMPEG_VERSION_TAG_OVERRIDE?=
 export RPICAM_APPS_VERSION_TAG_OVERRIDE
 container-build-ffmpeg:
 	. ${ctr_build_constant_env_file}
@@ -191,7 +191,7 @@ container-build-ffmpeg:
 	[ -v FFMPEG_VERSION_TAG_OVERRIDE ] && echo "FFMPEG_VERSION_TAG_OVERRIDE=$${FFMPEG_VERSION_TAG_OVERRIDE}"
 	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_FFMPEG}
 
-MOTION_VERSION_OVERRIDE?=""
+MOTION_VERSION_OVERRIDE?=
 export MOTION_VERSION_OVERRIDE
 container-build-motion:
 	. ${ctr_build_constant_env_file}
