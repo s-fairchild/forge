@@ -1,0 +1,11 @@
+---
+- name: Copy local asound.state to /var/lib/alsa/asound.state
+  ansible.builtin.copy:
+    dest: "{{ REMOTE.VAR.LIB.ALSA.FILES.ASOUND_STATE }}"
+    src: "{{ LOCAL.ANSIBLE.ROLE.AGENT.FILES.PATH.VAR.LIB.ALSA.ASOUND_STATE }}"
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - alsa
+    - alsa.state

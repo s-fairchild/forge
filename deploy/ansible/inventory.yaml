@@ -43,6 +43,15 @@ raspberry_pis:
             VIDEO_0: /dev/v4l/by-id/usb-HD_Camera_Manufacturer_HD_USB_Camera_2020101401-video-index0
             VIDEO_1: /dev/v4l/by-id/usb-HD_Camera_Manufacturer_HD_USB_Camera_2020101401-video-index1
 
+      VAR:
+        PATH: /var
+        LIB:
+          PATH: /var/lib
+          ALSA:
+            PATH: /var/lib/alsa
+            FILES:
+              ASOUND_STATE: /var/lib/alsa/asound.state
+
       USR:
         PATH: /usr
         LOCAL:
@@ -241,6 +250,14 @@ raspberry_pis:
             PATH: ../ansible/roles/agent
             FILES:
               PATH: ../ansible/roles/agent/files
+              VAR:
+                PATH: ../ansible/roles/agent/files/var
+                LIB:
+                  PATH: ../ansible/roles/agent/files/var/lib
+                  ALSA:
+                    PATH: ../ansible/roles/agent/files/var/lib/alsa
+                    FILES:
+                      ASOUND_STATE: ../ansible/roles/agent/files/var/lib/alsa/asound_state
               SYSTEMD:
                 PATH: ../ansible/roles/agent/files/systemd
                 SYSTEM:

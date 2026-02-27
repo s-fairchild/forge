@@ -1,0 +1,8 @@
+---
+- name: Configure K3S Agent Node Devices
+  hosts: raspberry_pis
+  remote_user: root
+  tasks:
+    - name: Configure alsa Capture Device Settings
+      ansible.builtin.import_tasks:
+        file: roles/agent/tasks/alsa/alsa-state.yaml
