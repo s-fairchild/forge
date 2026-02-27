@@ -1,0 +1,37 @@
+---
+#
+# yaml-language-server: https://raw.githubusercontent.com/cloudnative-pg/charts/refs/heads/main/charts/cluster/values.schema.json
+# 
+# References:
+#   * https://github.com/cloudnative-pg/charts/blob/main/charts/cluster/values.yaml
+#   * https://github.com/cloudnative-pg/charts/blob/main/charts/cluster/README.md
+#
+
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the chart
+fullnameOverride: ""
+# -- Override the namespace of the chart
+namespaceOverride: ""
+
+###
+# -- Type of the CNPG database. Available types:
+# * `postgresql`
+# * `postgis`
+# * `timescaledb`
+type: postgresql
+
+version:
+  # -- PostgreSQL major version to use
+  postgresql: "16"
+  # -- If using TimescaleDB, specify the version
+  timescaledb: "2.15"
+  # -- If using PostGIS, specify the version
+  postgis: "3.4"
+
+###
+# -- Cluster mode of operation. Available modes:
+# * `standalone` - default mode. Creates new or updates an existing CNPG cluster.
+# * `replica` - Creates a replica cluster from an existing CNPG cluster.
+# * `recovery` - Same as standalone but creates a cluster from a backup, object store or via pg_basebackup.
+mode: standalone

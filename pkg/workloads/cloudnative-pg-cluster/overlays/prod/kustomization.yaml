@@ -6,9 +6,11 @@ resources:
 - ../../base
 
 secretGenerator:
-- name: mariadb-operator-values
+- name: cnpg-cluster-values
   namespace: kube-system
+  behavior: merge
   files:
-  - values=mariadb-operator-values.yaml
+  - values/cluster.yaml
+  - values/database.yaml
   options:
     disableNameSuffixHash: true

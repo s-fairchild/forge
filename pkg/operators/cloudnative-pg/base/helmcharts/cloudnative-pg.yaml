@@ -1,0 +1,27 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cnpg-operator
+  namespace: kube-system
+spec:
+  # https://github.com/cloudnative-pg/charts/blob/cloudnative-pg-v0.27.1/charts/cloudnative-pg/Chart.yaml
+  chart: https://%{KUBERNETES_API}%/static/charts/cloudnative-pg-0.27.1.tgz
+
+  targetNamespace:  cnpg-operator
+  createNamespace: true
+  takeOwnership: true
+  failurePolicy: abort
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  valuesSecrets:
+  - name: cloudnative-pg-values
+    ignoreUpdates: false
+    keys:
+      - config.yaml
+      - monitoring.yaml
+      - resources.yaml
+      - security.yaml
+      - service.yaml

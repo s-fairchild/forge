@@ -1,0 +1,15 @@
+---
+resources:
+- helmcharts/cloudnative-pg.yaml
+
+secretGenerator:
+- name: cloudnative-pg-values
+  namespace: kube-system
+  files:
+    - values/config.yaml
+    - values/monitoring.yaml
+    - values/resources.yaml
+    - values/security.yaml
+    - values/service.yaml
+  options:
+    disableNameSuffixHash: true

@@ -1,0 +1,12 @@
+---
+resources:
+- helmcharts/cloudnative-pg-cluster.yaml
+
+secretGenerator:
+- name: cnpg-cluster-values
+  namespace: kube-system
+  files:
+  - values/cluster.yaml
+  - values/version.yaml
+  options:
+    disableNameSuffixHash: true
