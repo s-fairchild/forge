@@ -38,10 +38,14 @@ raspberry_pis:
           VIDEO_1: /dev/video0
           VIDEO_30: /dev/video30
         V4L:
-          PATH: /dev/v4l/by-id/
+          PATH: /dev/v4l/by-id
           FILES:
             VIDEO_0: /dev/v4l/by-id/usb-HD_Camera_Manufacturer_HD_USB_Camera_2020101401-video-index0
             VIDEO_1: /dev/v4l/by-id/usb-HD_Camera_Manufacturer_HD_USB_Camera_2020101401-video-index1
+        SND:
+          PATH: /dev/snd/by-id
+          FILES:
+            USB_PNP_SOUND0: /dev/snd/by-id/usb-C-Media_Electronics_Inc._USB_PnP_Sound_Device-00
 
       VAR:
         PATH: /var

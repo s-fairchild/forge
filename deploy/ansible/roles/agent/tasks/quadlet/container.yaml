@@ -72,7 +72,11 @@
       # https://www.raspberrypi.com/documentation/computers/camera_software.html#device-nodes-when-using-libcamera
       AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_0 }}:rw
       AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_1 }}:rw
+      # v4l loopback device
       AddDevice=-{{ REMOTE.DEVICE.FILES.VIDEO_30 }}:rw
+
+      # USB PnP sound capture card
+      AddDevice=-{{ REMOTE.DEVICE.SND.FILES.USB_PNP_SOUND0 }}
     dest: "{{ REMOTE.ETC.QUADLET.PATH }}/k3s-agent@{{ K3S.INSTANCE }}.container.d/devices.conf"
     owner: root
     group: root
