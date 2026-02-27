@@ -1,18 +1,21 @@
 #!/bin/bash
 
+# declare -r __ignition_sourced="true"
+declare -r __ignition_sourced="true"
+
 # gen_all_ignitions()
 # args:
 # 1) arr - nameref; array containing all butane files to be processed for merging into main config
 # TODO rename this function
 gen_all_ignitions() {
     local -n arr="$1"
-    log "starting"
+    info "starting"
 
     # shellcheck disable=SC2068
     for i in ${!arr[@]}; do
+        # shellcheck disable=SC2034
         conf="${arr[$i]}"
-        log "Generating ignition from $conf"
-        arr[i]="$(gen_ignition "$conf")"
+        arr[i]="$(gen_ignition conf)"
     done
 }
 
@@ -20,28 +23,29 @@ gen_all_ignitions() {
 # args:
 # 1) $1 - string; butane file to process
 gen_ignition() {
-    butane -srp --files-dir=deploy "$1"
-}
+    local -n butane_in="$1"
+    info "starting"
 
-# gen_main_ignition()
-# args:
-# 1) main - string; main butane file path
-# 2) ignitions_merge - nameref; array of ignition file contents to insert into .ignition.config.merge[$i].inline
-# 3) ign_out - nameref; empty, for returning the tmp file path
-gen_main_ignition() {
-    local main="$1"
-    # Is this useful? ignition files will be expected to appear in the same place for deploying
-    local -n ign_out="$3"
-    log "starting"
+    butane_opts=(
+        "--strict"
+        "--pretty"
+        "--raw"
+    )
 
-    local relative_tmp_butane_file
-    gen_main_butane "$main" "$2" relative_tmp_butane_file
+    if [ -f "$butane_in" ]; then
+        # The relative directory ignition uses to find "content: local" files
+        # Should be the base directory of the main butane file (deploy).
+        files_dir="${butane_in%%/*}"
+        butane_opts+=("--files-dir=$files_dir")
 
-    log "$relative_tmp_butane_file"
-
-    # shellcheck disable=SC2034
-    if ! ign_out="$(gen_ignition "$relative_tmp_butane_file")"; then
-        abort "failed to generate ignition from deploy/${relative_tmp_butane_file}"
+        info "Generating ignition from: ${butane_in}, files-dir: ${files_dir}"
+        # shellcheck disable=SC2068
+        butane ${butane_opts[@]} "$butane_in"
+    else
+        # butane_opts+=("<<<")
+        info "Generating ignition from stdin."
+        # shellcheck disable=SC2068
+        butane ${butane_opts[@]} <<< "$butane_in"
     fi
 }
 
@@ -50,29 +54,9 @@ gen_main_ignition() {
 # 1) main_bu - string; Butane file to parse for configs
 # 2) files - nameref; Empty array, populated with butane config files
 gen_merge_ignitions() {
-    log "starting"
+    info "starting"
 
     # shellcheck disable=SC2034
     gather_butane_files "$1" "$2"
     gen_all_ignitions "$2"
 }
-
-# butane is only used by ignition.sh
-lib="hack/ignition/lib/butane.sh"
-if [ -f "$lib" ]; then
-    # shellcheck source=butane.sh
-    source "$lib"
-else
-    echo "$lib not found. Exiting."
-    exit 1
-fi
-
-# included to provide definitions for shellcheck
-lib="hack/lib/util.sh"
-if [ -f "$lib" ]; then
-    # shellcheck source=../../lib/util.sh
-    source "$lib"
-else
-    echo "$lib not found. Are you in the repository root?"
-    exit 1
-fi

@@ -1,7 +1,7 @@
 ARG IMAGE_REGISTRY
 ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-FROM --platform=arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+FROM --platform=linux/arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
 ARG PREFIX
 COPY --link --from=libcamera ${PREFIX}/bin ${PREFIX}/bin
@@ -23,10 +23,10 @@ VOLUME [ "${PREFIX}/etc/libcamera/ipa", "${PREFIX}/share/libcamera/ipa" ]
 RUN ldconfig --verbose
 
 ARG LIBCAMERA_VERSION
-ARG LIBCAMERA_VERSION_GIT
+ARG LIBCAMERA_VERSION_GIT_TAG
 # Version info labels
 LABEL libcamera.version=${LIBCAMERA_VERSION}
-LABEL libcamera.git.tag=${LIBCAMERA_VERSION_GIT}
+LABEL libcamera.git.tag=${LIBCAMERA_VERSION_GIT_TAG}
 
 # https://www.raspberrypi.com/documentation/computers/camera_software.html#building-libcamera
 ARG BUILD_TYPE

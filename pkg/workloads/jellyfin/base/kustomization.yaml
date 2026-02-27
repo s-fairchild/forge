@@ -5,12 +5,16 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - deployment.yaml
+
 - service/web-svc-service.yaml
+- ingressroute/web-svc-host-ir.yaml
+- ingressroute/web-svc-path-ir.yaml
 - certificate/web-svc-certificate.yaml
-- ingressroute/web-svc-ingressroute.yaml
-- middleware/web-svc-secured.yaml
-- middleware/web-svc-headers.yaml
-- middleware/web-svc-https-redirect.yaml
+
+- middleware/web-svc-headers-mw.yaml
+- middleware/web-svc-https-redirect-mw.yaml
+- middleware/web-svc-secured-chain-mw.yaml
+
 - pvc/cache-pvc.yaml
 - pvc/plugins-pvc.yaml
 - pvc/config-pvc.yaml

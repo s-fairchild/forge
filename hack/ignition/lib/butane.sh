@@ -2,6 +2,9 @@
 # tools to be used for processing ignition files
 # should only be used by scripts in hack/ignition/lib
 
+# declare -r __ignition_butane_sourced="true"
+declare -r __ignition_butane_sourced="true"
+
 # gather_butane_files()
 # 
 # Args:
@@ -10,7 +13,7 @@
 gather_butane_files() {
     local -r main_bu="$1"
     local -n files="$2"
-    log "starting"
+    info "starting"
 
     local raw_butane_files
     # TODO simplify conversion into array by using yq output formatting options
@@ -29,89 +32,80 @@ gather_butane_files() {
     mapfile -t files <<< "${sed_out}"
 }
 
-# gen_main_butane()
-# args
-# 1) m - string; main butane file
-# 2) ignitions_merge - nameref; array of ignition file contents to insert into .ignition.config.merge[$i].inline
-# 3) tmp_file_path - nameref; empty, for returning the tmp file path
-gen_main_butane() {
-    local -r m="$1"
+# gen_butane_main()
+#
+# args:
+# * butane_main="$1" - string
+#     - Main butane file path.
+#     - .ignition.config.merge.[]
+#         + Each item contains a path to a butane file.
+#         + This butane file path is replaced with the generated ignition contents.
+#         + Required as butane does not recursively generate configs for you.
+#
+# * ignitions_merge="$2" - nameref, array
+#     - Each element contains the configuration to be merged.
+#     - Order must match .ignition.config.merge.[]
+#     - TODO investigate converting this into an associative array. The element order most likely does not match.
+#         + This shouldn't be a problem, so long as the array lengths are the same.
+#
+# * butane_out="$3" - nameref, empty
+#     - Declared empty variable used to return the final butane configuration.
+#     - String holding the config in memory. Not a written file.
+gen_butane_main() {
+    local -r butane_main="$1"
+    # local -r out_dir="$2"
     local -n ignitions_merge="$2"
-    log "starting"
+    local -n butane_out="$3"
+    info "starting"
 
-    verify_config_dest_length "$2"
-    working_butane="$(yq "$m")"
+    validate_config_dest_length "$2" "$butane_main"
+    tmp_butane="$(yq "$butane_main")"
 
     # shellcheck disable=SC2068
     for i in ${!ignitions_merge[@]}; do
         merge_ignition="${ignitions_merge[$i]}"
-        export pathEnv=".ignition.config.merge[$i].inline" valueEnv="$merge_ignition"
-        working_butane="$(yq -e=1 'eval(strenv(pathEnv)) = strenv(valueEnv)' <<< "$working_butane")"
+        export YQ_pathEnv=".ignition.config.merge[$i].inline" YQ_valueEnv="$merge_ignition"
+        tmp_butane="$(yq -e=1 'eval(strenv(YQ_pathEnv)) = strenv(YQ_valueEnv)' <<< "$tmp_butane")"
     done
 
-    write_tmp_butane "$m" working_butane "$3"
+    info "Checking merged butane config."
+    butane --check --strict <<< "$tmp_butane"
+    # shellcheck disable=SC2034
+    butane_out="$tmp_butane"
 }
 
-# write_tmp_butane()
+# write_butane()
 # args
 # 1) $1 - string; butane file path
 # 2) butane_contents - nameref; final butane file contents
-# 3) tmp_file_path - nameref; empty, for returning the tmp file path
-write_tmp_butane() {
+# 3) out - nameref; empty, for returning the tmp file path
+write_butane() {
     local -n butane_contents="$2"
-    local -n tmp_file_path="$3"
+    local -n out="$3"
 
-    prefix="$(get_merge_file_prefix "$1")"
-    tmp_file_path="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".${prefix}_main_butane.XXX")"
-    tmp_file_path="$tmp_file_path/${prefix}_main.bu"
-    echo "$butane_contents" > "$tmp_file_path"
+    out="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".main_butane.XXX")"
+    out="$out/main.bu"
+    echo "$butane_contents" > "$out"
 
-    TEMP_DATA+=("$tmp_file_path" "$(dirname "$tmp_file_path")")
+    TEMP_DATA+=("$out")
+    TEMP_DATA+=("$(dirname "$out")")
 }
 
-# verify_config_dest_length()
+# validate_config_dest_length()
 # Compares an array to an integer, aborts if they aren't equal
+#
 # args
-# 1) configs - array
-# 2) config_len - int; expected length of configs
-verify_config_dest_length() {
+#    * 1) configs - array
+#    * 2) butane_config - butane (yaml) file path
+validate_config_dest_length() {
     local -n configs="$1"
-    local -i config_len
+    local -r butane_config="$2"
+    info "starting"
 
-    config_len="$(yq '(.ignition.config.merge | length)' "$m")"
-    if [ "${#configs[@]}" -ne "$config_len" ]; then
-        abort "$m configs $config_len != ${#configs[@]}"
+    local -i butane_config_merge_len
+    butane_config_merge_len="$(yq '(.ignition.config.merge | length)' "$butane_config")"
+    if [ "${#configs[@]}" -ne "$butane_config_merge_len" ]; then
+        info "configs length: ${#configs[@]} != ${butane_config_merge_len}"
+        return 1
     fi
 }
-
-# butane()
-# runs ignition in a container with image quay.io/coreos/butane:release
-# args:
-# @) all arguements are passed to the container
-# TODO script creating ssh keys as podman secrets, mount them as secret files
-# TODO scrub debug logging output. This is getting logged to journald as well by podman log driver.
-# possibly stop using journald podman log driver here?
-butane() {
-    image="quay.io/coreos/butane:release"
-
-    podman run \
-        --name butane \
-        --security-opt label=disable \
-        -i \
-        --rm \
-        -v "./deploy/butane":/data/deploy/butane:O \
-        -v "${HOME}/.ssh":/data/deploy/keys:O \
-        -v "${HOME}/Documents/.luks_keys":/data/deploy/luks_keys \
-        -w /data \
-        "$image" \
-        "$@"
-}
-
-# included to provide definitions for shellcheck
-yq_lib="hack/lib/yq.sh"
-if [ ! -f "$yq_lib" ]; then
-    echo "$yq_lib not found. Are you in the repository root?"
-    exit 1
-fi
-# shellcheck source=../../lib/yq.sh
-source "$yq_lib"

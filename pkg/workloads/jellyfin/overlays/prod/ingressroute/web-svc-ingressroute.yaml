@@ -2,7 +2,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: web-svc-ingressroute
+  name: web-svc-host-ir
   namespace: jellyfin
 spec:
   entryPoints:
@@ -11,7 +11,7 @@ spec:
   - match: Host(`jellyfin.app.rick.expresso.lan`)
     kind: Rule
     middlewares:
-    - name: web-svc-secured
+    - name: web-svc-secured-chain-mw
     services:
     - name: web-svc
       namespace: jellyfin

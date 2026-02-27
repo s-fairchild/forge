@@ -1,7 +1,7 @@
 ARG IMAGE_REGISTRY
 ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
-FROM --platform=arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
+FROM --platform=linux/arm64 ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS builder
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \

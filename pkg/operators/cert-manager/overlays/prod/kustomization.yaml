@@ -6,4 +6,10 @@ resources:
 - ../../base
 - issuers/my-ca-issuer.yaml
 - issuers/selfsigned-issuer.yaml
-- certificates/root-ca.yaml
+
+patches:
+- path: certificate/root-ca-patch.yaml
+  target:
+    version: cert-manager.io/v1
+    kind: Certificate
+    name: root-ca

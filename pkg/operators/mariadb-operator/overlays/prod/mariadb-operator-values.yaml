@@ -1,0 +1,158 @@
+# References:
+#  * [README.md](https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/README.md)
+#  * [values.yaml](https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/values.yaml)
+#  * [Raw values.yaml](https://raw.githubusercontent.com/mariadb-operator/mariadb-operator/refs/tags/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/values.yaml)
+#
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mariadb-operator/mariadb-operator/refs/heads/main/deploy/manifests/helm-values.yaml
+
+image:
+  repository: docker-registry3.mariadb.com/mariadb-operator/mariadb-operator
+  pullPolicy: IfNotPresent
+  tag: 25.10.3
+# -- Controller log level
+logLevel: INFO
+# -- Cluster DNS name
+clusterName: cluster.local
+# -- Whether the operator should watch CRDs only in its own namespace or not.
+currentNamespaceOnly: false
+
+# https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/docs/helm.md#high-availability
+ha:
+  # -- Enable high availability of the controller.
+  # If you enable it we recommend to set `affinity` and `pdb`
+  enabled: pdb
+  # -- Number of replicas
+  replicas: 3
+
+# TODO enable once prometheus is configured
+metrics:
+  # -- Enable operator internal metrics. Prometheus must be installed in the cluster
+  enabled: false
+  # TODO enable once prometheus is configured
+  serviceMonitor:
+    enabled: false
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  enabled: true
+  # -- Automounts the service account token in all containers of the Pod
+  automount: true
+  # -- The name of the service account to use.
+  # If not set and enabled is true, a name is generated using the fullname template
+  name: ""
+
+rbac:
+  # -- Specifies whether RBAC resources should be created
+  enabled: true
+  aggregation:
+    # -- Specifies whether the cluster roles aggregate to view and edit pre-defined roles
+    enabled: true
+resources: {}
+# requests:
+#   cpu: 10m
+#   memory: 32Mi
+
+# -- Node selectors to add to controller Pod
+nodeSelector:
+  node-role.kubernetes.io/control-plane: "true"
+# -- Tolerations to add to controller Pod
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+pdb:
+  # -- Enable PodDisruptionBudget for the controller.
+  enabled: true
+  # -- Maximum number of unavailable Pods. You may also give a percentage, like `50%`
+  maxUnavailable: 1
+
+webhook:
+  # -- Specifies whether the webhook should be created.
+  enabled: true
+  image:
+    repository: docker-registry3.mariadb.com/mariadb-operator/mariadb-operator
+    pullPolicy: IfNotPresent
+    tag: 25.10.3
+    # https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/Chart.lock
+    # digest: sha256:015e4f8ee0e192bb9d011410ea458c59fb27bcdd0d3224b3328bd5019a2919c9
+  ha:
+    # -- Enable high availability
+    enabled: pdb
+    # -- Number of replicas
+    replicas: 3
+  cert:
+    certManager:
+      # -- Whether to use cert-manager to issue and rotate the certificate. If set to false, mariadb-operator's cert-controller will be used instead.
+      enabled: true
+      # -- Issuer reference to be used in the Certificate resource. If not provided, a self-signed issuer will be used.
+      issuerRef:
+        name: my-ca-issuer
+        kind: ClusterIssuer
+        group: cert-manager.io
+    # -- Path where the certificate will be mounted. 'tls.crt' and 'tls.key' certificates files should be under this path.
+    path: /tmp/k8s-webhook-server/serving-certs
+  # -- Port to be used by the webhook server
+  port: 9443
+  # -- Expose the webhook server in the host network
+  hostNetwork: false
+  serviceMonitor:
+    # -- Enable webhook ServiceMonitor. Metrics must be enabled
+    enabled: true
+  serviceAccount:
+    # -- Specifies whether a service account should be created
+    enabled: true
+  resources: {}
+  # requests:
+  #   cpu: 10m
+  #   memory: 32Mi
+  # -- Node selectors to add to webhook Pod
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+  # -- Tolerations to add to webhook Pod
+  tolerations:
+    - key: node.kubernetes.io/disk-pressure
+      operator: Exists
+      effect: NoSchedule
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
+  pdb:
+    # -- Enable PodDisruptionBudget for the webhook.
+    enabled: false
+    # -- Maximum number of unavailable Pods. You may also give a percentage, like `50%`
+    maxUnavailable: 1
+
+certController:
+  # -- Specifies whether the cert-controller should be created.
+  enabled: false
+
+# -- Operator configuration
+config:
+  # -- Galera library path to be used with MariaDB Galera
+  galeraLibPath: /usr/lib/galera/libgalera_smm.so
+  # -- Default MariaDB version to be used when unable to infer it via image tag
+  mariadbDefaultVersion: "11.8"
+  # -- Default MariaDB image
+  mariadbImage: docker-registry1.mariadb.com/library/mariadb:11.8.5
+  # -- Default MariaDB image name
+  mariadbImageName: docker-registry1.mariadb.com/library/mariadb
+  # -- Default MaxScale image
+  maxscaleImage: docker-registry2.mariadb.com/mariadb/maxscale:23.08.5
+  # -- Default MariaDB exporter image
+  exporterImage: prom/mysqld-exporter:v0.15.1
+  # -- Default MaxScale exporter image
+  exporterMaxscaleImage: docker-registry2.mariadb.com/mariadb/maxscale-prometheus-exporter-ubi:v0.0.1

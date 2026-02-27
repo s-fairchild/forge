@@ -1,0 +1,11 @@
+---
+# apiVersion and kind are not required for a simple JSON 6902 patch file
+- op: add
+  path: /spec/dnsNames/-
+  value: "rick.expresso.lan"
+- op: add
+  path: /spec/dnsNames/-
+  value: "root-ca.rick.expresso.lan"
+- op: add
+  path: /spec/dnsNames/-
+  value: "app.rick.expresso.lan"

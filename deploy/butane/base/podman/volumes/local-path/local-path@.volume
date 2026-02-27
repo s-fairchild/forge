@@ -1,0 +1,17 @@
+[Unit]
+Description=Create podman volume %N with btrfs subvolume as backing volume
+
+[Volume]
+# TODO use podman style full labels here
+Label=storageclass=%i
+Label=storageprovider=%p
+Label=app=%p
+Label=cluster=%l
+
+Type=btrfs
+Device=LABEL=%i
+# Instances should override Options as needed for volume specific mount options
+Options=compress=zstd:3,x-systemd.device-timeout=0,barrier,datasum,rescue=usebackuproot,usebackuproot,degraded
+
+[Install]
+WantedBy=default.target

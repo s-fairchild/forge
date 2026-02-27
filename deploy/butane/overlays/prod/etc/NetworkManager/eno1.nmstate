@@ -1,0 +1,57 @@
+NetworkManager:
+- - Production.nmconnection
+  - |
+    [connection]
+    autoconnect=true
+    autoconnect-slaves=-1
+    id=Production
+    interface-name=eno1
+    lldp=0
+    mptcp-flags=40
+    type=802-3-ethernet
+    uuid=ff8b47e2-9b1c-5e04-9f8b-34671372837c
+
+    [ipv4]
+    address0=10.50.0.2/24
+    dhcp-timeout=2147483647
+    forwarding=1
+    may-fail=false
+    method=manual
+    route0=0.0.0.0/0,10.50.0.1,100
+    route0_options=table=254
+    route1=10.16.0.0/16,10.50.0.11,90
+    route1_options=table=254
+
+    [ipv6]
+    addr-gen-mode=0
+    dhcp-timeout=2147483647
+    may-fail=true
+    method=disabled
+
+    [ethernet]
+    accept-all-mac-addresses=0
+    auto-negotiate=true
+    cloned-mac-address=D8:BB:C1:09:C6:4C
+    mtu=1500
+
+    [ethtool]
+    coalesce-rx-usecs=3
+    feature-gro=true
+    feature-gso=true
+    feature-rx=true
+    feature-rx-all=false
+    feature-rx-fcs=false
+    feature-rx-gro-list=false
+    feature-rx-udp-gro-forwarding=false
+    feature-rxhash=true
+    feature-rxvlan=true
+    feature-tso=true
+    feature-tx-checksum-ip-generic=true
+    feature-tx-nocache-copy=false
+    feature-tx-tcp-mangleid-segmentation=false
+    feature-tx-tcp6-segmentation=true
+    feature-txvlan=true
+    pause-autoneg=true
+    ring-rx=256
+    ring-tx=256
+

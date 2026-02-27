@@ -1,0 +1,8 @@
+---
+# https://coreos.github.io/coreos-installer/customizing-install/#example-manual-customization-via-installerd
+variant: fcos
+version: 1.5.0
+storage:
+  trees:
+  - path: /etc/coreos/installer.d/custom-config.yaml
+    local: etc/coreos/installer.d
