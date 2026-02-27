@@ -9,7 +9,7 @@ WORKDIR ${BUILD_TARGET}
 
 # https://www.raspberrypi.com/documentation/computers/camera_software.html#building-libcamera
 ARG BUILD_TYPE
-ARG TEST
+ARG ENABLE_TEST
 ARG ENABLE_PIPELINES
 ARG ENABLE_IPAS
 ARG ENABLE_V4L2
@@ -19,15 +19,18 @@ ARG ENABLE_CAM
 ARG ENABLE_QCAM
 ARG ENABLE_DOCUMENTATION
 ARG ENABLE_PYCAMERA
+ARG ENABLE_RPI_AWB_NN
+ARG ENABLE_UDEV
 ARG BUILD_THREADS
 
 RUN meson setup build --prefix=${PREFIX} --pkgconfig.relocatable \
-        --buildtype=${BUILD_TYPE} -Dtest=${TEST} \
+        --buildtype=${BUILD_TYPE} -Dtest=${ENABLE_TEST} \
         -Dpipelines=${ENABLE_PIPELINES} -Dipas=${ENABLE_IPAS} \
         -Dv4l2=${ENABLE_V4L2} -Dgstreamer=${ENABLE_GSTREAMER} \
         -Dlc-compliance=${ENABLE_LC_COMPLIANCE} -Dcam=${ENABLE_CAM} \
         -Dqcam=${ENABLE_QCAM} -Ddocumentation=${ENABLE_DOCUMENTATION} \
-        -Dpycamera=${ENABLE_PYCAMERA} \
+        -Dpycamera=${ENABLE_PYCAMERA} -Drpi-awb-nn=${ENABLE_RPI_AWB_NN} \
+        -Dudev=${ENABLE_UDEV} \
     && ninja -j ${BUILD_THREADS} \
              -C build \
     && ninja -j ${BUILD_THREADS} \

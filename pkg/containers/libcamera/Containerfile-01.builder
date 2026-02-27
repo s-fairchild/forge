@@ -34,4 +34,5 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
                         # Other libcamera dependencies
                         libavcodec-dev libjpeg-dev libtiff5-dev libpng-dev \
                         libavdevice-dev libavformat-dev libswresample-dev \
-                        libboost-program-options-dev libdrm-dev libexif-dev ninja-build
+                        libboost-program-options-dev libdrm-dev libexif-dev ninja-build \
+                        libglib2.0-dev libgstreamer-plugins-base1.0-dev
