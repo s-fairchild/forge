@@ -1,0 +1,43 @@
+---
+# References:
+#   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/README.md
+#   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/values.yaml
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: "true"
+
+manager:
+  image:
+    hub: intel
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  # supported devices by the operator
+  devices:
+    gpu: true
+
+privateRegistry:
+  registryUrl: ""
+  registryUser: ""
+  registrySecret: ""
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 120Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"

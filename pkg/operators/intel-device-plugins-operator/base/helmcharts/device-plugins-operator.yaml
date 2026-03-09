@@ -1,0 +1,23 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: intel-device-plugins-operator
+  namespace: kube-system
+spec:
+  # https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/Chart.yaml
+  chart: https://%{KUBERNETES_API}%/static/charts/intel-device-plugins-operator-0.35.0.tgz
+
+  targetNamespace: intel-device-plugins-operator
+  createNamespace: true
+  takeOwnership: true
+  failurePolicy: abort
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  valuesSecrets:
+  - name: intel-device-plugins-operator-values
+    ignoreUpdates: false
+    keys:
+      - values.yaml
