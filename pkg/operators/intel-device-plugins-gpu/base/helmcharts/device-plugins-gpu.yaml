@@ -1,0 +1,27 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: intel-device-plugins-gpu
+  namespace: kube-system
+spec:
+  # https://github.com/intel/helm-charts/blob/main/charts/gpu-device-plugin/Chart.yaml
+  # chart: https://%{KUBERNETES_API}%/static/charts/intel-device-plugins-gpu-0.35.0.tgz
+  chart: intel-device-plugins-gpu
+  repo: https://intel.github.io/helm-charts/
+  version: 0.35.0
+
+  targetNamespace: intel-device-plugins-operator
+  createNamespace: false
+  takeOwnership: true
+  failurePolicy: reinstall
+  backOffLimit: 20
+
+  valuesSecrets:
+  - name: intel-device-plugins-gpu-values
+    ignoreUpdates: false
+    keys:
+      - values.yaml
+
+  set:
+    global.systemDefaultRegistry: ""

@@ -1,0 +1,103 @@
+---
+# https://kubernetes-sigs.github.io/node-feature-discovery/v0.18/deployment/helm.html#deployment-with-helm
+# https://kubernetes-sigs.github.io/node-feature-discovery/v0.18/deployment/helm.html#chart-parameters
+
+image:
+  repository: registry.k8s.io/nfd/node-feature-discovery
+  # This should be set to 'IfNotPresent' for released version
+  pullPolicy: IfNotPresent
+  # tag, if defined will use the given image tag, else Chart.AppVersion will be used
+  # tag
+imagePullSecrets: []
+
+# https://kubernetes-sigs.github.io/node-feature-discovery/v0.18/deployment/helm.html#master-pod-parameters
+master:
+  enable: true
+  replicaCount: 1
+
+  resources:
+    limits:
+      memory: 4Gi
+    requests:
+      cpu: 100m
+      # You may want to use the same value for `requests.memory` and `limits.memory`. The “requests” value affects scheduling to accommodate pods on nodes.
+      # If there is a large difference between “requests” and “limits” and nodes experience memory pressure, the kernel may invoke
+      # the OOM Killer, even if the memory does not exceed the “limits” threshold. This can cause unexpected pod evictions. Memory
+      # cannot be compressed and once allocated to a pod, it can only be reclaimed by killing the pod.
+      # Natan Yellin 22/09/2022 https://home.robusta.dev/blog/kubernetes-memory-limit
+      memory: 128Mi
+
+  nodeSelector:
+    node-role.kubernetes.io/control-plane: "true"
+
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
+
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: In
+                values: [""]
+
+# https://kubernetes-sigs.github.io/node-feature-discovery/v0.18/deployment/helm.html#worker-pod-parameters
+worker:
+  enable: true
+
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 5m
+      memory: 64Mi
+
+  nodeSelector: {}
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - compute
+
+# topologyUpdater:
+  # config: ### <NFD-TOPOLOGY-UPDATER-CONF-START-DO-NOT-REMOVE>
+    # ## key = node name, value = list of resources to be excluded.
+    # ## use * to exclude from all nodes.
+    # ## an example for how the exclude list should looks like
+    # #excludeList:
+    # #  node1: [cpu]
+    # #  node2: [memory, example/deviceA]
+    # #  *: [hugepages-2Mi]
+# ### <NFD-TOPOLOGY-UPDATER-CONF-END-DO-NOT-REMOVE>
+
+  # enable: false
+  # createCRDs: true
+
+  # resources:
+    # limits:
+      # memory: 60Mi
+    # requests:
+      # cpu: 50m
+      # memory: 40Mi
+
+  # nodeSelector: {}
+  # tolerations: []
+  # annotations: {}
+  # daemonsetAnnotations: {}
+  # affinity: {}
+  # podSetFingerprint: true
+
+# prometheus:
+  # enable: false
+  # scrapeInterval: 10s
+  # labels: {}

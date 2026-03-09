@@ -1,0 +1,12 @@
+---
+resources:
+  - ../../base
+
+secretGenerator:
+  - name: intel-device-plugins-gpu-values
+    namespace: kube-system
+    behavior: merge
+    files:
+      - values/values.yaml
+    options:
+      disableNameSuffixHash: true

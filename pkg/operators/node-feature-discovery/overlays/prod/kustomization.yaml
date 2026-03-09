@@ -1,0 +1,13 @@
+---
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+resources:
+  - ../../base
+
+secretGenerator:
+  - name: node-feature-discovery-values
+    namespace: kube-system
+    behavior: merge
+    files:
+      - values/values.yaml

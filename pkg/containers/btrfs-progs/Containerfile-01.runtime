@@ -1,0 +1,3 @@
+FROM install AS runtime
+
+ENTRYPOINT [ "/sbin/btrfs" ]

@@ -1,0 +1,49 @@
+configmap:
+  name: local-path-config
+  # specify the custom script for setup and teardown
+  setup: |-
+    #!/bin/sh
+    set -eu
+    mkdir -m 0777 -p "$VOL_DIR"
+  teardown: |-
+    #!/bin/sh
+    set -eu
+    rm -rf "$VOL_DIR"
+
+  # setup: |-
+    # #!/bin/sh
+    # set -eu
+
+    # btrfs subvolume create -p "$VOL_DIR"
+    # chmod -m 0777 "$VOL_DIR"
+
+  # teardown: |-
+    # #!/bin/sh
+    # set -eu
+
+    # btrfs subvolume delete -Rv "$VOL_DIR"
+
+  helperPod:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+    # Allows to run the helper pod in another namespace. Uses release namespace by default.
+    namespaceOverride: ""
+    name: "helper-pod"
+    tolerations:
+    - key: node.kubernetes.io/disk-pressure
+      operator: Exists
+      effect: NoSchedule
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"

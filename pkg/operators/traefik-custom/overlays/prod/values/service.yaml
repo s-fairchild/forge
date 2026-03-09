@@ -1,0 +1,34 @@
+---
+service:
+  annotations: {}
+  labels: {}
+  enabled: true
+  # If seperate pods are used for tcp and udp, metallb IP sharing must be configured
+  single: false
+  type: LoadBalancer
+  ipFamilyPolicy: "SingleStack"
+  spec:
+    externalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  loadBalancerSourceRanges:
+  - 10.50.0.0/24
+  ## -- An additional and optional internal Service.
+  ## Same parameters as external Service
+  additionalServices:
+    internal:
+      type: ClusterIP
+      enabled: true
+      labels: {}
+      annotations: {}
+      spec:
+        trafficDistribution: PreferClose
+        sessionAffinity: ClientIP
+      single: false
+      ipFamilyPolicy: "SingleStack"
+      ipFamilies:
+        - IPv4
+      loadBalancerSourceRanges:
+      - 10.11.0.0/16
+      - 10.10.0.0/16
+      - 10.16.0.0/16

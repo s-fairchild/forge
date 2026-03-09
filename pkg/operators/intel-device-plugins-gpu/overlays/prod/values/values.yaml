@@ -1,0 +1,60 @@
+---
+# References:
+#   * https://github.com/intel/helm-charts/blob/main/charts/gpu-device-plugin/README.md
+#   * https://github.com/intel/helm-charts/blob/main/charts/gpu-device-plugin/values.yaml
+#   * https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md
+#   * https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md#modes-and-configuration-options
+
+name: intel-gpu-device-plugin
+
+image:
+  hub: intel
+  tag: ""
+
+initImage:
+  enable: false
+  hub: intel
+  tag: ""
+
+# Number of containers that can share the same GPU device
+# Increase as more workloads require the same GPU
+sharedDevNum: 2
+
+logLevel: 2
+
+# https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/monitoring.md
+enableMonitoring: true
+
+# 3 possible values: balanced, packed, none.
+#
+# For shared-dev-num > 1: balanced mode spreads workloads among GPU devices,
+# packed mode fills one GPU fully before moving to next, and none selects first available device from kubelet.
+#
+# Default is none.
+allocationPolicy: balanced
+
+# A list of PCI Device IDs that are allowed to be registered as resources. Default is empty (=all registered). Cannot be used together with deny-ids.
+allowIDs: ""
+
+# A list of PCI Device IDs that are denied to be registered as resources. Default is empty (=all registered). Cannot be used together with allow-ids.
+denyIDs: ""
+
+# https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md#by-path-mounting
+#
+# * single - Symlinks are individually mounted per device. Default.
+#   - Mostly Works, but is known to have issues with some pytorch workloads. See issue.
+#
+# * none - No symlinks are mounted.
+#   - Aligned with Docker privileged mode devices usage.
+#
+# * all - Mounts whole DRM by-path directory. Pro: symlink file types are preserved. Con: symlinks are present for all devices.
+#   - Optimal for scale-up workloads where all the GPUs are used by the workload.
+#
+bypathMode: all
+
+nodeSelector:
+  intel.feature.node.kubernetes.io/gpu: "true"
+
+tolerations: []
+
+nodeFeatureRule: true

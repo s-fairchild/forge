@@ -5,7 +5,9 @@ metadata:
   name: transcodes-pvc
   namespace: jellyfin
 spec:
-  storageClassName: local-path-default
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 100Gi
+      storage: 10Gi

@@ -1,0 +1,17 @@
+---
+# -- Only dashboard & healthcheck IngressRoute are supported. It's recommended to create workloads CR outside of this Chart.
+ingressRoute:
+  dashboard:
+    enabled: true
+    matchRule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+    services:
+      - name: api@internal
+        kind: TraefikService
+    entryPoints: ["traefik"]
+  healthcheck:
+    enabled: true
+    matchRule: PathPrefix(`/ping`)
+    services:
+      - name: ping@internal
+        kind: TraefikService
+    entryPoints: ["traefik"]

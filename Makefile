@@ -200,4 +200,10 @@ container-build-motion:
 	[ -v MOTION_VERSION_OVERRIDE ] && echo "MOTION_VERSION_OVERRIDE=$${MOTION_VERSION_OVERRIDE}"
 	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_MOTION}
 
+container-build-btrfs-progs:
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_BTRFS_PROGS}.env
+
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_BTRFS_PROGS}
+
 ### Containerfile End ###

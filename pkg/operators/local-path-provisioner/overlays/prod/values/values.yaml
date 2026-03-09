@@ -1,0 +1,176 @@
+---
+# Values for local-path-provisioner.
+# There is no json schema for this helm chart.
+# README.md https://github.com/rancher/local-path-provisioner/blob/v0.0.32/deploy/chart/local-path-provisioner/README.md
+# Example values.yaml https://github.com/rancher/local-path-provisioner/blob/v0.0.32/deploy/chart/local-path-provisioner/values.yaml
+
+replicaCount: 1
+commonLabels: {}
+namespaceOverride: ""
+
+image:
+  repository: docker.io/rancher/local-path-provisioner
+  tag: v0.0.34
+  pullPolicy: IfNotPresent
+
+helperImage:
+  # repository: docker.io/steve51516/btrfs-progs
+  repository: busybox
+  tag: latest
+
+## For creating the StorageClass automatically:
+# I am using storageClassConfigs instead.
+storageClass: {}
+
+# nodePathMap is the place user can customize where to store the data on each node.
+# 1. If one node is not listed on the nodePathMap, and Kubernetes wants to create volume on it, the paths specified in
+#    DEFAULT_PATH_FOR_NON_LISTED_NODES will be used for provisioning.
+# 2. If one node is listed on the nodePathMap, the specified paths will be used for provisioning.
+#     1. If one node is listed but with paths set to [], the provisioner will refuse to provision on this node.
+#     2. If more than one path was specified, the path would be chosen randomly when provisioning.
+#
+# The configuration must obey following rules:
+# 1. A path must start with /, a.k.a an absolute path.
+# 2. Root directory (/) is prohibited.
+# 3. No duplicate paths allowed for one node.
+# 4. No duplicate node allowed.
+nodePathMap: {}
+  # - node: DEFAULT_PATH_FOR_NON_LISTED_NODES
+    # paths:
+      # - /mnt/local-path/default
+
+# `sharedFileSystemPath` allows the provisioner to use a filesystem that is mounted on all
+# nodes at the same time. In this case all access modes are supported: `ReadWriteOnce`,
+# `ReadOnlyMany` and `ReadWriteMany` for storage claims. In addition
+# `volumeBindingMode: Immediate` can be used in  StorageClass definition.
+# Please note that `nodePathMap` and `sharedFileSystemPath` are mutually exclusive.
+# If `sharedFileSystemPath` is used, then `nodePathMap` must be set to `[]`.
+# sharedFileSystemPath: ""
+
+# `storageClassConfigs` allows the provisioner to manage multiple independent storage classes.
+# Each storage class must have a unique name, and contains the same fields as shown above for
+# a single storage class setup, EXCEPT for the provisionerName, which is the same for all
+# storage classes, and name, which is the key of the map.
+storageClassConfigs:
+  local-path:
+    storageClass:
+      create: true
+      provisionerName: cluster.local/local-path-provisioner
+      defaultClass: true
+      defaultVolumeType: hostPath
+      reclaimPolicy: Delete
+      volumeBindingMode: WaitForFirstConsumer
+      # pathPattern MUST end with /
+      # Otherwise it will fail to validate the path
+      # See:
+      #   * https://github.com/rancher/local-path-provisioner/pull/542
+      #   * https://github.com/mantissahz/local-path-provisioner/blob/594600454b19b7d4597cfec90adc8056ed0c5e15/test/testdata/custom-path-pattern/storage-class.yaml
+      #   * https://github.com/rancher/local-path-provisioner/issues/546
+      pathPattern: "{{ .PVC.Namespace }}/{{ .PVC.Name }}/"
+    nodePathMap: [
+                  {
+                    "node": "DEFAULT_PATH_FOR_NON_LISTED_NODES",
+                    "paths": [
+                      "/mnt/local-path/default"
+                    ]
+                  }
+                 ]
+  local-path-nvme:
+    storageClass:
+      create: true
+      provisionerName: cluster.local/local-path-provisioner
+      defaultClass: false
+      defaultVolumeType: hostPath
+      reclaimPolicy: Retain
+      volumeBindingMode: WaitForFirstConsumer
+      pathPattern: "{{ .PVC.Namespace }}/{{ .PVC.Name }}/"
+    nodePathMap: [
+                  {
+                    "node": "k3s-agent-0",
+                    "paths": [
+                      "/mnt/local-path/nvme"
+                    ]
+                  },
+                  {
+                    "node": "k3s-server-0",
+                    "paths": [
+                      "/mnt/local-path/nvme"
+                    ]
+                  },
+                  {
+                    "node": "k3s-server-1",
+                    "paths": [
+                      "/mnt/local-path/nvme"
+                    ]
+                  },
+                  {
+                    "node": "k3s-server-2",
+                    "paths": [
+                      "/mnt/local-path/nvme"
+                    ]
+                  }
+                 ]
+  local-path-appdata:
+    storageClass:
+      create: true
+      provisionerName: cluster.local/local-path-provisioner
+      defaultClass: false
+      defaultVolumeType: hostPath
+      reclaimPolicy: Retain
+      volumeBindingMode: WaitForFirstConsumer
+      pathPattern: "{{ .PVC.Namespace }}/{{ .PVC.Name }}/"
+    nodePathMap: [
+                  {
+                    "node": "k3s-agent-0",
+                    "paths": [
+                      "/mnt/local-path/appdata"
+                    ]
+                  }
+                 ]
+  local-path-cctv:
+    storageClass:
+      create: true
+      provisionerName: cluster.local/local-path-provisioner
+      defaultClass: false
+      defaultVolumeType: hostPath
+      reclaimPolicy: Retain
+      volumeBindingMode: WaitForFirstConsumer
+      pathPattern: "{{ .PVC.Namespace }}/{{ .PVC.Name }}/"
+    nodePathMap: [
+                  {
+                    "node": "k3s-agent-0",
+                    "paths": [
+                      "/mnt/local-path/cctv"
+                    ]
+                  }
+                 ]
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: "true"
+
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+podDisruptionBudget:
+  enabled: false
+
+# Extra arguments to pass to the CLI
+extraArgs: []

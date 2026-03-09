@@ -19,7 +19,7 @@ cluster:
 
   storage:
     size: 10Gi
-    storageClass: "local-path-default"
+    storageClass: "local-path-nvme"
 
   walStorage:
     enabled: false

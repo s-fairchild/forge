@@ -1,4 +1,0 @@
----
-resources:
-- namespace.yaml
-- helmcharts/local-path-storage.yaml

@@ -1,10 +1,14 @@
-# TODO Find a solution to restart this oneshot type service if docker pull fails for whatever reason
-#    * Restart=always is not allowed for oneshot type services (which quadlet generates)
 [Unit]
-Description=Pull image docker.io/nginx:stable
+Description=Pull image docker.io/nginx:${IMAGE_TAG_NGINX}
+Wants=nss-lookup.target
+After=nss-lookup.target
+
+[Service]
+EnvironmentFile=/usr/local/etc/sysconfig/%N
+TimeoutStartSec=900
 
 [Image]
-Image=docker.io/nginx:stable
+Image=docker.io/nginx:${IMAGE_TAG_NGINX}
 
 [Install]
 WantedBy=default.target

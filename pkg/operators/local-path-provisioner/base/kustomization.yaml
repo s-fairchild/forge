@@ -1,0 +1,12 @@
+---
+resources:
+  - helmcharts/local-path-provisioner.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: local-path-provisioner-values
+    namespace: kube-system
+    files:
+      - values/values.yaml

@@ -4,10 +4,14 @@ kind: Certificate
 metadata:
   name: default-certificate
   namespace: default
+
 spec:
   secretName: default-certificate
+
   dnsNames:
+    - "rick.expresso.lan"
     - "app.rick.expresso.lan"
+
   issuerRef:
     name: my-ca-issuer
     kind: ClusterIssuer

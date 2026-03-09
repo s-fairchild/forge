@@ -51,4 +51,4 @@ storage:
         inline: |
           [Service]
           # https://docs.k3s.io/cli/agent#node-labels-and-taints-for-agents
-          Environment=AGENT_EXTRA_ARGS=--node-label=svccontroller.k3s.cattle.io/enablelb=true \
+          Environment=AGENT_EXTRA_ARGS=--node-label=svccontroller.k3s.cattle.io/enablelb=true

@@ -1,0 +1,11 @@
+---
+resources:
+- helmcharts/device-plugins-gpu.yaml
+
+secretGenerator:
+- name: intel-device-plugins-gpu-values
+  namespace: kube-system
+  files:
+    - values/values.yaml
+  options:
+    disableNameSuffixHash: true

@@ -1,0 +1,23 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: node-feature-discovery
+  namespace: kube-system
+spec:
+  chart: oci://registry.k8s.io/nfd/charts/node-feature-discovery
+  version: 0.18.3
+
+  targetNamespace: node-feature-discovery
+  createNamespace: true
+  takeOwnership: true
+  failurePolicy: abort
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  valuesSecrets:
+  - name: node-feature-discovery-values
+    ignoreUpdates: false
+    keys:
+      - values.yaml

@@ -6,6 +6,8 @@ metadata:
   namespace: jellyfin
 spec:
   storageClassName: local-path-appdata
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
       storage: 3.9T

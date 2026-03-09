@@ -1,0 +1,15 @@
+---
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+resources:
+  - helmcharts/node-feature-discovery.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: node-feature-discovery-values
+    namespace: kube-system
+    files:
+      - values/values.yaml

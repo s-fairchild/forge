@@ -6,6 +6,7 @@ Restart=always
 RestartSec=30
 Environment="NAME=k3s-apiserverlb-%i"
 EnvironmentFile=/usr/local/etc/sysconfig/podman-options
+EnvironmentFile=/usr/local/etc/sysconfig/nginx-image
 
 [Container]
 ContainerName=${NAME}

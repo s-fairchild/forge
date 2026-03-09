@@ -1,0 +1,12 @@
+---
+logs:
+  general:
+    # format: json
+    # -- Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
+    level: INFO
+  access:
+    enabled: true
+    addInternals: false
+    fields:
+      headers:
+        defaultmode: keep

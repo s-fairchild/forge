@@ -5,7 +5,9 @@ metadata:
   name: config-pvc
   namespace: jellyfin
 spec:
-  storageClassName: local-path-default
+  storageClassName: local-path-nvme
+  accessModes:
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi

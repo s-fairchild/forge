@@ -1,6 +1,5 @@
 [Unit]
 Description=K3S Server Node %i Podman Container
-Upholds=k3s-apiserverlb@0.service
 
 [Service]
 Restart=always
@@ -10,6 +9,7 @@ ExecStartPre=modprobe iptable_nat
 ExecStartPre=/usr/bin/podman secret exists k3s-token
 Environment="NAME=k3s-server-%i"
 EnvironmentFile=/usr/local/etc/sysconfig/podman-options
+EnvironmentFile=/usr/local/etc/sysconfig/k3s-image
 
 [Container]
 ContainerName=${NAME}

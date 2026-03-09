@@ -1,0 +1,9 @@
+FROM builder AS install
+
+RUN apk \
+        --cache=no \
+                upgrade \
+        && apk \
+        --cache=no \
+                add \
+                btrfs-progs ca-certificates

@@ -5,16 +5,14 @@ metadata:
   name: cnpg-operator
   namespace: kube-system
 spec:
-  # https://github.com/cloudnative-pg/charts/blob/cloudnative-pg-v0.27.1/charts/cloudnative-pg/Chart.yaml
-  chart: https://%{KUBERNETES_API}%/static/charts/cloudnative-pg-0.27.1.tgz
+  repo: https://cloudnative-pg.github.io/charts
+  chart: cloudnative-pg
+  version: 0.27.1
 
-  targetNamespace:  cnpg-operator
+  targetNamespace: cnpg-system
   createNamespace: true
   takeOwnership: true
-  failurePolicy: abort
-
-  set:
-    global.systemDefaultRegistry: ""
+  failurePolicy: reinstall
 
   valuesSecrets:
   - name: cloudnative-pg-values
@@ -25,3 +23,6 @@ spec:
       - resources.yaml
       - security.yaml
       - service.yaml
+
+  set:
+    global.systemDefaultRegistry: ""

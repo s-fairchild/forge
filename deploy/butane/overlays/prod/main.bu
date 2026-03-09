@@ -6,7 +6,7 @@ ignition:
     merge:
       - inline: deploy/butane/base/coreos/system-config.bu
       - inline: deploy/butane/base/coreos/services.bu
-      - inline: deploy/butane/base/coreos/storage/filesystem/btrfsmaintenance.bu
+      - inline: deploy/butane/base/coreos/usr/local/btrfsmaintenance.bu
       - inline: deploy/butane/base/podman/podman.bu
       - inline: deploy/butane/base/podman/images/k3s/k3s.bu
       - inline: deploy/butane/base/podman/images/nginx/nginx.bu
@@ -18,12 +18,13 @@ ignition:
       - inline: deploy/butane/base/podman/containers/server/server.bu
       - inline: deploy/butane/base/podman/containers/api-server-lb/api-server-lb.bu
       - inline: deploy/butane/base/podman/containers/svclb/svc-lb.bu
-      - inline: deploy/butane/base/coreos/etc/containers/containers.bu
-      - inline: deploy/butane/base/coreos/etc/firewalld/firewalld.bu
-      - inline: deploy/butane/base/coreos/etc/sysctl.d/systctl.bu
+      - inline: deploy/butane/base/coreos/etc/containers.bu
+      - inline: deploy/butane/base/coreos/etc/firewalld.bu
+      - inline: deploy/butane/base/coreos/etc/systctl.bu
       - inline: deploy/butane/base/coreos/usr/local/lib/lib.bu
       - inline: deploy/butane/base/root/bashrc.d.bu
       - inline: deploy/butane/base/home/core/bashrc.d.bu
+
       - inline: deploy/butane/overlays/prod/storage/disks/disks.bu
       - inline: deploy/butane/overlays/prod/storage/luks/luks.bu
       - inline: deploy/butane/overlays/prod/storage/filesystems/filesystems.bu

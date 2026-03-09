@@ -13,3 +13,10 @@ patches:
     version: cert-manager.io/v1
     kind: Certificate
     name: root-ca
+
+secretGenerator:
+  - name: cert-manager-values
+    namespace: kube-system
+    behavior: merge
+    files:
+      - values/values.yaml
