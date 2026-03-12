@@ -1,10 +1,8 @@
 ---
 service:
-  annotations: {}
-  labels: {}
   enabled: true
   # If seperate pods are used for tcp and udp, metallb IP sharing must be configured
-  single: false
+  single: true
   type: LoadBalancer
   ipFamilyPolicy: "SingleStack"
   spec:

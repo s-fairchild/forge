@@ -37,6 +37,7 @@ Volume=${NAME}-log:/var/log/pod:Z,rslave
 Volume=${NAME}-containers:/var/lib/containers:Z,rslave
 Volume=/usr/local/lib/rancher/k3s/server/static/charts/extra:/var/lib/rancher/k3s/server/static/charts/extra:z,ro,rshared
 Volume=/usr/local/lib/rancher/k3s/server/manifests:/var/lib/rancher/k3s/server/manifests/compute:z,rslave
+Volume=/usr/local/etc/k3s:/etc/rancher/k3s/config.yaml,Z,ro
 AddDevice=/dev/fuse:/dev/fuse
 PodmanArgs=--oom-score-adj=1000 --privileged
 

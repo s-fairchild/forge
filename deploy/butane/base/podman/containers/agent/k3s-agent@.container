@@ -31,6 +31,7 @@ Volume=${NAME}-kubelet:/var/lib/kubelet:Z,rslave
 Volume=${NAME}-pod-logs:/var/log/pods:Z,rslave
 Volume=${NAME}-data:/var/lib/rancher/k3s:Z,rslave
 Volume=${NAME}-rancher:/etc/rancher,rslave
+Volume=/usr/local/etc/k3s:/etc/rancher/k3s/config.yaml,Z,ro
 PodmanArgs=--oom-score-adj=1000 --privileged
 
 [Install]

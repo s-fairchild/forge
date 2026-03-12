@@ -1,0 +1,3 @@
+---
+node-label: node-role.kubernetes.io/agent="true"
+node-label: app=compute
