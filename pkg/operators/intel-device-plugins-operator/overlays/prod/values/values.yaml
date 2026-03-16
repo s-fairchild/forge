@@ -1,10 +1,14 @@
 ---
+# yaml-language-server: $schema=../../../../../schemas/intel-device-plugins-operator/values.schema.json
+#
 # References:
 #   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/README.md
 #   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/values.yaml
 
 nodeSelector:
+  # yaml-language-server-disable Property node-role.kubernetes.io/control-plane is not allowed
   node-role.kubernetes.io/control-plane: "true"
+  kubernetes.io/arch: amd64
 
 manager:
   image:
@@ -12,8 +16,8 @@ manager:
     tag: ""
     pullPolicy: IfNotPresent
 
-  # supported devices by the operator
   devices:
+    # yaml-language-server-disable Incorrect type. Expected "null"
     gpu: true
 
 privateRegistry:

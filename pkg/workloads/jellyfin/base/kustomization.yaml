@@ -6,20 +6,19 @@ resources:
 - namespace.yaml
 - deployment.yaml
 
-- service/web-svc-service.yaml
-- ingressroute/web-svc-host-ir.yaml
-- ingressroute/web-svc-path-ir.yaml
-- certificate/web-svc-certificate.yaml
+- services/web-svc-service.yaml
 
-- middleware/web-svc-headers-mw.yaml
-- middleware/web-svc-https-redirect-mw.yaml
-- middleware/web-svc-secured-chain-mw.yaml
+- ingressroutes/web-svc-ir.yaml
+
+- middlewares/web-svc-headers-mw.yaml
+- middlewares/web-svc-https-redirect-mw.yaml
+- middlewares/web-svc-secured-chain-mw.yaml
 
 - pvc/cache-pvc.yaml
 - pvc/plugins-pvc.yaml
 - pvc/config-pvc.yaml
 - pvc/data-pvc.yaml
-- pvc/images-pvc.yaml
+- pvc/log-pvc.yaml
 - pvc/media-pvc.yaml
 - pvc/metadata-pvc.yaml
 - pvc/transcodes-pvc.yaml

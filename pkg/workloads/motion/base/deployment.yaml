@@ -36,13 +36,7 @@ spec:
           mountPath: /root/.motion
           # mountPropagation: HostToContainer
           readOnly: true
-        - name: camera-conf
-          mountPath: /etc/motion/conf.d
-          # Allows for sending reload signal to the motion process
-          # Re-reading the updated config files
-          # mountPropagation: HostToContainer
-          readOnly: true
-        - name: media
+        - name: recordings
           mountPath: /var/motion
           # Allows for sending reload signal to the motion process
           # Re-reading the updated config files
@@ -58,11 +52,7 @@ spec:
       - name: motion-conf
         configMap:
           name: motion-conf-cm
-          optional: true
-      - name: camera-conf
-        configMap:
-          name: camera-conf-cm
-          optional: true
-      - name: media
+          optional: false
+      - name: recordings
         persistentVolumeClaim:
-          claimName: media-pvc
+          claimName: recordings-pvc

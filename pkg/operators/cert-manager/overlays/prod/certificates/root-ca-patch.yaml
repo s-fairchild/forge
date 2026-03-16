@@ -1,0 +1,22 @@
+---
+- op: add
+  path: /spec/dnsNames
+  value:
+    - "rick.expresso.lan"
+    - "root-ca.rick.expresso.lan"
+
+- op: add
+  path: /spec/secretTemplate
+  value: {}
+
+- op: add
+  path: /spec/secretTemplate/labels
+  value: {}
+
+- op: add
+  path: "/spec/secretTemplate/labels/enterprise.mariadb.com~1watch"
+  value: ""
+
+- op: add
+  path: /spec/duration
+  value: 52596h # 6 years

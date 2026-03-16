@@ -66,14 +66,12 @@ spec:
         volumeMounts:
         - name: cache
           mountPath: /config/cache
-        - name: logs
-          mountPath: /config/logs
+        - name: log
+          mountPath: /config/log
         - name: transcodes
           mountPath: /config/data/transcodes
         - name: media
           mountPath: /media
-        - name: images
-          mountPath: /config/cache/images
         - name: config
           mountPath: /config
         - name: plugins
@@ -88,13 +86,9 @@ spec:
       - name: cache
         persistentVolumeClaim:
           claimName: cache-pvc
-      - name: images
+      - name: log
         persistentVolumeClaim:
-          claimName: images-pvc
-      - name: logs
-        emptyDir:
-          medium: Memory
-          sizeLimit: 500Mi
+          claimName: log-pvc
       - name: transcodes
         persistentVolumeClaim:
           claimName: transcodes-pvc

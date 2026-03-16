@@ -1,4 +1,6 @@
 ---
+# yaml-language-server: $schema=../../../../schemas/intel-device-plugins-operator/values.schema.json
+#
 # References:
 #   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/README.md
 #   * https://github.com/intel/helm-charts/blob/main/charts/device-plugin-operator/values.yaml

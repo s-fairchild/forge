@@ -1,0 +1,1513 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "featureGates": {
+      "additionalProperties": false,
+      "properties": {
+        "NodeFeatureGroupAPI": {
+          "default": false,
+          "title": "NodeFeatureGroupAPI",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "NodeFeatureGroupAPI"
+      ],
+      "title": "featureGates",
+      "type": "object"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "gc": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "affinity",
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "deploymentAnnotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "deploymentAnnotations",
+          "type": "object"
+        },
+        "dnsPolicy": {
+          "default": "ClusterFirstWithHostNet",
+          "title": "dnsPolicy",
+          "type": "string"
+        },
+        "enable": {
+          "default": true,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraEnvs",
+          "type": "array"
+        },
+        "hostNetwork": {
+          "default": false,
+          "title": "hostNetwork",
+          "type": "boolean"
+        },
+        "interval": {
+          "default": "1h",
+          "title": "interval",
+          "type": "string"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "default": 10,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "podDisruptionBudget": {
+          "additionalProperties": false,
+          "properties": {
+            "enable": {
+              "default": false,
+              "title": "enable",
+              "type": "boolean"
+            },
+            "minAvailable": {
+              "default": 1,
+              "title": "minAvailable",
+              "type": "integer"
+            },
+            "unhealthyPodEvictionPolicy": {
+              "default": "AlwaysAllow",
+              "title": "unhealthyPodEvictionPolicy",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enable",
+            "minAvailable",
+            "unhealthyPodEvictionPolicy"
+          ],
+          "title": "podDisruptionBudget",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "port": {
+          "default": 8080,
+          "title": "port",
+          "type": "integer"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "create"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "default": 5,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "replicaCount": {
+          "default": 1,
+          "title": "replicaCount",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "memory": {
+                  "default": "1Gi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "10m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "128Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "revisionHistoryLimit": {
+          "default": "",
+          "description": "specify how many old ReplicaSets for the Deployment to retain.",
+          "title": "revisionHistoryLimit",
+          "type": "null"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "title": "name",
+              "type": "null"
+            }
+          },
+          "required": [
+            "create",
+            "annotations",
+            "name"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tolerations": {
+          "items": {
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "extraArgs",
+        "extraEnvs",
+        "hostNetwork",
+        "replicaCount",
+        "dnsPolicy",
+        "serviceAccount",
+        "rbac",
+        "interval",
+        "podSecurityContext",
+        "livenessProbe",
+        "readinessProbe",
+        "resources",
+        "port",
+        "nodeSelector",
+        "tolerations",
+        "annotations",
+        "deploymentAnnotations",
+        "affinity",
+        "podDisruptionBudget",
+        "revisionHistoryLimit"
+      ],
+      "title": "gc",
+      "type": "object"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "yaml-language-server: $schema=values.schema.json",
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This should be set to 'IfNotPresent' for released version",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "registry.k8s.io/nfd/node-feature-discovery",
+          "title": "repository",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "master": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "properties": {
+            "nodeAffinity": {
+              "additionalProperties": false,
+              "properties": {
+                "preferredDuringSchedulingIgnoredDuringExecution": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "preference": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "matchExpressions": {
+                                "items": {
+                                  "anyOf": [
+                                    {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "key": {
+                                          "default": "node-role.kubernetes.io/control-plane",
+                                          "title": "key",
+                                          "type": "string"
+                                        },
+                                        "operator": {
+                                          "default": "In",
+                                          "title": "operator",
+                                          "type": "string"
+                                        },
+                                        "values": {
+                                          "items": {
+                                            "anyOf": [
+                                              {
+                                                "type": "string"
+                                              }
+                                            ],
+                                            "required": []
+                                          },
+                                          "title": "values",
+                                          "type": "array"
+                                        }
+                                      },
+                                      "required": [
+                                        "key",
+                                        "operator",
+                                        "values"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  ],
+                                  "required": []
+                                },
+                                "title": "matchExpressions",
+                                "type": "array"
+                              }
+                            },
+                            "required": [
+                              "matchExpressions"
+                            ],
+                            "title": "preference",
+                            "type": "object"
+                          },
+                          "weight": {
+                            "default": 1,
+                            "title": "weight",
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "weight",
+                          "preference"
+                        ],
+                        "type": "object"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "preferredDuringSchedulingIgnoredDuringExecution",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "preferredDuringSchedulingIgnoredDuringExecution"
+              ],
+              "title": "nodeAffinity",
+              "type": "object"
+            }
+          },
+          "required": [
+            "nodeAffinity"
+          ],
+          "title": "affinity",
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "config": {
+          "default": "",
+          "title": "config",
+          "type": "null"
+        },
+        "denyLabelNs": {
+          "items": {
+            "required": []
+          },
+          "title": "denyLabelNs",
+          "type": "array"
+        },
+        "deploymentAnnotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "deploymentAnnotations",
+          "type": "object"
+        },
+        "dnsPolicy": {
+          "default": "ClusterFirstWithHostNet",
+          "title": "dnsPolicy",
+          "type": "string"
+        },
+        "enable": {
+          "default": true,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "enableTaints": {
+          "default": false,
+          "title": "enableTaints",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraEnvs",
+          "type": "array"
+        },
+        "extraLabelNs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraLabelNs",
+          "type": "array"
+        },
+        "hostNetwork": {
+          "default": false,
+          "title": "hostNetwork",
+          "type": "boolean"
+        },
+        "instance": {
+          "default": "",
+          "title": "instance",
+          "type": "null"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "nfdApiParallelism": {
+          "default": "null",
+          "title": "nfdApiParallelism",
+          "type": "null"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "podDisruptionBudget": {
+          "additionalProperties": false,
+          "properties": {
+            "enable": {
+              "default": false,
+              "title": "enable",
+              "type": "boolean"
+            },
+            "minAvailable": {
+              "default": 1,
+              "title": "minAvailable",
+              "type": "integer"
+            },
+            "unhealthyPodEvictionPolicy": {
+              "default": "AlwaysAllow",
+              "title": "unhealthyPodEvictionPolicy",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enable",
+            "minAvailable",
+            "unhealthyPodEvictionPolicy"
+          ],
+          "title": "podDisruptionBudget",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "port": {
+          "default": "8080",
+          "description": " extraLabelNs: [\"added.ns.io\",\"added.kubernets.io\"] denyLabelNs: [\"denied.ns.io\",\"denied.kubernetes.io\"] enableTaints: false informerPageSize: 200 labelWhiteList: \"foo\" resyncPeriod: \"2h\" restrictions:   disableLabels: true   disableTaints: true   disableExtendedResources: true   disableAnnotations: true   allowOverwrite: false   denyNodeFeatureLabels: true   nodeFeatureNamespaceSelector:    matchLabels:      kubernetes.io/metadata.name: \"node-feature-discovery\"    matchExpressions:      - key: \"kubernetes.io/metadata.name\"        operator: \"In\"        values:           - \"node-feature-discovery\" klog:    addDirHeader: false    alsologtostderr: false    logBacktraceAt:    logtostderr: true    skipHeaders: false    stderrthreshold: 2    v: 0    vmodule: #   NOTE: the following options are not dynamically run-time configurable #         and require a nfd-master restart to take effect after being changed    logDir:    logFile:    logFileMaxSize: 1800    skipLogHeaders: false leaderElection:   leaseDuration: 15s   # this value has to be lower than leaseDuration and greater than retryPeriod*1.2   renewDeadline: 10s   # this value has to be greater than 0   retryPeriod: 2s nfdApiParallelism: 10 ## \u003cNFD-MASTER-CONF-END-DO-NOT-REMOVE\u003e",
+          "required": [],
+          "title": "port"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "create"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "description": " initialDelaySeconds: 0 periodSeconds: 10 timeoutSeconds: 1",
+          "properties": {
+            "failureThreshold": {
+              "default": 10,
+              "title": "failureThreshold",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold"
+          ],
+          "title": "readinessProbe"
+        },
+        "replicaCount": {
+          "default": 1,
+          "title": "replicaCount",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "memory": {
+                  "default": "4Gi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "100m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "128Mi",
+                  "description": " If there is a large difference between “requests” and “limits” and nodes experience memory pressure, the kernel may invoke the OOM Killer, even if the memory does not exceed the “limits” threshold. This can cause unexpected pod evictions. Memory cannot be compressed and once allocated to a pod, it can only be reclaimed by killing the pod. Natan Yellin 22/09/2022 https://home.robusta.dev/blog/kubernetes-memory-limit",
+                  "required": [],
+                  "title": "memory"
+                }
+              },
+              "required": [
+                "cpu"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "resyncPeriod": {
+          "default": "",
+          "title": "resyncPeriod",
+          "type": "null"
+        },
+        "revisionHistoryLimit": {
+          "default": "",
+          "description": "specify how many old ReplicaSets for the Deployment to retain.",
+          "title": "revisionHistoryLimit",
+          "type": "null"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "default": false,
+              "title": "allowPrivilegeEscalation",
+              "type": "boolean"
+            },
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": true,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowPrivilegeEscalation",
+            "capabilities",
+            "readOnlyRootFilesystem",
+            "runAsNonRoot"
+          ],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations to add to the service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "create": {
+              "default": true,
+              "description": "Specifies whether a service account should be created",
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "description": " If not set and create is true, a name is generated using the fullname template",
+              "required": [],
+              "title": "name"
+            }
+          },
+          "required": [
+            "create",
+            "annotations"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "startupProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "default": 30,
+              "title": "failureThreshold",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "failureThreshold"
+          ],
+          "title": "startupProbe",
+          "type": "object"
+        },
+        "tolerations": {
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "effect": {
+                    "default": "NoSchedule",
+                    "title": "effect",
+                    "type": "string"
+                  },
+                  "key": {
+                    "default": "node-role.kubernetes.io/control-plane",
+                    "title": "key",
+                    "type": "string"
+                  },
+                  "operator": {
+                    "default": "Equal",
+                    "title": "operator",
+                    "type": "string"
+                  },
+                  "value": {
+                    "default": "",
+                    "title": "value",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "operator",
+                  "value",
+                  "effect"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enable",
+        "extraArgs",
+        "extraEnvs",
+        "hostNetwork",
+        "dnsPolicy",
+        "config",
+        "instance",
+        "resyncPeriod",
+        "denyLabelNs",
+        "extraLabelNs",
+        "enableTaints",
+        "nfdApiParallelism",
+        "deploymentAnnotations",
+        "replicaCount",
+        "podSecurityContext",
+        "securityContext",
+        "serviceAccount",
+        "revisionHistoryLimit",
+        "rbac",
+        "resources",
+        "nodeSelector",
+        "tolerations",
+        "podDisruptionBudget",
+        "annotations",
+        "affinity",
+        "startupProbe",
+        "livenessProbe"
+      ],
+      "title": "master",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "namespaceOverride": {
+      "default": "",
+      "title": "namespaceOverride",
+      "type": "string"
+    },
+    "postDeleteCleanup": {
+      "default": true,
+      "title": "postDeleteCleanup",
+      "type": "boolean"
+    },
+    "priorityClassName": {
+      "default": "",
+      "title": "priorityClassName",
+      "type": "string"
+    },
+    "prometheus": {
+      "additionalProperties": false,
+      "properties": {
+        "enable": {
+          "default": false,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "labels": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "labels",
+          "type": "object"
+        },
+        "scrapeInterval": {
+          "default": "10s",
+          "title": "scrapeInterval",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enable",
+        "scrapeInterval",
+        "labels"
+      ],
+      "title": "prometheus",
+      "type": "object"
+    },
+    "topologyUpdater": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "affinity",
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "config": {
+          "default": "",
+          "title": "config",
+          "type": "null"
+        },
+        "createCRDs": {
+          "default": false,
+          "title": "createCRDs",
+          "type": "boolean"
+        },
+        "daemonsetAnnotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "daemonsetAnnotations",
+          "type": "object"
+        },
+        "dnsPolicy": {
+          "default": "ClusterFirstWithHostNet",
+          "title": "dnsPolicy",
+          "type": "string"
+        },
+        "enable": {
+          "default": false,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraEnvs",
+          "type": "array"
+        },
+        "hostNetwork": {
+          "default": false,
+          "title": "hostNetwork",
+          "type": "boolean"
+        },
+        "kubeletConfigPath": {
+          "default": "",
+          "title": "kubeletConfigPath",
+          "type": "null"
+        },
+        "kubeletPodResourcesSockPath": {
+          "default": "",
+          "title": "kubeletPodResourcesSockPath",
+          "type": "null"
+        },
+        "kubeletStateDir": {
+          "default": "/var/lib/kubelet",
+          "title": "kubeletStateDir",
+          "type": "string"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "default": 10,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "podSetFingerprint": {
+          "default": true,
+          "title": "podSetFingerprint",
+          "type": "boolean"
+        },
+        "port": {
+          "default": 8080,
+          "title": "port",
+          "type": "integer"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "create"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "default": 10,
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 5,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds",
+            "failureThreshold"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "memory": {
+                  "default": "60Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "50m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "40Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "revisionHistoryLimit": {
+          "default": "",
+          "description": "specify how many old ControllerRevisions for the DaemonSet to retain.",
+          "title": "revisionHistoryLimit",
+          "type": "null"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "default": false,
+              "title": "allowPrivilegeEscalation",
+              "type": "boolean"
+            },
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": true,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "default": 0,
+              "title": "runAsUser",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "allowPrivilegeEscalation",
+            "capabilities",
+            "readOnlyRootFilesystem",
+            "runAsUser"
+          ],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "title": "name",
+              "type": "null"
+            }
+          },
+          "required": [
+            "create",
+            "annotations",
+            "name"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tolerations": {
+          "items": {
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "updateInterval": {
+          "default": "60s",
+          "title": "updateInterval",
+          "type": "string"
+        },
+        "watchNamespace": {
+          "default": "*",
+          "title": "watchNamespace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "config",
+        "enable",
+        "createCRDs",
+        "extraArgs",
+        "extraEnvs",
+        "hostNetwork",
+        "dnsPolicy",
+        "serviceAccount",
+        "revisionHistoryLimit",
+        "rbac",
+        "port",
+        "kubeletConfigPath",
+        "kubeletPodResourcesSockPath",
+        "updateInterval",
+        "watchNamespace",
+        "kubeletStateDir",
+        "podSecurityContext",
+        "securityContext",
+        "livenessProbe",
+        "readinessProbe",
+        "resources",
+        "nodeSelector",
+        "tolerations",
+        "annotations",
+        "daemonsetAnnotations",
+        "affinity",
+        "podSetFingerprint"
+      ],
+      "title": "topologyUpdater",
+      "type": "object"
+    },
+    "worker": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "affinity",
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "config": {
+          "default": "",
+          "title": "config",
+          "type": "null"
+        },
+        "daemonsetAnnotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "daemonsetAnnotations",
+          "type": "object"
+        },
+        "dnsPolicy": {
+          "default": "ClusterFirstWithHostNet",
+          "title": "dnsPolicy",
+          "type": "string"
+        },
+        "enable": {
+          "default": true,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraEnvs": {
+          "items": {
+            "required": []
+          },
+          "title": "extraEnvs",
+          "type": "array"
+        },
+        "hostNetwork": {
+          "default": false,
+          "title": "hostNetwork",
+          "type": "boolean"
+        },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "initialDelaySeconds": {
+              "default": 10,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
+        "mountUsrSrc": {
+          "default": "false",
+          "description": " Does not work on systems without /usr/src AND a read-only /usr, such as Talos",
+          "required": [],
+          "title": "mountUsrSrc"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "port": {
+          "default": 8080,
+          "title": "port",
+          "type": "integer"
+        },
+        "priorityClassName": {
+          "default": "",
+          "title": "priorityClassName",
+          "type": "string"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "properties": {
+            "create": {
+              "default": true,
+              "title": "create",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "create"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "failureThreshold": {
+              "default": 10,
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "initialDelaySeconds": {
+              "default": 5,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "initialDelaySeconds",
+            "failureThreshold"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "memory": {
+                  "default": "512Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "5m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "64Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "limits",
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "revisionHistoryLimit": {
+          "default": "",
+          "description": "specify how many old ControllerRevisions for the DaemonSet to retain.",
+          "title": "revisionHistoryLimit",
+          "type": "null"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "default": false,
+              "title": "allowPrivilegeEscalation",
+              "type": "boolean"
+            },
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": true,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowPrivilegeEscalation",
+            "capabilities",
+            "readOnlyRootFilesystem",
+            "runAsNonRoot"
+          ],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations to add to the service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "create": {
+              "default": "true",
+              "description": " We create this by default to make it easier for downstream users to apply PodSecurityPolicies.",
+              "required": [],
+              "title": "create"
+            },
+            "name": {
+              "default": "",
+              "description": " If not set and create is true, a name is generated using the fullname template",
+              "required": [],
+              "title": "name"
+            }
+          },
+          "required": [
+            "annotations"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tolerations": {
+          "items": {
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "updateStrategy": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "updateStrategy",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enable",
+        "extraArgs",
+        "extraEnvs",
+        "hostNetwork",
+        "dnsPolicy",
+        "config",
+        "port",
+        "daemonsetAnnotations",
+        "podSecurityContext",
+        "securityContext",
+        "livenessProbe",
+        "readinessProbe",
+        "serviceAccount",
+        "revisionHistoryLimit",
+        "rbac",
+        "resources",
+        "nodeSelector",
+        "tolerations",
+        "annotations",
+        "affinity",
+        "priorityClassName",
+        "updateStrategy"
+      ],
+      "title": "worker",
+      "type": "object"
+    }
+  },
+  "required": [
+    "image",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "namespaceOverride",
+    "featureGates",
+    "priorityClassName",
+    "postDeleteCleanup",
+    "master",
+    "worker",
+    "topologyUpdater",
+    "gc",
+    "prometheus"
+  ],
+  "type": "object"
+}

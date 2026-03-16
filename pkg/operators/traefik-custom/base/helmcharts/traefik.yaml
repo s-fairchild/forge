@@ -22,4 +22,4 @@ spec:
   - name: traefik-custom-values
     ignoreUpdates: false
     keys:
-      - values
+      - values.yaml

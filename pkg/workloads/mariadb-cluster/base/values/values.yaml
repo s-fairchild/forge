@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=../../../../schemas/mariadb-cluster/values.schema.json
+
+nameOverride: ""
+fullnameOverride: "mariadb"
+namespaceOverride: "mariadb"
+
+# yaml-language-server-disable Missing property
+mariadb:
+  # username: mariadb-mariadb-sys
+  rootPasswordSecretKeyRef:
+    name: mariadb-auth
+    key: root
+    generate: true
+
+
+databases:
+  - name: mariadb-sys
+    characterSet: utf8
+    collate: utf8_general_ci
+    cleanupPolicy: Delete
+    requeueInterval: 10h
+    retryInterval: 30s

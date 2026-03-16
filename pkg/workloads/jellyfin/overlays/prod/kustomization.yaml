@@ -13,16 +13,75 @@ secretGenerator:
 
 patches:
 - path: deployment.yaml
-- path: pvc/cache-pvc.yaml
-- path: pvc/plugins-pvc.yaml
-- path: pvc/config-pvc.yaml
-- path: pvc/data-pvc.yaml
-- path: pvc/images-pvc.yaml
-- path: pvc/media-pvc.yaml
-- path: pvc/metadata-pvc.yaml
-- path: pvc/transcodes-pvc.yaml
 
-patchesStrategicMerge:
-- certificate/web-svc-certificate.yaml
-- ingressroute/web-svc-ingressroute.yaml
-- middleware/web-svc-headers.yaml
+- path: pvc/metadata-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: metadata-pvc
+    namespace: jellyfin
+
+- path: pvc/cache-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: cache-pvc
+    namespace: jellyfin
+
+- path: pvc/config-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: config-pvc
+    namespace: jellyfin
+
+- path: pvc/data-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: data-pvc
+    namespace: jellyfin
+
+- path: pvc/media-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: media-pvc
+    namespace: jellyfin
+
+- path: pvc/transcodes-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: transcodes-pvc
+    namespace: jellyfin
+
+- path: pvc/plugins-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: plugins-pvc
+    namespace: jellyfin
+
+- path: pvc/log-pvc-patch.yaml
+  target:
+    version: v1
+    kind: PersistentVolumeClaim
+    name: log-pvc
+    namespace: jellyfin
+
+- path: ingressroutes/web-svc-ir-patch.yaml
+  target:
+    version: v1alpha1
+    group: traefik.io
+    kind: IngressRoute
+    name: web-svc-ir
+    namespace: jellyfin
+
+- path: middlewares/web-svc-headers-patch.yaml
+  target:
+    version: v1alpha1
+    group: traefik.io
+    kind: Middleware
+    name: web-svc-headers-mw
+    namespace: jellyfin

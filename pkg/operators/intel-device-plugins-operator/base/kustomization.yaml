@@ -3,7 +3,9 @@ kind: Kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 
 resources:
-  - helmcharts/device-plugins-operator.yaml
+- namespace.yaml
+- helmcharts/device-plugins-operator.yaml
+- certificates/inteldeviceplugins-serving-cert.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -13,3 +15,7 @@ secretGenerator:
     namespace: kube-system
     files:
       - values/values.yaml
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

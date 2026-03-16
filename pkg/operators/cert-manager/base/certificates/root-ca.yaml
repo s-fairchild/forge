@@ -1,0 +1,29 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: root-ca
+  namespace: cert-manager
+spec:
+  commonName: root-ca
+
+  usages:
+  - digital signature
+  - key encipherment
+  - cert sign
+
+  privateKey:
+    encoding: PKCS1
+    algorithm: ECDSA
+    size: 256
+
+  secretName: root-ca
+
+  revisionHistoryLimit: 10
+
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  isCA: true

@@ -10,3 +10,7 @@ secretGenerator:
     namespace: kube-system
     files:
       - values/values.yaml
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

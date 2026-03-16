@@ -1,15 +1,30 @@
 ---
-# TODO add taint to servicelb nodes
-# kubectl taint node k3s-svclb-0 enablelb=true:NoSchedule
-- op: replace
-  path: /spec/valuesSecrets
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
   value:
-  - ignoreUpdates: false
-    name: traefik-custom-values
-    keys:
-      - ingress-route.yaml
-      - logs.yaml
-      - ports.yaml
-      - providers.yaml
-      - service.yaml
-      - values.yaml
+    ingress-route.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    logs.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    ports.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    ports.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    providers.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    service.yaml

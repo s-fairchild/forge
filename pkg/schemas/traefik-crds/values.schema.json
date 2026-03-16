@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "deleteOnUninstall": {
+      "default": "false",
+      "description": "Set it to true if you want to uninstall CRDs when uninstalling this chart. By default, CRDs will be kept so your custom resources will not be deleted accidentally.",
+      "required": [],
+      "title": "deleteOnUninstall"
+    },
+    "enabled": {
+      "default": "true",
+      "description": "Field that can be used as a condition when this chart is a dependency. This definition is only here as a placeholder such that it is included in the json schema. See https://helm.sh/docs/chart_best_practices/dependencies/#conditions-and-tags for more info.",
+      "required": [],
+      "title": "enabled"
+    },
+    "gatewayAPI": {
+      "default": "false",
+      "description": "Set it to true to install GatewayAPI CRDs. Needed if you set providers.kubernetesGateway.enabled to true in main chart Cannot be used together with gatewayAPIExperimental",
+      "required": [],
+      "title": "gatewayAPI"
+    },
+    "gatewayAPIExperimental": {
+      "default": "false",
+      "description": "Set it to true to install experimental GatewayAPI CRDs. This includes additional experimental features beyond the standard Gateway API Cannot be used together with gatewayAPI",
+      "required": [],
+      "title": "gatewayAPIExperimental"
+    },
+    "global": {
+      "additionalProperties": false,
+      "description": "Global values This definition is only here as a placeholder such that it is included in the json schema.",
+      "required": [],
+      "title": "global"
+    },
+    "hub": {
+      "default": "false",
+      "description": "Set it to true to install Traefik Hub CRDs. Needed if you set hub.enabled to true in main chart",
+      "required": [],
+      "title": "hub"
+    },
+    "knative": {
+      "default": "false",
+      "description": "Set it to true to install Knative CRDs. Needed if you set providers.knative.enabled to true in main chart",
+      "required": [],
+      "title": "knative"
+    },
+    "traefik": {
+      "default": "true",
+      "description": "Install Traefik CRDs by default",
+      "required": [],
+      "title": "traefik"
+    }
+  },
+  "required": [],
+  "type": "object"
+}

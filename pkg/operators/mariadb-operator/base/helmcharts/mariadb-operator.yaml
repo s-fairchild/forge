@@ -1,0 +1,24 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: mariadb-operator
+  namespace: kube-system
+spec:
+  chart: mariadb-operator
+  # https://github.com/mariadb-operator/mariadb-operator/blob/main/deploy/charts/mariadb-operator/Chart.yaml
+  repo: https://helm.mariadb.com/mariadb-operator
+  version: 26.3.0
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  targetNamespace: mariadb-operator
+  takeOwnership: true
+  failurePolicy: reinstall
+
+  valuesSecrets:
+  - name: mariadb-operator-values
+    ignoreUpdates: false
+    keys:
+      - base-values.yaml

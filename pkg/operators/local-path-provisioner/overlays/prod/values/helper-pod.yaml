@@ -1,0 +1,42 @@
+---
+helperImage:
+  repository: docker.io/steve51516/btrfs-progs
+  tag: latest
+  imagePullPolicy: IfNotPresent
+
+helperPod:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+
+configmap:
+  helperPod:
+    priorityClassName: "system-node-critical"
+
+    containers:
+    - name: helper-pod
+
+    # This is not copied into the helperPod yaml
+    # Not sure why, but without it we cannot provision btrfs subvolumes
+    # One solution is to create the configmap outside of helm
+    securityContext:
+      privileged: true
+
+
+    tolerations:
+    - key: node.kubernetes.io/disk-pressure
+      operator: Exists
+      effect: NoSchedule
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"

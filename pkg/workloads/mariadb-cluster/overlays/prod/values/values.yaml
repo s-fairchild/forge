@@ -1,0 +1,122 @@
+---
+# yaml-language-server: $schema=../../../../../schemas/mariadb-cluster/values.schema.json
+
+# yaml-language-server-disable Missing property
+mariadb:
+  replicas: 3
+
+  podDisruptionBudget:
+    maxUnavailable: 33%
+
+  # yaml-language-server-disable Missing property "size"
+  storage:
+    ephemeral: false
+    resizeInUseVolumes: true
+    waitForVolumeResize: true
+
+    volumeClaimTemplate: 
+      storageClassName: local-path
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
+  nodeSelector:
+    k8s.mariadb.com/node: "ha" 
+
+  affinity:
+    # For now all should run on a single node
+    # There is no real reason to run multiple agents containers on the same physical host
+    antiAffinityEnabled: false
+
+  tolerations:
+    - key: "k8s.mariadb.com/ha"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+  tls:
+    enabled: true
+    required: false
+    galeraSSTEnabled: true
+
+    serverCertIssuerRef:
+      name: root-ca
+      kind: ClusterIssuer
+
+    clientCertIssuerRef:
+      name: root-ca
+      kind: ClusterIssuer
+
+  # bootstrapFrom:
+    # restoreJob:
+      # affinity:
+        # antiAffinityEnabled: true
+
+  metrics:
+    exporter:
+      affinity:
+        # For now all should run on a single node
+        # There is no real reason to run multiple agents containers on the same physical host
+        antiAffinityEnabled: false
+
+  # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galera
+  galera:
+    enabled: true
+
+  # yaml-language-server-disable Property recovery is not allowed
+    recovery:
+      enabled: true
+    
+    # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#sst
+    #
+    # yaml-language-server-disable Property sst is not allowed
+    sst: mariabackup
+
+    # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galeraconfig
+    #
+    # yaml-language-server-disable Property config is not allowed
+    config:
+      reuseStorageVolume: true
+
+      volumeClaimTemplate:
+        storageClassName: local-path
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+      # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galerarecoveryjob
+      # job:
+
+backups:
+  - name: backup
+    schedule:
+      cron: "0 0 * * *"
+      suspend: false
+    compression: gzip
+    maxRetention: 720h # 30 days
+    storage:
+      persistentVolumeClaim:
+        storageClassName: local-path-nvme
+
+physicalBackups:
+  - name: physical-backup
+
+    schedule:
+      cron: "0 0 * * *"
+      suspend: false
+      immediate: true
+
+    compression: gzip
+    maxRetention: 720h
+
+    storage:
+      persistentVolumeClaim:
+        storageClassName: local-path-nvme
+
+    affinity:
+      # For now all should run on a single node
+      # There is no real reason to run multiple agents containers on the same physical host
+      antiAffinityEnabled: false

@@ -1,0 +1,4 @@
+---
+- op: replace
+  path: /spec/headers/customFrameOptionsValue
+  value: "'allow-from https://app.jellyfin.expresso.lan'"

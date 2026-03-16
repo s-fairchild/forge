@@ -1,11 +1,16 @@
 ---
 resources:
-- helmcharts/device-plugins-gpu.yaml
+  - helmcharts/device-plugins-gpu.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
 
 secretGenerator:
 - name: intel-device-plugins-gpu-values
   namespace: kube-system
   files:
     - values/values.yaml
-  options:
-    disableNameSuffixHash: true
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

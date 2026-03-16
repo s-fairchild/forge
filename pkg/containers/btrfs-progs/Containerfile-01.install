@@ -6,4 +6,6 @@ RUN apk \
         && apk \
         --cache=no \
                 add \
-                btrfs-progs ca-certificates
+                btrfs-progs ca-certificates bash
+                # Possibly install bash
+                # btrfs-progs ca-certificates bash

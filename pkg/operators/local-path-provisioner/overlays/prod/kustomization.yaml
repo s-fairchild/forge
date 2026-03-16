@@ -5,6 +5,15 @@ kind: Kustomization
 resources:
   - ../../base
 
+patches:
+  - path: helmcharts/local-path-provisioner-patch.yaml
+    target:
+      version: v1
+      group: helm.cattle.io
+      kind: HelmChart
+      name: local-path-provisioner
+      namespace: kube-system
+
 secretGenerator:
   - name: local-path-provisioner-values
     namespace: kube-system
@@ -12,3 +21,4 @@ secretGenerator:
     files:
       - values/values.yaml
       - values/configmap.yaml
+      - values/helper-pod.yaml

@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "backups": {
+      "description": "The list of Backup CRs. The `.mariaDbRef` keys will be ignored. The `.name` keys are used to generate distinct CR names. The `.namespace` keys are allowed to override `.Release.Namespace`. https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#backupspec",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "backups"
+    },
+    "databases": {
+      "description": "The list of Database CRs. The `.mariaDbRef` keys will be ignored. The `.name` keys are required to generate distinct CR names. The `.namespace` keys are allowed to override `.Release.Namespace`. https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#databasespec",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "databases"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "grants": {
+      "description": "The list of Grant CRs. The `.mariaDbRef` keys will be ignored. The `.name` keys are used to generate distinct CR names. The `.namespace` keys are allowed to override `.Release.Namespace`. https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#grantspec",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "grants"
+    },
+    "mariadb": {
+      "additionalProperties": true,
+      "description": "MariaDB CR https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#mariadbspec\nMariaDBSpec: https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#mariadbspec",
+      "properties": {
+        "galera": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "galera",
+          "type": "object"
+        },
+        "replicas": {
+          "default": 3,
+          "title": "replicas",
+          "type": "integer"
+        },
+        "rootPasswordSecretKeyRef": {
+          "additionalProperties": false,
+          "properties": {
+            "generate": {
+              "default": true,
+              "title": "generate",
+              "type": "boolean"
+            },
+            "key": {
+              "default": "root",
+              "title": "key",
+              "type": "string"
+            },
+            "name": {
+              "default": "The chart will generate the Secret name e.g. `myrelease-mariadb-cluster-root`",
+              "description": "The name of the Secret holding root password.",
+              "required": [],
+              "title": "name"
+            }
+          },
+          "required": [
+            "key",
+            "generate"
+          ],
+          "title": "rootPasswordSecretKeyRef",
+          "type": "object"
+        },
+        "storage": {
+          "description": "Storage: https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#storage",
+          "additionalProperties": true,
+          "properties": {
+            "size": {
+              "default": "1Gi",
+              "title": "size",
+              "type": "string"
+            }
+          },
+          "required": [
+            "size"
+          ],
+          "title": "storage",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rootPasswordSecretKeyRef",
+        "storage",
+        "replicas",
+        "galera"
+      ],
+      "title": "mariadb"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "yaml-language-server: $schema=values.schema.json",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "namespaceOverride": {
+      "default": "",
+      "title": "namespaceOverride",
+      "type": "string"
+    },
+    "physicalBackups": {
+      "description": "The list of PhysicalBackup CRs. The `.mariaDbRef` keys will be ignored. The `.name` keys are used to generate distinct CR names. The `.namespace` keys are allowed to override `.Release.Namespace`. https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#physicalbackup",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "physicalBackups"
+    },
+    "users": {
+      "description": "The list of User CRs. The `.mariaDbRef` keys will be ignored. The `.name` keys are required to generate distinct CR names. The `.namespace` keys are allowed to override `.Release.Namespace`. https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#userspec",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "users"
+    }
+  },
+  "required": [
+    "nameOverride",
+    "fullnameOverride",
+    "namespaceOverride"
+  ],
+  "type": "object"
+}

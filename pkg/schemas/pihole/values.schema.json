@@ -1,0 +1,1303 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "DNS1": {
+      "default": "8.8.8.8",
+      "description": "default upstream DNS 1 server to use",
+      "required": [],
+      "title": "DNS1"
+    },
+    "DNS2": {
+      "default": "8.8.4.4",
+      "description": "default upstream DNS 2 server to use",
+      "required": [],
+      "title": "DNS2"
+    },
+    "adlists": {
+      "additionalProperties": false,
+      "description": "list of adlists to import during initial start of the container",
+      "required": [],
+      "title": "adlists"
+    },
+    "admin": {
+      "additionalProperties": false,
+      "description": "Use an existing secret for the admin password.",
+      "properties": {
+        "annotations": {
+          "default": "",
+          "description": "Specify [annotations](docs/Values.md#admin.annotations) to be added to the secret",
+          "required": [],
+          "title": "annotations"
+        },
+        "enabled": {
+          "default": "true",
+          "description": "If set to false admin password will be disabled, adminPassword specified above and the pre-existing secret (if specified) will be ignored.",
+          "required": [],
+          "title": "enabled"
+        },
+        "existingSecret": {
+          "default": "",
+          "description": "Specify an existing secret to use as admin password",
+          "required": [],
+          "title": "existingSecret"
+        },
+        "passwordKey": {
+          "default": "password",
+          "description": "Specify the key inside the secret to use",
+          "required": [],
+          "title": "passwordKey"
+        }
+      },
+      "required": [],
+      "title": "admin"
+    },
+    "adminPassword": {
+      "default": "admin",
+      "description": "Administrator password when not using an existing secret (see below)",
+      "required": [],
+      "title": "adminPassword"
+    },
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "antiaff": {
+      "additionalProperties": false,
+      "properties": {
+        "avoidRelease": {
+          "default": "pihole1",
+          "description": "Here you can set the pihole release (you set in `helm install \u003creleasename\u003e ...`) you want to avoid",
+          "required": [],
+          "title": "avoidRelease"
+        },
+        "enabled": {
+          "default": "false",
+          "description": "set to true to enable antiaffinity (example: 2 pihole DNS in the same cluster)",
+          "required": [],
+          "title": "enabled"
+        },
+        "namespaces": {
+          "description": "Here you can pass namespaces to be part of those inclueded in anti-affinity",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "namespaces"
+        },
+        "strict": {
+          "default": "true",
+          "description": "Here you can choose between preferred or required",
+          "required": [],
+          "title": "strict"
+        }
+      },
+      "required": [],
+      "title": "antiaff",
+      "type": "object"
+    },
+    "blacklist": {
+      "additionalProperties": false,
+      "description": "list of blacklisted domains to import during initial start of the container",
+      "required": [],
+      "title": "blacklist"
+    },
+    "capabilities": {
+      "additionalProperties": false,
+      "description": "linux capabilities container should run with",
+      "required": [],
+      "title": "capabilities",
+      "type": "object"
+    },
+    "customVolumes": {
+      "additionalProperties": false,
+      "properties": {
+        "config": {
+          "additionalProperties": false,
+          "description": "any volume type can be used here",
+          "required": [],
+          "title": "config"
+        },
+        "enabled": {
+          "default": "false",
+          "description": "set this to true to enable custom volumes",
+          "required": [],
+          "title": "enabled"
+        }
+      },
+      "required": [],
+      "title": "customVolumes",
+      "type": "object"
+    },
+    "deploymentAnnotations": {
+      "additionalProperties": false,
+      "description": "Additional annotations for the deployment",
+      "required": [],
+      "title": "deploymentAnnotations"
+    },
+    "dnsHostPort": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": "false",
+          "description": "set this to true to enable dnsHostPort",
+          "required": [],
+          "title": "enabled"
+        },
+        "port": {
+          "default": "53",
+          "description": "default port for this pod",
+          "required": [],
+          "title": "port"
+        }
+      },
+      "required": [],
+      "title": "dnsHostPort",
+      "type": "object"
+    },
+    "dnsmasq": {
+      "additionalProperties": false,
+      "description": "DNS MASQ settings",
+      "properties": {
+        "additionalHostsEntries": {
+          "description": "Dnsmasq reads the /etc/hosts file to resolve ips. You can add additional entries if you like",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "additionalHostsEntries"
+        },
+        "customCnameEntries": {
+          "description": "Here we specify custom cname entries that should point to `A` records or elements in customDnsEntries array. The format should be:  - cname=cname.foo.bar,foo.bar  - cname=cname.bar.foo,bar.foo  - cname=cname record,dns record",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "customCnameEntries"
+        },
+        "customDnsEntries": {
+          "description": "Add custom dns entries to override the dns resolution. All lines will be added to the pihole dnsmasq configuration.",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "customDnsEntries"
+        },
+        "customSettings": {
+          "default": "",
+          "description": "Other options",
+          "required": [],
+          "title": "customSettings"
+        },
+        "enableCustomDnsMasq": {
+          "default": "true",
+          "description": "Load custom user configuration files from /etc/dnsmasq.d",
+          "required": [],
+          "title": "enableCustomDnsMasq"
+        },
+        "staticDhcpEntries": {
+          "description": "Static DHCP config",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "staticDhcpEntries"
+        },
+        "upstreamServers": {
+          "description": "Add upstream dns servers. All lines will be added to the pihole dnsmasq configuration",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "upstreamServers"
+        }
+      },
+      "required": [],
+      "title": "dnsmasq"
+    },
+    "doh": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "description": "Custom command to the DoH container",
+          "items": {
+            "required": []
+          },
+          "required": [],
+          "title": "command"
+        },
+        "enabled": {
+          "default": "false",
+          "description": "set to true to enabled DNS over HTTPs via cloudflared",
+          "required": [],
+          "title": "enabled"
+        },
+        "envVars": {
+          "additionalProperties": false,
+          "description": "Here you can pass environment variables to the DoH container, for example:",
+          "required": [],
+          "title": "envVars"
+        },
+        "monitoring": {
+          "additionalProperties": false,
+          "properties": {
+            "podMonitor": {
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "title": "enabled",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "title": "podMonitor",
+              "type": "object"
+            }
+          },
+          "required": [
+            "podMonitor"
+          ],
+          "title": "monitoring",
+          "type": "object"
+        },
+        "name": {
+          "default": "cloudflared",
+          "description": "name",
+          "required": [],
+          "title": "name"
+        },
+        "probes": {
+          "additionalProperties": false,
+          "description": "Probes configuration",
+          "properties": {
+            "liveness": {
+              "additionalProperties": false,
+              "description": "Configure the healthcheck for the doh container",
+              "properties": {
+                "enabled": {
+                  "default": "true",
+                  "description": "set to true to enable liveness probe",
+                  "required": [],
+                  "title": "enabled"
+                },
+                "failureThreshold": {
+                  "default": "10",
+                  "description": "defines the failure threshold for the liveness probe",
+                  "required": [],
+                  "title": "failureThreshold"
+                },
+                "initialDelaySeconds": {
+                  "default": "60",
+                  "description": "defines the initial delay for the liveness probe",
+                  "required": [],
+                  "title": "initialDelaySeconds"
+                },
+                "probe": {
+                  "additionalProperties": false,
+                  "description": "customize the liveness probe",
+                  "properties": {
+                    "exec": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "command": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "required": []
+                          },
+                          "title": "command",
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "command"
+                      ],
+                      "title": "exec",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "exec"
+                  ],
+                  "title": "probe"
+                },
+                "timeoutSeconds": {
+                  "default": "5",
+                  "description": "defines the timeout in secondes for the liveness probe",
+                  "required": [],
+                  "title": "timeoutSeconds"
+                }
+              },
+              "required": [],
+              "title": "liveness"
+            },
+            "readiness": {
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "default": "true",
+                  "description": "set to true to enable readiness probe",
+                  "required": [],
+                  "title": "enabled"
+                },
+                "failureThreshold": {
+                  "default": "10",
+                  "description": "defines the failure threshold for the readiness probe",
+                  "required": [],
+                  "title": "failureThreshold"
+                },
+                "initialDelaySeconds": {
+                  "default": "60",
+                  "description": "defines the initial delay for the readiness probe",
+                  "required": [],
+                  "title": "initialDelaySeconds"
+                },
+                "probe": {
+                  "additionalProperties": false,
+                  "description": "customize the readiness probe",
+                  "properties": {
+                    "exec": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "command": {
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              }
+                            ],
+                            "required": []
+                          },
+                          "title": "command",
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "command"
+                      ],
+                      "title": "exec",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "exec"
+                  ],
+                  "title": "probe"
+                },
+                "timeoutSeconds": {
+                  "default": "5",
+                  "description": "defines the timeout in secondes for the readiness probe",
+                  "required": [],
+                  "title": "timeoutSeconds"
+                }
+              },
+              "required": [],
+              "title": "readiness",
+              "type": "object"
+            }
+          },
+          "required": [
+            "readiness"
+          ],
+          "title": "probes"
+        },
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "Pull policy",
+          "required": [],
+          "title": "pullPolicy"
+        },
+        "repository": {
+          "default": "crazymax/cloudflared",
+          "description": "repository",
+          "required": [],
+          "title": "repository"
+        },
+        "tag": {
+          "default": "latest",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "monitoring"
+      ],
+      "title": "doh",
+      "type": "object"
+    },
+    "dualStack": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": "false",
+          "description": "set this to true to enable creation of DualStack services or creation of separate IPv6 services if `serviceDns.type` is set to `\"LoadBalancer\"`",
+          "required": [],
+          "title": "enabled"
+        }
+      },
+      "required": [],
+      "title": "dualStack",
+      "type": "object"
+    },
+    "extraContainers": {
+      "items": {
+        "required": []
+      },
+      "title": "extraContainers",
+      "type": "array"
+    },
+    "extraEnvVars": {
+      "additionalProperties": false,
+      "description": "extraEnvironmentVars is a list of extra enviroment variables to set for pihole to use. You can use either scalars or project cm, secrets or pod fields via valueFrom",
+      "properties": {
+        "FTLCONF_dns_listeningMode": {
+          "default": "all",
+          "description": "issue 360",
+          "title": "FTLCONF_dns_listeningMode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "FTLCONF_dns_listeningMode"
+      ],
+      "title": "extraEnvVars"
+    },
+    "extraEnvVarsSecret": {
+      "additionalProperties": false,
+      "description": "extraEnvVarsSecret is a list of secrets to load in as environment variables.",
+      "required": [],
+      "title": "extraEnvVarsSecret"
+    },
+    "extraInitContainers": {
+      "description": "any initContainers you might want to run before starting pihole",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "extraInitContainers"
+    },
+    "extraObjects": {
+      "description": "any extra kubernetes manifests you might want",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "extraObjects"
+    },
+    "extraVolumeMounts": {
+      "additionalProperties": false,
+      "description": "any extra volume mounts you might want",
+      "required": [],
+      "title": "extraVolumeMounts"
+    },
+    "extraVolumes": {
+      "additionalProperties": false,
+      "description": "any extra volumes you might want",
+      "required": [],
+      "title": "extraVolumes"
+    },
+    "ftl": {
+      "additionalProperties": false,
+      "description": "values that should be added to pihole-FTL.conf. You can use either scalars or project cm, secrets or pod fields via valueFrom",
+      "required": [],
+      "title": "ftl"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "hostNetwork": {
+      "default": "false",
+      "description": "should the container use host network",
+      "required": [],
+      "title": "hostNetwork"
+    },
+    "hostname": {
+      "default": "",
+      "description": "hostname of pod",
+      "required": [],
+      "title": "hostname"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "the pull policy",
+          "required": [],
+          "title": "pullPolicy"
+        },
+        "repository": {
+          "default": "pihole/pihole",
+          "description": "the repostory to pull the image from",
+          "required": [],
+          "title": "repository"
+        },
+        "tag": {
+          "default": "",
+          "description": "the docker tag, if left empty it will get it from the chart's appVersion",
+          "required": [],
+          "title": "tag"
+        }
+      },
+      "required": [],
+      "title": "image",
+      "type": "object"
+    },
+    "ingress": {
+      "additionalProperties": false,
+      "description": "Configuration for the Ingress",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for the ingress",
+          "required": [],
+          "title": "annotations"
+        },
+        "enabled": {
+          "default": "false",
+          "description": "Generate a Ingress resource",
+          "required": [],
+          "title": "enabled"
+        },
+        "hosts": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "hosts",
+          "type": "array"
+        },
+        "path": {
+          "default": "/",
+          "description": " kubernetes.io/tls-acme: \"true\"",
+          "required": [],
+          "title": "path"
+        },
+        "pathType": {
+          "default": "ImplementationSpecific",
+          "title": "pathType",
+          "type": "string"
+        },
+        "tls": {
+          "items": {
+            "required": []
+          },
+          "title": "tls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "pathType",
+        "hosts",
+        "tls"
+      ],
+      "title": "ingress"
+    },
+    "maxSurge": {
+      "default": "1",
+      "description": "The maximum number of Pods that can be created over the desired number of `ReplicaSet` during updating.",
+      "required": [],
+      "title": "maxSurge"
+    },
+    "maxUnavailable": {
+      "default": "1",
+      "description": "The maximum number of Pods that can be unavailable during updating",
+      "required": [],
+      "title": "maxUnavailable"
+    },
+    "monitoring": {
+      "additionalProperties": false,
+      "properties": {
+        "podMonitor": {
+          "additionalProperties": false,
+          "description": "Preferably adding prometheus scrape annotations rather than enabling podMonitor.",
+          "properties": {
+            "enabled": {
+              "default": "false",
+              "description": "set this to true to enable podMonitor",
+              "required": [],
+              "title": "enabled"
+            }
+          },
+          "required": [],
+          "title": "podMonitor"
+        },
+        "sidecar": {
+          "additionalProperties": false,
+          "description": "Sidecar configuration",
+          "properties": {
+            "enabled": {
+              "default": "false",
+              "description": "set this to true to enable podMonitor as sidecar",
+              "required": [],
+              "title": "enabled"
+            },
+            "image": {
+              "additionalProperties": false,
+              "properties": {
+                "pullPolicy": {
+                  "default": "IfNotPresent",
+                  "title": "pullPolicy",
+                  "type": "string"
+                },
+                "repository": {
+                  "default": "ekofr/pihole-exporter",
+                  "description": "the repository to use",
+                  "required": [],
+                  "title": "repository"
+                },
+                "tag": {
+                  "default": "v1.0.0",
+                  "title": "tag",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "tag",
+                "pullPolicy"
+              ],
+              "title": "image",
+              "type": "object"
+            },
+            "port": {
+              "default": 9617,
+              "title": "port",
+              "type": "integer"
+            },
+            "resources": {
+              "additionalProperties": false,
+              "properties": {
+                "limits": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "memory": {
+                      "default": "128Mi",
+                      "title": "memory",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "memory"
+                  ],
+                  "title": "limits",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "limits"
+              ],
+              "title": "resources",
+              "type": "object"
+            }
+          },
+          "required": [
+            "port",
+            "image",
+            "resources"
+          ],
+          "title": "sidecar"
+        }
+      },
+      "required": [],
+      "title": "monitoring",
+      "type": "object"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "description": "Node selector values",
+      "required": [],
+      "title": "nodeSelector"
+    },
+    "persistentVolumeClaim": {
+      "additionalProperties": false,
+      "description": "`spec.PersitentVolumeClaim` configuration",
+      "properties": {
+        "accessModes": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "accessModes",
+          "type": "array"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for the `PersitentVolumeClaim`",
+          "required": [],
+          "title": "annotations"
+        },
+        "enabled": {
+          "default": "false",
+          "description": "set to true to use pvc",
+          "required": [],
+          "title": "enabled"
+        },
+        "size": {
+          "default": "500Mi",
+          "description": "volume claim size",
+          "required": [],
+          "title": "size"
+        }
+      },
+      "required": [
+        "accessModes"
+      ],
+      "title": "persistentVolumeClaim"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "description": "Additional annotations for pods",
+      "required": [],
+      "title": "podAnnotations"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "description": "configure a Pod Disruption Budget",
+      "properties": {
+        "enabled": {
+          "default": "false",
+          "description": "set to true to enable creating the PDB",
+          "required": [],
+          "title": "enabled"
+        },
+        "minAvailable": {
+          "default": "1",
+          "description": "minimum number of pods Kubernetes should try to have running at all times",
+          "required": [],
+          "title": "minAvailable"
+        }
+      },
+      "required": [],
+      "title": "podDisruptionBudget"
+    },
+    "podDnsConfig": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "nameservers": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "nameservers",
+          "type": "array"
+        },
+        "policy": {
+          "default": "None",
+          "title": "policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "policy",
+        "nameservers"
+      ],
+      "title": "podDnsConfig",
+      "type": "object"
+    },
+    "privileged": {
+      "default": "false",
+      "description": "should container run in privileged mode",
+      "required": [],
+      "title": "privileged"
+    },
+    "probes": {
+      "additionalProperties": false,
+      "description": "Probes configuration",
+      "properties": {
+        "liveness": {
+          "additionalProperties": false,
+          "description": "Configure the healthcheck for the ingress controller",
+          "properties": {
+            "command": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "command",
+              "type": "array"
+            },
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "failureThreshold": {
+              "default": "10",
+              "description": "threshold until the probe is considered failing",
+              "required": [],
+              "title": "failureThreshold"
+            },
+            "initialDelaySeconds": {
+              "default": "60",
+              "description": "wait time before trying the liveness probe",
+              "required": [],
+              "title": "initialDelaySeconds"
+            },
+            "timeoutSeconds": {
+              "default": "5",
+              "description": "timeout in seconds",
+              "required": [],
+              "title": "timeoutSeconds"
+            },
+            "type": {
+              "default": "command",
+              "description": "Generate a liveness probe 'type' defaults to command, can be set to 'httpGet' to use a HTTP GET type liveness probe.",
+              "required": [],
+              "title": "type"
+            }
+          },
+          "required": [
+            "command",
+            "enabled"
+          ],
+          "title": "liveness"
+        },
+        "readiness": {
+          "additionalProperties": false,
+          "properties": {
+            "command": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "command",
+              "type": "array"
+            },
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "failureThreshold": {
+              "default": "10",
+              "description": "threshold until the probe is considered failing",
+              "required": [],
+              "title": "failureThreshold"
+            },
+            "initialDelaySeconds": {
+              "default": "60",
+              "description": "wait time before trying the readiness probe",
+              "required": [],
+              "title": "initialDelaySeconds"
+            },
+            "timeoutSeconds": {
+              "default": "5",
+              "description": "timeout in seconds",
+              "required": [],
+              "title": "timeoutSeconds"
+            },
+            "type": {
+              "default": "command",
+              "description": "Generate a readiness probe 'type' defaults to command, can be set to 'httpGet' to use a HTTP GET type readiness probe.",
+              "required": [],
+              "title": "type"
+            }
+          },
+          "required": [
+            "command",
+            "enabled"
+          ],
+          "title": "readiness",
+          "type": "object"
+        }
+      },
+      "required": [
+        "readiness"
+      ],
+      "title": "probes"
+    },
+    "regex": {
+      "additionalProperties": false,
+      "description": "list of blacklisted regex expressions to import during initial start of the container",
+      "required": [],
+      "title": "regex"
+    },
+    "replicaCount": {
+      "default": "1",
+      "description": "The number of replicas",
+      "required": [],
+      "title": "replicaCount"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "description": "lines, adjust them as necessary, and remove the curly braces after 'resources:'.",
+      "required": [],
+      "title": "resources"
+    },
+    "revisionHistoryLimit": {
+      "default": "10",
+      "description": "The number of old ReplicaSets to retain to allow rollback",
+      "required": [],
+      "title": "revisionHistoryLimit"
+    },
+    "serviceDhcp": {
+      "additionalProperties": false,
+      "description": "Configuration for the DHCP service on port 67",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for the DHCP service",
+          "required": [],
+          "title": "annotations"
+        },
+        "enabled": {
+          "default": "true",
+          "description": "Generate a Service resource for DHCP traffic",
+          "required": [],
+          "title": "enabled"
+        },
+        "externalTrafficPolicy": {
+          "default": "Local",
+          "description": "`spec.externalTrafficPolicy` for the DHCP Service",
+          "required": [],
+          "title": "externalTrafficPolicy"
+        },
+        "extraLabels": {
+          "additionalProperties": false,
+          "description": "Labels for the DHCP service",
+          "required": [],
+          "title": "extraLabels"
+        },
+        "loadBalancerClass": {
+          "default": "",
+          "description": "`spec.loadBalancerClass` for the DHCP Service. Only used if type is LoadBalancer.",
+          "required": [],
+          "title": "loadBalancerClass"
+        },
+        "loadBalancerIP": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the DHCP Service",
+          "required": [],
+          "title": "loadBalancerIP"
+        },
+        "loadBalancerIPv6": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the IPv6 DHCP Service",
+          "required": [],
+          "title": "loadBalancerIPv6"
+        },
+        "nodePort": {
+          "default": "",
+          "description": "Optional node port for the DHCP service",
+          "required": [],
+          "title": "nodePort"
+        },
+        "port": {
+          "default": "67",
+          "description": "The port of the DHCP service",
+          "required": [],
+          "title": "port"
+        },
+        "type": {
+          "default": "NodePort",
+          "description": "`spec.type` for the DHCP Service",
+          "required": [],
+          "title": "type"
+        }
+      },
+      "required": [],
+      "title": "serviceDhcp"
+    },
+    "serviceDns": {
+      "additionalProperties": false,
+      "description": "Configuration for the DNS service on port 53",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for the DNS service",
+          "required": [],
+          "title": "annotations"
+        },
+        "externalTrafficPolicy": {
+          "default": "Local",
+          "description": "`spec.externalTrafficPolicy` for the DHCP Service",
+          "required": [],
+          "title": "externalTrafficPolicy"
+        },
+        "extraLabels": {
+          "additionalProperties": false,
+          "description": "Labels for the DNS service",
+          "required": [],
+          "title": "extraLabels"
+        },
+        "loadBalancerClass": {
+          "default": "",
+          "description": "`spec.loadBalancerClass` for the DNS Service. Only used if type is LoadBalancer.",
+          "required": [],
+          "title": "loadBalancerClass"
+        },
+        "loadBalancerIP": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the DNS Service",
+          "required": [],
+          "title": "loadBalancerIP"
+        },
+        "loadBalancerIPv6": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the IPv6 DNS Service",
+          "required": [],
+          "title": "loadBalancerIPv6"
+        },
+        "mixedService": {
+          "default": "false",
+          "description": "deploys a mixed (TCP + UDP) Service instead of separate ones",
+          "required": [],
+          "title": "mixedService"
+        },
+        "nodePort": {
+          "default": "",
+          "description": "Optional node port for the DNS service",
+          "required": [],
+          "title": "nodePort"
+        },
+        "port": {
+          "default": "53",
+          "description": "The port of the DNS service",
+          "required": [],
+          "title": "port"
+        },
+        "type": {
+          "default": "NodePort",
+          "description": "`spec.type` for the DNS Service",
+          "required": [],
+          "title": "type"
+        }
+      },
+      "required": [],
+      "title": "serviceDns"
+    },
+    "serviceWeb": {
+      "additionalProperties": false,
+      "description": "Configuration for the web interface service",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for the DHCP service",
+          "required": [],
+          "title": "annotations"
+        },
+        "externalTrafficPolicy": {
+          "default": "Local",
+          "description": "`spec.externalTrafficPolicy` for the web interface Service",
+          "required": [],
+          "title": "externalTrafficPolicy"
+        },
+        "extraLabels": {
+          "additionalProperties": false,
+          "description": "Labels for the web interface service",
+          "required": [],
+          "title": "extraLabels"
+        },
+        "http": {
+          "additionalProperties": false,
+          "description": "Configuration for the HTTP web interface listener",
+          "properties": {
+            "enabled": {
+              "default": "true",
+              "description": "Generate a service for HTTP traffic",
+              "required": [],
+              "title": "enabled"
+            },
+            "nodePort": {
+              "default": "",
+              "description": "Optional node port for the web HTTP service",
+              "required": [],
+              "title": "nodePort"
+            },
+            "port": {
+              "default": "80",
+              "description": "The port of the web HTTP service",
+              "required": [],
+              "title": "port"
+            }
+          },
+          "required": [],
+          "title": "http"
+        },
+        "https": {
+          "additionalProperties": false,
+          "description": "Configuration for the HTTPS web interface listener",
+          "properties": {
+            "enabled": {
+              "default": "true",
+              "description": "Generate a service for HTTPS traffic",
+              "required": [],
+              "title": "enabled"
+            },
+            "nodePort": {
+              "default": "",
+              "description": "Optional node port for the web HTTPS service",
+              "required": [],
+              "title": "nodePort"
+            },
+            "port": {
+              "default": "443",
+              "description": "The port of the web HTTPS service",
+              "required": [],
+              "title": "port"
+            }
+          },
+          "required": [],
+          "title": "https"
+        },
+        "loadBalancerClass": {
+          "default": "",
+          "description": "`spec.loadBalancerClass` for the web interface Service. Only used if type is LoadBalancer.",
+          "required": [],
+          "title": "loadBalancerClass"
+        },
+        "loadBalancerIP": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the web interface Service",
+          "required": [],
+          "title": "loadBalancerIP"
+        },
+        "loadBalancerIPv6": {
+          "default": "",
+          "description": "A fixed `spec.loadBalancerIP` for the IPv6 web interface Service",
+          "required": [],
+          "title": "loadBalancerIPv6"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "description": "`spec.type` for the web interface Service",
+          "required": [],
+          "title": "type"
+        }
+      },
+      "required": [],
+      "title": "serviceWeb"
+    },
+    "strategyType": {
+      "default": "RollingUpdate",
+      "description": "The `spec.strategyTpye` for updates",
+      "required": [],
+      "title": "strategyType"
+    },
+    "tolerations": {
+      "description": "Toleration",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "tolerations"
+    },
+    "topologySpreadConstraints": {
+      "description": "Specify a priorityClassName priorityClassName: \"\" Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "topologySpreadConstraints"
+    },
+    "virtualHost": {
+      "default": "pi.hole",
+      "title": "virtualHost",
+      "type": "string"
+    },
+    "webHttp": {
+      "default": "80",
+      "description": "port the container should use to expose HTTP traffic",
+      "required": [],
+      "title": "webHttp"
+    },
+    "webHttps": {
+      "default": "443",
+      "description": "port the container should use to expose HTTPS traffic",
+      "required": [],
+      "title": "webHttps"
+    },
+    "whitelist": {
+      "additionalProperties": false,
+      "description": "list of whitelisted domains to import during initial start of the container",
+      "required": [],
+      "title": "whitelist"
+    }
+  },
+  "required": [
+    "image",
+    "dualStack",
+    "dnsHostPort",
+    "virtualHost",
+    "affinity",
+    "antiaff",
+    "doh",
+    "capabilities",
+    "customVolumes",
+    "extraContainers",
+    "monitoring",
+    "podDnsConfig"
+  ],
+  "type": "object"
+}

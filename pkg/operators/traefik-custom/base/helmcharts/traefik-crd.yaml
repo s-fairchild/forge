@@ -12,4 +12,5 @@ spec:
   set:
     global.systemDefaultRegistry: ""
 
+  takeOwnership: true
   failurePolicy: reinstall

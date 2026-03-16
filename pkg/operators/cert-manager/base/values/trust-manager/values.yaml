@@ -1,0 +1,30 @@
+---
+# yaml-language-server: https://raw.githubusercontent.com/cert-manager/trust-manager/refs/heads/main/deploy/charts/trust-manager/values.schema.json
+#
+# References
+#   * https://github.com/cert-manager/trust-manager/blob/main/deploy/charts/trust-manager/README.md
+
+global:
+  rbac:
+    create: true
+
+automountServiceAccountToken: true
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: "true"
+
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"

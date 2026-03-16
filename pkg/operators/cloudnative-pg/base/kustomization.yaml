@@ -14,3 +14,7 @@ secretGenerator:
       - values/resources.yaml
       - values/security.yaml
       - values/service.yaml
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

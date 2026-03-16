@@ -1,0 +1,39 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Connection
+metadata:
+  name: mariadb-motion-connection
+  namespace: motion
+spec:
+  mariaDbRef:
+    name: mariadb
+    namespace: mariadb
+
+  username: motion
+  database: motion
+  serviceName: mariadb
+
+  secretTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: motion
+      annotations:
+        app.kubernetes.io/managed-by: mariadb-operator
+
+    key: dsn
+    usernameKey: username
+    passwordKey: password
+    hostKey: host
+    portKey: port
+    databaseKey: database
+  
+  passwordSecretKeyRef:
+    name: mariadb-motion-auth
+    key: motion
+
+  tlsClientCertSecretRef:
+    name: mariadb-motion-client-cert
+
+  healthCheck:
+    interval: 10s
+    retryInterval: 3s

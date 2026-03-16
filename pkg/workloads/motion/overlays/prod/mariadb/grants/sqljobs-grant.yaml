@@ -1,0 +1,21 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: motion-sqljobs
+  namespace: motion
+spec:
+  mariaDbRef:
+    name: mariadb
+    namespace: mariadb
+
+  database: motion
+  table: security
+  username: motion-sqljobs
+  host: "%"
+  cleanupPolicy: Delete
+  retryInterval: 30s
+
+  privileges:
+  - CREATE
+  - SELECT

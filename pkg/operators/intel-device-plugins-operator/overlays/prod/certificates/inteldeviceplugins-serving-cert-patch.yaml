@@ -1,0 +1,22 @@
+---
+- op: add
+  path: /spec/issuerRef
+  value: {}
+
+- op: add
+  path: /spec/issuerRef/group
+  value: cert-manager.io
+
+- op: add
+  path: /spec/issuerRef/kind
+  value: ClusterIssuer
+
+- op: add
+  path: /spec/issuerRef/name
+  value: root-ca
+
+
+  # issuerRef:
+    # group: cert-manager.io
+    # kind: ClusterIssuer
+    # name: root-ca

@@ -1,0 +1,26 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: motion-sqljobs
+  namespace: motion
+  labels:
+    k8s.mariadb.com/watch: ""
+spec:
+  mariaDbRef:
+    name: mariadb
+    namespace: mariadb
+
+  passwordSecretKeyRef:
+    name: mariadb-motion-auth
+    key: sqljobs
+
+  require:
+    issuer: "/CN=root-ca"
+    subject: "/CN=mariadb-motion-client"
+
+  cleanupPolicy: Delete
+  requeueInterval: 30s
+  retryInterval: 5s
+  maxUserConnections: 20
+  host: "%"

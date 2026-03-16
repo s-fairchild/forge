@@ -1,0 +1,15 @@
+---
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    crds-values.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    secret-targets-values.yaml
+
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value:
+    app-values.yaml
