@@ -65,28 +65,6 @@
     - quadlet.containers.agent
     - quadlet.containers.agent.conf.node-ip
 
-- name: Copy k3s-agent@<K3S.INSTANCE>.container.d/devices.conf - K3S.INSTANCE - {{ K3S.INSTANCE }}
-  ansible.builtin.copy:
-    content: |
-      [Container]
-      # https://www.raspberrypi.com/documentation/computers/camera_software.html#device-nodes-when-using-libcamera
-      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_0 }}:rw
-      AddDevice=-{{ REMOTE.DEVICE.V4L.FILES.VIDEO_1 }}:rw
-      # v4l loopback device
-      AddDevice=-{{ REMOTE.DEVICE.FILES.VIDEO_30 }}:rw
-
-      # USB PnP sound capture card
-      AddDevice=-{{ REMOTE.DEVICE.SND.FILES.USB_PNP_SOUND0 }}
-    dest: "{{ REMOTE.ETC.QUADLET.PATH }}/k3s-agent@{{ K3S.INSTANCE }}.container.d/devices.conf"
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - quadlet
-    - quadlet.containers
-    - quadlet.containers.agent
-    - quadlet.containers.agent.conf.devices
-
 - name: Create directory k3s-agent@.container.d - "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.PATH }}"
   ansible.builtin.file:
     path: "{{ REMOTE.ETC.QUADLET.CONTAINERS.AGENT.DROP_INS.PATH }}"

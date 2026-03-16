@@ -20,6 +20,10 @@ spec:
       labels:
         app: rtsp0
     spec:
+      # Another useful option for scheduling is the usb vendor code.
+      # It's applied as a label via nfd operator.
+      # Example:
+      #   * feature.node.kubernetes.io/usb-ef_32e4_9310.present: "true"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -30,10 +34,10 @@ spec:
                   values:
                     - "0"
       containers:
-      - name: rtsp0
+        # TODO setup multicast network once motion is deployed
         # TODO Add IngressRouteTCP and IngressRouteUDP for rtsp ports
         #    This allows rtsp to be accessed via traefik rather than directly
-        # TODO setup muticast network once motion is deployed
+      - name: rtsp0
         args:
         - -p
         - "8085"
@@ -44,10 +48,11 @@ spec:
         - -H 720
         - -F 30
         - -S60
-        - -A
-        - "48000"
-        - -C
-        - "1"
-        - -a
-        - S16_LE
-        - "/dev/video30,/dev/video0"
+        # Audio plus video capture on raspberry pi's overloads usb bandwidth causing one to fail, and the other to be served
+        # - -A
+        # - "48000"
+        # - -C
+        # - "1"
+        # - -a
+        # - S16_LE
+        - "/dev/video30"

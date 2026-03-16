@@ -31,8 +31,8 @@ spec:
         - v4l2
         - -framerate
         - "10"
-        # - -input_format
-        # - yuyv422
+        - -input_format
+        - yuyv422
         - -video_size
         - 1280x720
         - -i
@@ -49,8 +49,6 @@ spec:
             mountPath: /dev/video1
           - name: video30
             mountPath: /dev/video30
-          - name: snd0
-            mountPath: /dev/snd
       containers:
       - name: rtsp0
         livenessProbe:
@@ -85,8 +83,6 @@ spec:
           mountPath: /dev/video1
         - name: video30
           mountPath: /dev/video30
-        - name: snd0
-          mountPath: /dev/snd
         env:
         # Variable holding the rtsp server password
         # Will differ for each overlay
@@ -108,25 +104,21 @@ spec:
         # runAsGroup: 985
         runAsUser: 0
       volumes:
-      - name: snd0
-        hostPath:
-          path: /dev/snd
-          type: Directory
-      # ffmpeg capture devices
-      # v4l2rtspserver audio devices
-      - name: video0
-        hostPath: 
-          path: /dev/video0
-          type: CharDevice
-      - name: video1
-        hostPath: 
-          path: /dev/video1
-          type: CharDevice
-      # ffmpeg loopback output device
-      # v4l2rtspserver capture device
-      - name: video30
-        hostPath: 
-          path: /dev/video30
-          type: CharDevice
+        # ffmpeg capture devices
+        # v4l2rtspserver audio devices
+        - name: video0
+          hostPath: 
+            path: /dev/video0
+            type: CharDevice
+        - name: video1
+          hostPath: 
+            path: /dev/video1
+            type: CharDevice
+        # ffmpeg loopback output device
+        # v4l2rtspserver capture device
+        - name: video30
+          hostPath: 
+            path: /dev/video30
+            type: CharDevice
       dnsPolicy: ClusterFirst
       restartPolicy: Always
