@@ -6,6 +6,10 @@ metadata:
   namespace: jellyfin
 spec:
   secretName: web-svc-certificate
+
+  privateKey:
+    rotationPolicy: Never
+
   dnsNames:
     - "jellyfin.app.rick.expresso.lan"
   issuerRef:
