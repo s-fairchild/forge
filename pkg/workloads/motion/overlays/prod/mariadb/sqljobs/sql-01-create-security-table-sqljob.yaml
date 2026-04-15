@@ -5,22 +5,16 @@ metadata:
   name: sql-01-create-security-table
   namespace: motion
 spec:
+  nodeSelector:
+    k8s.mariadb.com/node: "" 
+
   mariaDbRef:
     name: mariadb
     namespace: mariadb
 
   failedJobsHistoryLimit: 5
   successfulJobsHistoryLimit: 5
-
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-            - key: app
-              operator: In
-              values:
-                - compute
+  timeZone: "UTC"
 
   database: motion
   username: motion-sqljobs

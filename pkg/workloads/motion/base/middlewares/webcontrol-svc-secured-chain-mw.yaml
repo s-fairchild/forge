@@ -1,0 +1,10 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: webcontrol-svc-secured-chain-mw
+  namespace: motion
+spec:
+  chain:
+    middlewares:
+    - name: webcontrol-svc-https-redirect-mw

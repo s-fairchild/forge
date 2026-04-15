@@ -1,0 +1,8 @@
+ARG RELEASE_IMAGE_REGISTRY
+ARG RELEASE_IMAGE_REPOSITORY
+ARG RELEASE_IMAGE_TAG
+FROM --platform=${BUILDPLATFORM} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+
+COPY --from=builder /usr/bin/envsubst /usr/bin/envsubst
+
+ENTRYPOINT [ "envsubst" ]

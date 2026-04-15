@@ -4,6 +4,7 @@ kind: Connection
 metadata:
   name: mariadb-motion-connection
   namespace: motion
+# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#connectionspec
 spec:
   mariaDbRef:
     name: mariadb
@@ -31,9 +32,6 @@ spec:
     name: mariadb-motion-auth
     key: motion
 
-  tlsClientCertSecretRef:
-    name: mariadb-motion-client-cert
-
   healthCheck:
-    interval: 10s
-    retryInterval: 3s
+    interval: 30s
+    retryInterval: 5s

@@ -1,0 +1,10 @@
+---
+- op: replace
+  path: /spec/routes/0/match
+  value:
+    # https://doc.traefik.io/traefik/v3.6/reference/routing-configuration/http/routing/rules-and-priority/#host-and-hostregexp
+    (
+        HostRegexp(`(^.+\.)*motion\.app\.rick\.expresso\.lan`) ||
+        PathRegexp(`(?i)^/motion`)
+    ) &&
+    Method(`GET`)

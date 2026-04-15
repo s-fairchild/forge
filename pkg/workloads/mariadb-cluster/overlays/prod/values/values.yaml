@@ -5,6 +5,11 @@
 mariadb:
   replicas: 1
 
+  rootPasswordSecretKeyRef:
+    name: "mariadb-root"
+    key: root
+    generate: false
+
   podDisruptionBudget:
     maxUnavailable: 33%
 
@@ -22,16 +27,13 @@ mariadb:
         requests:
           storage: 1Gi
 
-  nodeSelector:
-    k8s.mariadb.com/node: "" 
-
   affinity:
     # For now all should run on a single node
     # There is no real reason to run multiple agents containers on the same physical host
     antiAffinityEnabled: false
 
   tolerations:
-    - key: "k8s.mariadb.com/ha"
+    - key: "k8s.mariadb.com/node"
       operator: "Exists"
       effect: "NoSchedule"
 
@@ -46,11 +48,12 @@ mariadb:
     clientCertIssuerRef:
       name: root-ca
       kind: ClusterIssuer
+    
+    serverCASecretRef:
+      name: root-ca-bundle
 
-  # bootstrapFrom:
-    # restoreJob:
-      # affinity:
-        # antiAffinityEnabled: true
+    clientCASecretRef:
+      name: root-ca-bundle
 
   metrics:
     exporter:
@@ -62,38 +65,3 @@ mariadb:
   # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galera
   galera:
     enabled: false
-
-backups:
-  - name: backup
-    schedule:
-      cron: "0 0 * * *"
-      suspend: false
-    compression: gzip
-    maxRetention: 720h # 30 days
-    storage:
-      persistentVolumeClaim:
-        storageClassName: local-path-nvme
-        accessModes:
-        - ReadWriteOnce
-
-physicalBackups:
-  - name: physical-backup
-
-    schedule:
-      cron: "0 0 * * *"
-      suspend: false
-      immediate: true
-
-    compression: gzip
-    maxRetention: 720h
-
-    storage:
-      persistentVolumeClaim:
-        storageClassName: local-path-nvme
-        accessModes:
-        - ReadWriteOnce
-
-    affinity:
-      # For now all should run on a single node
-      # There is no real reason to run multiple agents containers on the same physical host
-      antiAffinityEnabled: false

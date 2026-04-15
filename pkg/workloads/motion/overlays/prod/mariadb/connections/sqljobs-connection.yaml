@@ -4,6 +4,7 @@ kind: Connection
 metadata:
   name: mariadb-motion-sqljobs-connection
   namespace: motion
+# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#connectionspec
 spec:
   mariaDbRef:
     name: mariadb
@@ -36,4 +37,4 @@ spec:
 
   healthCheck:
     interval: 30s
-    retryInterval: 3s
+    retryInterval: 5s

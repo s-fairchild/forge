@@ -6,6 +6,7 @@ metadata:
   namespace: motion
   labels:
     k8s.mariadb.com/watch: ""
+# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#sqljobspec
 spec:
   mariaDbRef:
     name: mariadb

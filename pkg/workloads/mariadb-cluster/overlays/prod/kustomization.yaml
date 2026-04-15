@@ -20,9 +20,18 @@ patches:
     name: mariadb-cluster
     namespace: kube-system
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 secretGenerator:
 - name: mariadb-cluster-values
   namespace: kube-system
   behavior: merge
   files:
-    - prod-values.yaml=values/values.yaml
+  - prod-values.yaml=values/values.yaml
+
+- name: mariadb-root
+  namespace: mariadb
+  behavior: create
+  files:
+  - root=secrets/mariadb-root.txt

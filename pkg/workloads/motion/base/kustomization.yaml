@@ -1,8 +1,13 @@
 ---
 resources:
-- namespace.yaml
-- deployment.yaml
+- certificates/webcontrol-motion-cert.yaml
 - pvc/recordings-pvc.yaml
+- deployment.yaml
+- namespace.yaml
+- ingress-routes/webcontrol-svc-ir.yaml
+- middlewares/webcontrol-svc-https-redirect-mw.yaml
+- middlewares/webcontrol-svc-secured-chain-mw.yaml
+- services/webcontrol-svc.yaml
 
 generatorOptions:
   disableNameSuffixHash: true

@@ -1,0 +1,20 @@
+---
+- op: add
+  path: /spec/template/spec/nodeSelector
+  value:
+    intel.feature.node.kubernetes.io/gpu: "true"
+
+- op: replace
+  path: /spec/template/spec/containers/0/resources
+  value:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "10Gi"
+      cpu: "1"
+
+# Required to use the config file with populated database variables
+- op: add
+  path: /spec/template/spec/containers/0/args
+  value: ["-c", "/tmp/.motion/motion.conf"]

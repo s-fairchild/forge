@@ -21,38 +21,58 @@ spec:
       restartPolicy: Always
       containers:
       - name: motion
-        # https://github.com/Motion-Project/motion/releases/tag/release-4.7.1
-        # https://motion-project.github.io/4.6.0/motion_config.html
-        # https://hub.docker.com/repository/docker/steve51516/motion/tags
-        image: docker.io/steve51516/motion:4.7.1
+        # Documentation:
+        #   * https://motion-project.github.io/motionv5_config.html
+        #   * https://motion-project.github.io/motionv5_build.html
+        #   * https://motion-project.github.io/motionv5_examples.html
+        #
+        # Sources:
+        #   * https://github.com/Motion-Project/motion/tree/5.0
+        #   * https://hub.docker.com/repository/docker/steve51516/motion/tags
+        image: docker.io/steve51516/motion:5.0
+        imagePullPolicy: Always
+
         ports:
-        - containerPort: 8081
-          name: stream
-          protocol: TCP
-        securityContext:
-          privileged: true
+        - containerPort: 80
+          name: webcontrol
+
         volumeMounts:
         - name: motion-conf
+          # Optionally motion's config file could be re-read via sending a reload signal to the container.
+          # to do this 'mountPropagation: Bidirectional' would be required.
+          mountPropagation: HostToContainer
           mountPath: /root/.motion
-          # mountPropagation: HostToContainer
           readOnly: true
+
+        - name: motion-conf-d
+          mountPath: /usr/local/var/lib/motion/conf.d
+          readOnly: true
+          recursiveReadOnly: IfPossible
+          mountPropagation: None
+
         - name: recordings
           mountPath: /var/motion
-          # Allows for sending reload signal to the motion process
-          # Re-reading the updated config files
-          mountPropagation: Bidirectional
+          mountPropagation: HostToContainer
+
         resources:
           requests:
-            memory: "1G"
-            cpu: "500m"
+            memory: "200Mi"
+            cpu: "5m"
           limits:
-            memory: "1G"
+            memory: "1Gi"
             cpu: "500m"
+
       volumes:
       - name: motion-conf
         configMap:
           name: motion-conf-cm
           optional: false
+
+      - name: motion-conf-d
+        configMap:
+          name: motion-cameras-cm
+          optional: true
+
       - name: recordings
         persistentVolumeClaim:
           claimName: recordings-pvc

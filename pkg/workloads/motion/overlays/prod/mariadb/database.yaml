@@ -3,7 +3,7 @@ apiVersion: k8s.mariadb.com/v1alpha1
 kind: Database
 metadata:
   name: motion
-  namespace: motion
+  namespace: mariadb
 spec:
   name: motion
 
@@ -11,7 +11,5 @@ spec:
     name: mariadb
     namespace: mariadb
 
-  characterSet: utf8
-  collate: utf8_general_ci
   cleanupPolicy: Skip
   retryInterval: 30s

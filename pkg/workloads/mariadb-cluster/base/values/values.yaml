@@ -7,12 +7,22 @@ namespaceOverride: "mariadb"
 
 # yaml-language-server-disable Missing property
 mariadb:
-  # username: mariadb-mariadb-sys
+  nodeSelector:
+    k8s.mariadb.com/node: "" 
+
+  env:
+  - name: TZ
+    value: UTC
+
   rootPasswordSecretKeyRef:
-    name: mariadb-auth
+    name: "mariadb-root"
     key: root
     generate: true
 
+users: []
+grants: []
+backups: []
+physicalBackups: []
 
 databases:
   - name: mariadb-sys

@@ -6,6 +6,7 @@ metadata:
   namespace: motion
   labels:
     k8s.mariadb.com/watch: ""
+# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#grantspec
 spec:
   mariaDbRef:
     name: mariadb
@@ -14,11 +15,6 @@ spec:
   passwordSecretKeyRef:
     name: mariadb-motion-auth
     key: motion
-
-  # TODO remove if this prevents password only auth from motion app
-  require:
-    issuer: "/CN=root-ca"
-    subject: "/CN=mariadb-motion-client"
 
   cleanupPolicy: Delete
   requeueInterval: 30s

@@ -3,13 +3,13 @@ ARG IMAGE_REPOSITORY
 ARG IMAGE_TAG
 FROM --platform=${BUILDPLATFORM} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
-ARG TZ_COUNTRY
-ARG TZ_CITY
+ARG TZ
+ENV TZ=${TZ}
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
         # The packages being installed want to know the timezone.
-        ln -s /usr/share/zoneinfo/${TZ_COUNTRY}/${TZ_CITY} /etc/localtime \
+        echo "$TZ" > /etc/timezone \
         # Update everything
         && DEBIAN_FRONTEND=noninteractive \
           apt-get update \
@@ -27,14 +27,15 @@ ARG INSTALL_PREFIX
 COPY --from=build "$INSTALL_PREFIX/var/lib/motion" "$INSTALL_PREFIX/var/lib/motion"
 COPY --from=build "$INSTALL_PREFIX/bin/motion" "$INSTALL_PREFIX/bin/motion"
 COPY --from=build "$INSTALL_PREFIX/share/locale" "$INSTALL_PREFIX/share/locale"
+COPY --from=build "/usr/share/zoneinfo/$TZ" /etc/localtime 
 
 ARG LIBVA_DRIVER_NAME
 ARG MOTION_VERSION
 
 LABEL motion.build.prefix="${INSTALL_PREFIX}"
 LABEL motion.version=${MOTION_VERSION}
-LABEL timezone="${TZ_COUNTRY}/${TZ_CITY}"
-LABEL libva.driver.name=${LIBVA_DRIVER_NAME}
+LABEL system.timezone=${TZ}
+LABEL system.libva.driver.name=${LIBVA_DRIVER_NAME}
 
 ENV LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME}
 

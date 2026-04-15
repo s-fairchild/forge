@@ -1,0 +1,10 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: webcontrol-svc-https-redirect-mw
+  namespace: motion
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: false

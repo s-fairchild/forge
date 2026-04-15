@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webcontrol-svc
+  namespace: motion
+  labels:
+    app: motion
+spec:
+  selector:
+    app: motion
+
+  ports:
+  - name: web
+    port: 8080
+    targetPort: webcontrol
+
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  internalTrafficPolicy: Local

@@ -13,6 +13,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         # Install motion v5 build dependencies
         # https://motion-project.github.io/motionv5_build.html#Building_Guide
         apt-get install --no-install-recommends -y \
+            # Used to set timezone in release stage
+            tzdata \
             # Build tools
             autoconf automake autopoint build-essential pkgconf libtool git gettext \
             # FFMpeg Functionality(Required for creating movies, using network cameras, etc.)

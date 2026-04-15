@@ -1,0 +1,38 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: webcontrol-svc-ir
+  namespace: motion
+# https://doc.traefik.io/traefik/v3.6/reference/routing-configuration/kubernetes/crd/http/ingressroute
+spec:
+  entryPoints:
+  - websecure
+
+  routes:
+  - match: Host(`motion.motion.svc.cluster.local`)
+    kind: Rule
+
+    middlewares:
+    # Chain is used to make adding more middlewares easier later on
+    - name: webcontrol-svc-secured-chain-mw
+
+    observability:
+      metrics: true
+      tracing: true
+      traceVerbosity: detailed
+
+    services:
+    - name: webcontrol-svc
+      namespace: motion
+      kind: Service
+      port: web
+
+      sticky:
+        cookie:
+          secure: true
+          sameSite: none
+          maxAge: 600 # 10 minutes
+
+  tls:
+    secretName: webcontrol-cert

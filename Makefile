@@ -206,4 +206,10 @@ container-build-btrfs-progs:
 
 	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_BTRFS_PROGS}
 
+container-build-envsubst:
+	. ${ctr_build_constant_env_file}
+	. ${ctr_build_env_dir}/$${IMAGE_ENVSUBST}.env
+
+	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_ENVSUBST}
+
 ### Containerfile End ###

@@ -1,25 +1,21 @@
 ---
 resources:
-  - ../../base
-  - certificates/mariadb-motion-client-cert.yaml
+- ../../base
+- certificates/mariadb-motion-client-cert.yaml
 
-  - mariadb/connections/motion-connection.yaml
-  - mariadb/connections/sqljobs-connection.yaml
+- mariadb/connections/motion-connection.yaml
+- mariadb/connections/sqljobs-connection.yaml
+- mariadb/grants/motion-grant.yaml
+- mariadb/grants/sqljobs-grant.yaml
+- mariadb/sqljobs/sql-01-create-security-table-sqljob.yaml
+- mariadb/users/motion-user.yaml
+- mariadb/users/sqljobs-user.yaml
+- mariadb/database.yaml
 
-  - mariadb/grants/motion-grant.yaml
-  - mariadb/grants/sqljobs-grant.yaml
-
-  - mariadb/sqljobs/sql-01-create-security-table-sqljob.yaml
-
-  - mariadb/users/motion-user.yaml
-  - mariadb/users/sqljobs-user.yaml
-
-  - mariadb/database.yaml
+- middlewares/webcontrol-svc-stripprefix-mw.yaml
 
 patches:
-  - path: deployment.yaml
-
-  - path: deployment-patch.yaml
+  - path: deployments/motion-deployment-patch.yaml
     target:
       version: v1
       group: apps
@@ -27,11 +23,51 @@ patches:
       name: motion
       namespace: motion
 
+  - path: deployments/motion-deployment-volumes-patch.yaml
+    target:
+      version: v1
+      group: apps
+      kind: Deployment
+      name: motion
+      namespace: motion
+
+  - path: deployments/motion-deployment-init-containers-patch.yaml
+    target:
+      version: v1
+      group: apps
+      kind: Deployment
+      name: motion
+      namespace: motion
+
+  - path: ingress-routes/webcontrol-svc-ir-patch.yaml
+    target:
+      version: v1alpha1
+      group: traefik.io
+      kind: IngressRoute
+      name: webcontrol-svc-ir
+      namespace: motion
+
+  - path: middlewares/webcontrol-svc-secured-chain-mw-patch.yaml
+    target:
+      version: v1alpha1
+      group: traefik.io
+      kind: Middleware
+      name: webcontrol-svc-secured-chain-mw
+      namespace: motion
+
   - path: pvc/recordings-pvc-patch.yaml
     target:
       version: v1
       kind: PersistentVolumeClaim
       name: recordings-pvc
+      namespace: motion
+  
+  - path: certificates/webcontrol-motion-cert-patch.yaml
+    target:
+      version: v1
+      group: cert-manager.io
+      kind: Certificate
+      name: webcontrol-motion-cert
       namespace: motion
 
   - path: namespace-patch.yaml
@@ -43,23 +79,17 @@ patches:
 generatorOptions:
   disableNameSuffixHash: true
 
+# TODO Create configmaps for sound devices, libcamera, rtsp cameras
 configMapGenerator:
-  - name: cameras-cm
+  - name: motion-cameras-cm
     namespace: motion
     behavior: create
     files:
       - configmap/camera1.conf
-  
-  - name: motion-conf-cm
-    namespace: motion
-    # merge will also replace the motion.conf key.
-    # This is due to merge only working to merge configmap keys, not the data within the key.
-    behavior: merge
-    files:
-      - configmap/motion.conf
-  
+
   - name: sql-01-create-security-table
     namespace: motion
+    behavior: create
     files:
       - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
 
