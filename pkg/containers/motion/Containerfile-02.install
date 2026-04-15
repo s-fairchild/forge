@@ -1,18 +1,15 @@
-FROM builder AS install
+FROM builder AS build
 
-ARG IMAGE_TAG
-ARG MOTION_VERSION_TAG
-ARG TARGETARCH
+ARG MOTION_VERSION
 
-ARG MOTION_RELEASE_PACKAGE=${IMAGE_TAG}_motion_${MOTION_VERSION_TAG}-1_${TARGETARCH}.deb
+ARG MOTION_SOURCE=/tmp/motion
+ADD https://github.com/Motion-Project/motion.git#${MOTION_VERSION} ${MOTION_SOURCE}
+WORKDIR ${MOTION_SOURCE}
 
-ADD --link https://github.com/Motion-Project/motion/releases/download/release-${MOTION_VERSION_TAG}/${MOTION_RELEASE_PACKAGE} /tmp
+ARG BUILD_THREADS
+ARG INSTALL_PREFIX
 
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-        DEBIAN_FRONTEND=noninteractive \
-            apt-get install --no-install-recommends -y \
-            /tmp/${MOTION_RELEASE_PACKAGE} && \
-            rm /tmp/${MOTION_RELEASE_PACKAGE}
-
-ENTRYPOINT [ "motion" ]
+RUN autoreconf -fiv \
+    && ./configure --prefix=${INSTALL_PREFIX} \
+    && make -j${BUILD_THREADS} \
+    && make install

@@ -19,6 +19,14 @@ resources:
 patches:
   - path: deployment.yaml
 
+  - path: deployment-patch.yaml
+    target:
+      version: v1
+      group: apps
+      kind: Deployment
+      name: motion
+      namespace: motion
+
   - path: pvc/recordings-pvc-patch.yaml
     target:
       version: v1

@@ -1,14 +1,41 @@
-FROM install AS release
+ARG IMAGE_REGISTRY
+ARG IMAGE_REPOSITORY
+ARG IMAGE_TAG
+FROM --platform=${BUILDPLATFORM} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
 
-ARG MOTION_VERSION_TAG
-ARG MOTION_RELEASE_PACKAGE
 ARG TZ_COUNTRY
 ARG TZ_CITY
 
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+        # The packages being installed want to know the timezone.
+        ln -s /usr/share/zoneinfo/${TZ_COUNTRY}/${TZ_CITY} /etc/localtime \
+        # Update everything
+        && DEBIAN_FRONTEND=noninteractive \
+          apt-get update \
+          && apt-get upgrade -y \
+        && DEBIAN_FRONTEND=noninteractive \
+          apt-get install --no-install-recommends -y \
+              # Install QSV driver packages for intel GPU acceleration.
+              ffmpeg intel-media-va-driver-non-free libmfx-dev \
+              # motion runtime dependencies
+              libmicrohttpd12t64 libcamera0.2 libopencv-objdetect406t64 \
+              libopencv-imgcodecs406t64 libmariadb3
 
-LABEL motion.version=${MOTION_VERSION_TAG}
-LABEL motion.package-installed=${MOTION_RELEASE_PACKAGE}
-LABEL localtime="${TZ_COUNTRY}/${TZ_CITY}"
-LABEL gpu.acceleration="intel-media-va-driver-non-free"
+ARG INSTALL_PREFIX
 
+COPY --from=build "$INSTALL_PREFIX/var/lib/motion" "$INSTALL_PREFIX/var/lib/motion"
+COPY --from=build "$INSTALL_PREFIX/bin/motion" "$INSTALL_PREFIX/bin/motion"
+COPY --from=build "$INSTALL_PREFIX/share/locale" "$INSTALL_PREFIX/share/locale"
 
+ARG LIBVA_DRIVER_NAME
+ARG MOTION_VERSION
+
+LABEL motion.build.prefix="${INSTALL_PREFIX}"
+LABEL motion.version=${MOTION_VERSION}
+LABEL timezone="${TZ_COUNTRY}/${TZ_CITY}"
+LABEL libva.driver.name=${LIBVA_DRIVER_NAME}
+
+ENV LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME}
+
+ENTRYPOINT [ "motion" ]
