@@ -18,9 +18,10 @@ deployment:
 image:
   registry: docker.io
   repository: "rancher/mirrored-library-traefik"
+             # rancher/mirrored-library-traefik
   # -- defaults to appVersion. It's used for version checking, even prefixed with experimental- or latest-.
   # When a digest is required, `versionOverride` can be used to set the version.
-  tag: "3.5.1"
+  tag: "3.6.9"
   pullPolicy: IfNotPresent
 
 nodeSelector:
@@ -51,3 +52,9 @@ serviceAccount:
   # If set, an existing service account is used
   # If not set, a service account is created automatically using the fullname template
   name: ""
+
+# -- TLS Store are created as [TLSStore CRDs](https://doc.traefik.io/traefik/https/tls/#default-certificate). This is useful if you want to set a default certificate. See EXAMPLE.md for details.
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: default-certificate

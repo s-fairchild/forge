@@ -1,0 +1,41 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: SqlJob
+metadata:
+  name: sql-01-create-security-table
+  namespace: motion
+spec:
+  mariaDbRef:
+    name: mariadb
+    namespace: mariadb
+
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 5
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: app
+              operator: In
+              values:
+                - compute
+
+  database: motion
+  username: motion-sqljobs
+  serviceAccountName: motion-sqljobs
+
+  passwordSecretKeyRef:
+    name: mariadb-motion-sqljobs-connection
+    key: password
+
+  tlsClientCertSecretRef:
+    name: mariadb-motion-client-cert
+
+  tlsCASecretRef:
+    name: root-ca-bundle
+
+  sqlConfigMapKeyRef:
+    key: jobs.sql
+    name: sql-01-create-security-table

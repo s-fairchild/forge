@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "manager": {
+      "additionalProperties": false,
+      "properties": {
+        "devices": {
+          "default": "",
+          "description": "supported devices by the operator",
+          "title": "devices",
+          "type": "null"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "hub": {
+              "default": "intel",
+              "title": "hub",
+              "type": "string"
+            },
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "hub",
+            "tag",
+            "pullPolicy"
+          ],
+          "title": "image",
+          "type": "object"
+        }
+      },
+      "required": [
+        "image",
+        "devices"
+      ],
+      "title": "manager",
+      "type": "object"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "description": "yaml-language-server: $schema=values.schema.json",
+      "properties": {
+        "kubernetes.io/arch": {
+          "default": "amd64",
+          "title": "kubernetes.io/arch",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kubernetes.io/arch"
+      ],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "privateRegistry": {
+      "additionalProperties": false,
+      "properties": {
+        "registrySecret": {
+          "default": "",
+          "title": "registrySecret",
+          "type": "string"
+        },
+        "registryUrl": {
+          "default": "",
+          "title": "registryUrl",
+          "type": "string"
+        },
+        "registryUser": {
+          "default": "",
+          "title": "registryUser",
+          "type": "string"
+        }
+      },
+      "required": [
+        "registryUrl",
+        "registryUser",
+        "registrySecret"
+      ],
+      "title": "privateRegistry",
+      "type": "object"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "120Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "100Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "limits",
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "nodeSelector",
+    "manager",
+    "privateRegistry",
+    "resources",
+    "tolerations"
+  ],
+  "type": "object"
+}

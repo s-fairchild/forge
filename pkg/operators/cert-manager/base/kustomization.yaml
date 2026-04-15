@@ -3,8 +3,12 @@ kind: Kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
 
 resources:
+- namespace.yaml
 - helmcharts/cert-manager.yaml
-- certificate/root-ca.yaml
+- helmcharts/trust-manager.yaml
+- cluster-issuers/root-ca-cluster-issuer.yaml
+- cluster-issuers/selfsigned-cluster-issuer.yaml
+- certificates/root-ca.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -12,5 +16,19 @@ generatorOptions:
 secretGenerator:
   - name: cert-manager-values
     namespace: kube-system
+    behavior: create
     files:
-      - values/values.yaml
+      - base-values.yaml=values/cert-manager/values.yaml
+  
+  - name: trust-manager-values
+    namespace: kube-system
+    behavior: create
+    files:
+    - values/trust-manager/default-package-values.yaml
+    - values/trust-manager/image-values.yaml
+    - values/trust-manager/replicas-values.yaml
+    - values/trust-manager/values.yaml
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

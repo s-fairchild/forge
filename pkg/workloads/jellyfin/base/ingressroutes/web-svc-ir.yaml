@@ -1,0 +1,39 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: web-svc-ir
+  namespace: jellyfin
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`jellyfin`)
+    kind: Rule
+    middlewares:
+    - name: web-svc-secured-chain-mw
+    observability:
+      metrics: false
+      accessLogs: true
+      tracing: true
+      traceVerbosity: detailed
+    services:
+    - name: web-svc
+      namespace: jellyfin
+      kind: Service
+      passHostHeader: true
+      port: web
+      # nativeLB: true
+      scheme: http
+      responseForwarding:
+        flushInterval: 1ms
+      sticky:
+        cookie:
+          # httpOnly: true
+          name: cookie
+          secure: true
+          sameSite: none
+          maxAge: 0 # Never expires
+
+  # Use default certificate
+  tls: {}

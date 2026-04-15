@@ -1,0 +1,4 @@
+---
+- op: add
+  path: /spec/valuesSecrets/0/keys/-
+  value: prod-values.yaml

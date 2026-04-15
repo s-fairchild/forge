@@ -44,7 +44,9 @@ spec:
             path: /health
             port: web-client
             scheme: HTTP
-        image: docker.io/linuxserver/jellyfin:10.11.6
+        # Upstream release: https://github.com/jellyfin/jellyfin/releases/tag/v10.11.8
+        # Image build release: https://github.com/linuxserver/docker-jellyfin/releases/tag/10.11.8ubu2404-ls27
+        image: docker.io/linuxserver/jellyfin:10.11.8
         env:
         - name: DISABLE_SERVER_SELECTION
           value: "1"
@@ -80,6 +82,7 @@ spec:
       - name: plugins
         persistentVolumeClaim:
           claimName: plugins-pvc
+      # TODO mount render via intel device gpu operator
       - name: render
         hostPath:
           path: /dev/dri/renderD128

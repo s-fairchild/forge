@@ -1,49 +1,153 @@
+---
+# Number of provisioner worker threads to call provision/delete simultaneously.
+workerThreads: 4
+
+# Number of retries of failed volume provisioning. 0 means retry indefinitely.
+provisioningRetryCount: 15
+
+# Number of retries of failed volume deletion. 0 means retry indefinitely.
+deletionRetryCount: 15
+
+# Extra arguments to pass to the CLI
+# extraArgs: []
+
 configmap:
   name: local-path-config
-  # specify the custom script for setup and teardown
+
   setup: |-
     #!/bin/sh
-    set -eu
-    mkdir -m 0777 -p "$VOL_DIR"
+    set -o errexit \
+        -o nounset
+
+    main() {
+        while getopts "a:m:s:p:x" opt
+        do
+            case $opt in
+                x)
+                    set -x
+                    ;;
+                p)
+                    absolute_path="$OPTARG"
+                    echo "absolute_path=$absolute_path"
+                    ;;
+                s)
+                    size_in_bytes="$OPTARG"
+                    echo "size_in_bytes=$size_in_bytes"
+                    ;;
+                m)
+                    vol_mode="$OPTARG"
+                    echo "vol_mode=$vol_mode"
+                    ;;
+                a)
+                    # create or delete
+                    # Seems to be used for a script that contains both setup and teardown
+                    operation="$OPTARG"
+                    echo "operation=$operation"
+                    ;;
+            esac
+        done
+
+        dir_create "$absolute_path"
+        # subvol_create "$absolute_path"
+    }
+
+    # dir_create()
+    dir_create() {
+        echo "Creating directory $1"
+        mkdir -m 0777 \
+              -p ${1}
+    }
+
+    # subvol_create()
+    #
+    # Currently unused
+    # TODO configure configmap.helperPod yaml to run as privileged
+    subvol_create() {
+        if [ -d "$1" ]; then
+            echo "$1 already exists. Doing nothing."
+
+            btrfs subvolume show \
+              -h \
+              "$1" || echo "Warning: $1 is not a subvolume."
+
+            return 0
+        fi
+
+
+        btrfs subvolume create \
+          -p \
+          "$1"
+    
+        btrfs subvolume show \
+          -h \
+          "$1"
+    }
+
+    main $@
+
   teardown: |-
     #!/bin/sh
-    set -eu
-    rm -rf "$VOL_DIR"
+    set -o errexit \
+        -o nounset
 
-  # setup: |-
-    # #!/bin/sh
-    # set -eu
+    main() {
+        while getopts "a:m:s:p:x" opt
+        do
+            case $opt in
+                x)
+                    set -x
+                    ;;
+                p)
+                    absolute_path="$OPTARG"
+                    echo "absolute_path=$absolute_path"
+                    ;;
+                s)
+                    size_in_bytes="$OPTARG"
+                    echo "size_in_bytes=$size_in_bytes"
+                    ;;
+                m)
+                    vol_mode="$OPTARG"
+                    echo "vol_mode=$vol_mode"
+                    ;;
+                a)
+                    # create or delete
+                    # Seems to be used for a script that contains both setup and teardown
+                    operation="$OPTARG"
+                    echo "operation=$operation"
+                    ;;
+            esac
+        done
 
-    # btrfs subvolume create -p "$VOL_DIR"
-    # chmod -m 0777 "$VOL_DIR"
+        dir_delete "$absolute_path"
+        # subvol_delete "$1"
+    }
 
-  # teardown: |-
-    # #!/bin/sh
-    # set -eu
+    # dir_delete()
+    dir_delete() {
+        echo "Recursively Deleting $1"
+        rm -rf ${1}
+    }
 
-    # btrfs subvolume delete -Rv "$VOL_DIR"
+    # subvol_delete()
+    #
+    # Currently unused
+    # TODO configure configmap.helperPod yaml to run as privileged
+    subvol_delete() {
+        [ ! -d "$1" ] && $(echo "error: $1 not found."; return 1)
 
-  helperPod:
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
+        btrfs subvolume show \
+          -h \
+          "$1" || $(echo "error: $1 is not a subvolume."; return 1)
 
-    # Allows to run the helper pod in another namespace. Uses release namespace by default.
-    namespaceOverride: ""
-    name: "helper-pod"
-    tolerations:
-    - key: node.kubernetes.io/disk-pressure
-      operator: Exists
-      effect: NoSchedule
-    - key: "CriticalAddonsOnly"
-      operator: "Exists"
-    - key: "node-role.kubernetes.io/control-plane"
-      operator: "Exists"
-      effect: "NoSchedule"
-    - key: "node-role.kubernetes.io/master"
-      operator: "Exists"
-      effect: "NoSchedule"
+        echo "Deleting btrfs subvolume $1"
+        btrfs subvolume delete \
+          -Rv \
+          "$1"
+        
+        echo "Waiting for $absolute_path subvolume deletion..."
+        btrfs subvolume sync "$1"
+
+        echo "Successfully deleted subvolume $1"
+    }
+
+    main $@

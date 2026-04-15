@@ -1,0 +1,25 @@
+---
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: root-ca-bundle
+  namespace: cert-manager
+spec:
+  sources:
+  - useDefaultCAs: false
+
+  - secret:
+      name: "root-ca"
+      key: "ca.crt"
+
+  target:
+    secret:
+      key: "ca.crt"
+      metadata:
+        labels:
+          app.kubernetes.io/component: "trust-bundle"
+          app.kubernetes.io/managed-by: "trust-manager"
+
+    namespaceSelector:
+      matchLabels:
+        linkerd.io/inject: "enabled"

@@ -1,10 +1,17 @@
 ---
 resources:
 - ../../base
-- ingressroute/rtsp0-hls-ingressroute.yaml
 
 patches:
   - path: deployment.yaml
+
+  - path: ingress-routes/rtsp-hls-ir-patch.yaml
+    target:
+      version: v1alpha1
+      group: traefik.io
+      kind: IngressRoute
+      name: rtsp-hls-ingressroute
+      namespace: v4l2rtspserver
 
 secretGenerator:
 - name: rtsp0-password

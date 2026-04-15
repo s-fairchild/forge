@@ -1,0 +1,12 @@
+---
+imageRegistry: quay.io
+# Organization
+imageNamespace: jetstack
+
+image:
+  # Repository
+  name: trust-manager
+  # Override the image tag to deploy by setting this variable.
+  # If no value is set, the chart's appVersion is used.
+  # tag: vX.Y.Z
+  pullPolicy: IfNotPresent

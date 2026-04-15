@@ -141,7 +141,8 @@ master:
             matchExpressions:
               - key: "node-role.kubernetes.io/control-plane"
                 operator: In
-                values: [""]
+                values:
+                - "true"
                 
   startupProbe:
     failureThreshold: 30

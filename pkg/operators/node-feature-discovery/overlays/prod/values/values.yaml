@@ -44,7 +44,8 @@ master:
             matchExpressions:
               - key: "node-role.kubernetes.io/control-plane"
                 operator: In
-                values: [""]
+                values:
+                - "true"
 
 # https://kubernetes-sigs.github.io/node-feature-discovery/v0.18/deployment/helm.html#worker-pod-parameters
 worker:

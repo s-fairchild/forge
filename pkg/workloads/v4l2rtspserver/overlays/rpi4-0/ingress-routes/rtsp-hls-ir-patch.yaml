@@ -1,0 +1,25 @@
+---
+- op: replace
+  path: /spec/routes/0/match
+  value: Host(`rtsp0.app.rick.expresso.lan`)
+- op: add
+  path: /spec/routes/0/services/-
+  value:
+    kind: Service
+    name: rtsp0-hls-svc
+    namespace: v4l2rtspserver
+    passHostHeader: true
+    port: hls-web
+    responseForwarding:
+      flushInterval: 1ms
+    scheme: http
+    sticky:
+      cookie:
+        httpOnly: true
+        name: cookie
+        secure: true
+        sameSite: none
+        maxAge: 42  
+    weight: 40
+    nativeLB: false
+    nodePortLB: true

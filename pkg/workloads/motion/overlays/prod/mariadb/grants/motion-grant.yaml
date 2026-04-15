@@ -1,0 +1,22 @@
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: motion
+  namespace: motion
+spec:
+  mariaDbRef:
+    name: mariadb
+    namespace: mariadb
+
+  database: motion
+  table: security
+  username: motion
+  host: "%"
+  cleanupPolicy: Delete
+  retryInterval: 30s
+
+  privileges:
+  - INSERT
+  - UPDATE
+  - SELECT

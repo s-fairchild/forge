@@ -1,0 +1,131 @@
+---
+# yaml-language-server: $schema=../../../../schemas/mariadb-operator/values.schema.json
+
+# yaml-language-server-disable Missing property
+crds:
+  enabled: false
+
+image:
+  repository: docker-registry3.mariadb.com/mariadb-operator/mariadb-operator
+  pullPolicy: IfNotPresent
+  tag: ""
+
+logLevel: INFO
+clusterName: cluster.local
+currentNamespaceOnly: false
+
+rbac:
+  enabled: true
+  aggregation:
+    enabled: true
+
+# yaml-language-server-disable Missing property "annotations", Missing property "extraLabels", "name"
+serviceAccount:
+  enabled: true
+  automount: true
+
+# yaml-language-server-disable Missing property "port"
+pprof:
+  enabled: false
+
+affinity:
+  # yaml-language-server-disable Property nodeAffinity is not allowed
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: In
+              values:
+              - "true"
+
+# yaml-language-server-disable Missing property
+certController:
+  enabled: false
+
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+# yaml-language-server-disable Missing property
+webhook:
+  image:
+    repository: docker-registry3.mariadb.com/mariadb-operator/mariadb-operator
+    pullPolicy: IfNotPresent
+    # https://github.com/mariadb-operator/mariadb-operator/blob/mariadb-operator-crds-25.10.3/deploy/charts/mariadb-operator/Chart.lock
+    # digest: sha256:015e4f8ee0e192bb9d011410ea458c59fb27bcdd0d3224b3328bd5019a2919c9
+    tag: 25.10.3
+
+  # yaml-language-server-disable Missing property "path", "ca", "secretAnnotations"
+  cert:
+    secretLabels:
+      # yaml-language-server-disable Property k8s.mariadb.com/watch is not allowed
+      k8s.mariadb.com/watch: ""
+
+  # yaml-language-server-disable Missing property "duration", "renewBefore"
+    certManager:
+      enabled: true
+      issuerRef:
+        # yaml-language-server-disable Property name is not allowed
+        name: root-ca
+        # yaml-language-server-disable Property kind is not allowed
+        kind: ClusterIssuer
+        # yaml-language-server-disable Property group is not allowed
+        group: cert-manager.io
+      revisionHistoryLimit: 3
+
+  port: 9443
+  hostNetwork: false
+
+  # yaml-language-server-disable Missing property "additionalLabels", "metricRelabelings", "relabelings"
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 25s
+
+  # yaml-language-server-disable Missing property "annotations", "extraLabels", "name"
+  serviceAccount:
+    enabled: true
+    automount: true
+
+  affinity:
+    # yaml-language-server-disable
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: In
+                values:
+                - "true"
+
+  tolerations:
+    - key: node.kubernetes.io/disk-pressure
+      operator: Exists
+      effect: NoSchedule
+    - key: "CriticalAddonsOnly"
+      operator: "Exists"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+metrics:
+  enabled: false
+  # yaml-language-server-disable Missing property
+  serviceMonitor:
+    # TODO enable once prometheus is configured
+    enabled: false

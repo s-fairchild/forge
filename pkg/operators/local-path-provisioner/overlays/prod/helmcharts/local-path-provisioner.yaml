@@ -1,9 +1,0 @@
----
-- op: replace
-  path: /spec/valuesSecrets
-  value:
-  - ignoreUpdates: false
-    name: local-path-provisioner-values
-    keys:
-      - configmap.yaml
-      - values.yaml

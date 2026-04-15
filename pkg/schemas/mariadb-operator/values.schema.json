@@ -1,0 +1,1344 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "description": "Affinity to add to controller Pod",
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "certController": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "description": "Affinity to add to cert-controller container",
+          "required": [],
+          "title": "affinity",
+          "type": "object"
+        },
+        "caLifetime": {
+          "default": "26280h",
+          "description": "CA certificate lifetime. It must be greater than certLifetime.",
+          "title": "caLifetime",
+          "type": "string"
+        },
+        "certLifetime": {
+          "default": "2160h",
+          "description": "Certificate lifetime.",
+          "title": "certLifetime",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Specifies whether the cert-controller should be created.",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "description": "Extra arguments to be passed to the cert-controller entrypoint",
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraVolumeMounts": {
+          "description": "Extra volumes to mount to cert-controller container",
+          "items": {
+            "required": []
+          },
+          "title": "extraVolumeMounts",
+          "type": "array"
+        },
+        "extraVolumes": {
+          "description": "Extra volumes to pass to cert-controller Pod",
+          "items": {
+            "required": []
+          },
+          "title": "extraVolumes",
+          "type": "array"
+        },
+        "ha": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable high availability",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "replicas": {
+              "default": 3,
+              "description": "Number of replicas",
+              "title": "replicas",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "replicas"
+          ],
+          "title": "ha",
+          "type": "object"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "docker-registry3.mariadb.com/mariadb-operator/mariadb-operator",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Image tag to use. By default the chart appVersion is used",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "pullPolicy",
+            "tag"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "imagePullSecrets": {
+          "items": {
+            "required": []
+          },
+          "title": "imagePullSecrets",
+          "type": "array"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "description": "requests:\n  cpu: 10m\n  memory: 32Mi\nNode selectors to add to cert-controller container",
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "pdb": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable PodDisruptionBudget for the cert-controller.",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "maxUnavailable": {
+              "default": 1,
+              "description": "Maximum number of unavailable Pods. You may also give a percentage, like `50%`",
+              "title": "maxUnavailable",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "maxUnavailable"
+          ],
+          "title": "pdb",
+          "type": "object"
+        },
+        "podAnnotations": {
+          "additionalProperties": false,
+          "description": "Annotations to add to cert-controller Pod",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "description": "Security context to add to cert-controller Pod",
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "priorityClassName": {
+          "default": "",
+          "description": "priorityClassName to add to cert-controller container",
+          "title": "priorityClassName",
+          "type": "string"
+        },
+        "renewBeforePercentage": {
+          "default": 33,
+          "description": "How long before the certificate expiration should the renewal process be triggered. For example, if a certificate is valid for 60 minutes, and renewBeforePercentage=25, cert-controller will begin to attempt to renew the certificate 45 minutes after it was issued (i.e. when there are 15 minutes (25%) remaining until the certificate is no longer valid).",
+          "title": "renewBeforePercentage",
+          "type": "integer"
+        },
+        "requeueDuration": {
+          "default": "5m",
+          "description": "Requeue duration to ensure that certificate gets renewed.",
+          "title": "requeueDuration",
+          "type": "string"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Resources to add to cert-controller container",
+          "required": [],
+          "title": "resources",
+          "type": "object"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "description": "Security context to add to cert-controller Pod",
+          "required": [],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations to add to the service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "automount": {
+              "default": true,
+              "description": "Automounts the service account token in all containers of the Pod",
+              "title": "automount",
+              "type": "boolean"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Specifies whether a service account should be created",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "extraLabels": {
+              "additionalProperties": false,
+              "description": "Extra Labels to add to the service account",
+              "required": [],
+              "title": "extraLabels",
+              "type": "object"
+            },
+            "name": {
+              "default": "",
+              "description": "The name of the service account to use.\nIf not set and enabled is true, a name is generated using the fullname template",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "automount",
+            "annotations",
+            "extraLabels",
+            "name"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "serviceMonitor": {
+          "additionalProperties": false,
+          "properties": {
+            "additionalLabels": {
+              "additionalProperties": false,
+              "description": "Labels to be added to the cert-controller ServiceMonitor",
+              "required": [],
+              "title": "additionalLabels",
+              "type": "object"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Enable cert-controller ServiceMonitor. Metrics must be enabled",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "interval": {
+              "default": "30s",
+              "description": "release: kube-prometheus-stack\n Interval to scrape metrics",
+              "title": "interval",
+              "type": "string"
+            },
+            "metricRelabelings": {
+              "description": "MetricRelabelConfigs to apply to samples before ingestion.",
+              "items": {
+                "required": []
+              },
+              "title": "metricRelabelings",
+              "type": "array"
+            },
+            "relabelings": {
+              "description": "RelabelConfigs to apply to samples before scraping.",
+              "items": {
+                "required": []
+              },
+              "title": "relabelings",
+              "type": "array"
+            },
+            "scrapeTimeout": {
+              "default": "25s",
+              "description": "Timeout if metrics can't be retrieved in given time interval",
+              "title": "scrapeTimeout",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "additionalLabels",
+            "interval",
+            "scrapeTimeout",
+            "metricRelabelings",
+            "relabelings"
+          ],
+          "title": "serviceMonitor",
+          "type": "object"
+        },
+        "tolerations": {
+          "description": "Tolerations to add to cert-controller container",
+          "items": {
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "description": "topologySpreadConstraints to add to cert-controller container",
+          "items": {
+            "required": []
+          },
+          "title": "topologySpreadConstraints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "image",
+        "imagePullSecrets",
+        "ha",
+        "caLifetime",
+        "certLifetime",
+        "renewBeforePercentage",
+        "requeueDuration",
+        "serviceMonitor",
+        "serviceAccount",
+        "extraArgs",
+        "extraVolumes",
+        "extraVolumeMounts",
+        "podAnnotations",
+        "podSecurityContext",
+        "securityContext",
+        "resources",
+        "nodeSelector",
+        "tolerations",
+        "topologySpreadConstraints",
+        "priorityClassName",
+        "affinity",
+        "pdb"
+      ],
+      "title": "certController",
+      "type": "object"
+    },
+    "clusterName": {
+      "default": "cluster.local",
+      "description": "Cluster DNS name",
+      "title": "clusterName",
+      "type": "string"
+    },
+    "config": {
+      "additionalProperties": false,
+      "description": "Operator configuration",
+      "properties": {
+        "exporterImage": {
+          "additionalProperties": false,
+          "description": "Default MariaDB exporter image",
+          "properties": {
+            "repository": {
+              "default": "prom/mysqld-exporter",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "v0.15.1",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag"
+          ],
+          "title": "exporterImage",
+          "type": "object"
+        },
+        "exporterMaxscaleImage": {
+          "additionalProperties": false,
+          "description": "Default MaxScale exporter image",
+          "properties": {
+            "repository": {
+              "default": "docker-registry2.mariadb.com/mariadb/maxscale-prometheus-exporter-ubi",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "v0.0.1",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag"
+          ],
+          "title": "exporterMaxscaleImage",
+          "type": "object"
+        },
+        "galeraLibPath": {
+          "default": "/usr/lib/galera/libgalera_smm.so",
+          "description": "Galera library path to be used with MariaDB Galera",
+          "title": "galeraLibPath",
+          "type": "string"
+        },
+        "mariadbDefaultVersion": {
+          "default": "11.8",
+          "description": "Default MariaDB version to be used when unable to infer it via image tag",
+          "title": "mariadbDefaultVersion",
+          "type": "string"
+        },
+        "mariadbImage": {
+          "additionalProperties": false,
+          "description": "Default MariaDB image",
+          "properties": {
+            "repository": {
+              "default": "docker-registry1.mariadb.com/library/mariadb",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "11.8.5",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag"
+          ],
+          "title": "mariadbImage",
+          "type": "object"
+        },
+        "mariadbImageName": {
+          "default": "docker-registry1.mariadb.com/library/mariadb",
+          "description": "Default MariaDB image name",
+          "title": "mariadbImageName",
+          "type": "string"
+        },
+        "maxscaleImage": {
+          "additionalProperties": false,
+          "description": "Default MaxScale image",
+          "properties": {
+            "repository": {
+              "default": "docker-registry2.mariadb.com/mariadb/maxscale",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "23.08.5",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag"
+          ],
+          "title": "maxscaleImage",
+          "type": "object"
+        }
+      },
+      "required": [
+        "galeraLibPath",
+        "mariadbDefaultVersion",
+        "mariadbImage",
+        "mariadbImageName",
+        "maxscaleImage",
+        "exporterImage",
+        "exporterMaxscaleImage"
+      ],
+      "title": "config",
+      "type": "object"
+    },
+    "crds": {
+      "additionalProperties": false,
+      "description": "CRDs",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Whether the helm chart should create and update the CRDs. It is false by default, which implies that the CRDs must be\nmanaged independently with the mariadb-operator-crds helm chart.\n**WARNING** This should only be set to true during the initial deployment. If this chart manages the CRDs\nand is later uninstalled, all MariaDB instances will be DELETED.",
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "crds",
+      "type": "object"
+    },
+    "currentNamespaceOnly": {
+      "default": false,
+      "description": "Whether the operator should watch CRDs only in its own namespace or not.",
+      "title": "currentNamespaceOnly",
+      "type": "boolean"
+    },
+    "extraArgs": {
+      "description": "Extra arguments to be passed to the controller entrypoint",
+      "items": {
+        "required": []
+      },
+      "title": "extraArgs",
+      "type": "array"
+    },
+    "extraEnv": {
+      "description": "Extra environment variables to be passed to the controller",
+      "items": {
+        "required": []
+      },
+      "title": "extraEnv",
+      "type": "array"
+    },
+    "extraEnvFrom": {
+      "description": "Extra environment variables from preexiting ConfigMap / Secret objects used by the controller using envFrom",
+      "items": {
+        "required": []
+      },
+      "title": "extraEnvFrom",
+      "type": "array"
+    },
+    "extraVolumeMounts": {
+      "description": "Extra volumes to mount to the container.",
+      "items": {
+        "required": []
+      },
+      "title": "extraVolumeMounts",
+      "type": "array"
+    },
+    "extraVolumes": {
+      "description": "Extra volumes to pass to pod.",
+      "items": {
+        "required": []
+      },
+      "title": "extraVolumes",
+      "type": "array"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "ha": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable high availability of the controller.\nIf you enable it we recommend to set `affinity` and `pdb`",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "replicas": {
+          "default": 3,
+          "description": "Number of replicas",
+          "title": "replicas",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "replicas"
+      ],
+      "title": "ha",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "docker-registry3.mariadb.com/mariadb-operator/mariadb-operator",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Image tag to use. By default the chart appVersion is used",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "logLevel": {
+      "default": "INFO",
+      "description": "Controller log level",
+      "title": "logLevel",
+      "type": "string"
+    },
+    "mariadb-operator-crds": {
+      "description": "mariadb-operator CRDs",
+      "required": [],
+      "title": "mariadb-operator-crds",
+      "type": "object"
+    },
+    "metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable operator internal metrics. Prometheus must be installed in the cluster",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "serviceMonitor": {
+          "additionalProperties": false,
+          "properties": {
+            "additionalLabels": {
+              "additionalProperties": false,
+              "description": "Labels to be added to the controller ServiceMonitor",
+              "required": [],
+              "title": "additionalLabels",
+              "type": "object"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Enable controller ServiceMonitor",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "interval": {
+              "default": "30s",
+              "description": "release: kube-prometheus-stack\n Interval to scrape metrics",
+              "title": "interval",
+              "type": "string"
+            },
+            "metricRelabelings": {
+              "description": "MetricRelabelConfigs to apply to samples before ingestion.",
+              "items": {
+                "required": []
+              },
+              "title": "metricRelabelings",
+              "type": "array"
+            },
+            "relabelings": {
+              "description": "RelabelConfigs to apply to samples before scraping.",
+              "items": {
+                "required": []
+              },
+              "title": "relabelings",
+              "type": "array"
+            },
+            "scrapeTimeout": {
+              "default": "25s",
+              "description": "Timeout if metrics can't be retrieved in given time interval",
+              "title": "scrapeTimeout",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "additionalLabels",
+            "interval",
+            "scrapeTimeout",
+            "metricRelabelings",
+            "relabelings"
+          ],
+          "title": "serviceMonitor",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "serviceMonitor"
+      ],
+      "title": "metrics",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "yaml-language-server: $schema=values.schema.json",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "description": "Node selectors to add to controller Pod",
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "pdb": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable PodDisruptionBudget for the controller.",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxUnavailable": {
+          "default": 1,
+          "description": "Maximum number of unavailable Pods. You may also give a percentage, like `50%`",
+          "title": "maxUnavailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxUnavailable"
+      ],
+      "title": "pdb",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "description": "Annotations to add to controller Pod",
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "description": "Security context to add to controller Pod",
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "pprof": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable the pprof HTTP server.",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "port": {
+          "default": 6060,
+          "description": "The port where the pprof HTTP server listens.",
+          "title": "port",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "port"
+      ],
+      "title": "pprof",
+      "type": "object"
+    },
+    "priorityClassName": {
+      "default": "",
+      "description": "priorityClassName to add to controller Pod",
+      "title": "priorityClassName",
+      "type": "string"
+    },
+    "rbac": {
+      "additionalProperties": false,
+      "properties": {
+        "aggregation": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Specifies whether the cluster roles aggrate to view and edit predefinied roles",
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "aggregation",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Specifies whether RBAC resources should be created",
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "aggregation"
+      ],
+      "title": "rbac",
+      "type": "object"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "description": "Resources to add to controller container",
+      "required": [],
+      "title": "resources",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "description": "Security context to add to controller container",
+      "required": [],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations to add to the service account",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": true,
+          "description": "Automounts the service account token in all containers of the Pod",
+          "title": "automount",
+          "type": "boolean"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Specifies whether a service account should be created",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraLabels": {
+          "additionalProperties": false,
+          "description": "Extra Labels to add to the service account",
+          "required": [],
+          "title": "extraLabels",
+          "type": "object"
+        },
+        "name": {
+          "default": "",
+          "description": "The name of the service account to use.\nIf not set and enabled is true, a name is generated using the fullname template",
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "automount",
+        "annotations",
+        "extraLabels",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "tolerations": {
+      "description": "Tolerations to add to controller Pod",
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    },
+    "topologySpreadConstraints": {
+      "description": "topologySpreadConstraints to add to controller Pod",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
+      "type": "array"
+    },
+    "webhook": {
+      "additionalProperties": false,
+      "properties": {
+        "affinity": {
+          "additionalProperties": false,
+          "description": "Affinity to add to webhook Pod",
+          "required": [],
+          "title": "affinity",
+          "type": "object"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for webhook configurations.",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "cert": {
+          "additionalProperties": false,
+          "properties": {
+            "ca": {
+              "additionalProperties": false,
+              "properties": {
+                "key": {
+                  "default": "",
+                  "description": "File under 'ca.path' that contains the full CA trust chain.",
+                  "title": "key",
+                  "type": "string"
+                },
+                "path": {
+                  "default": "",
+                  "description": "Path that contains the full CA trust chain.",
+                  "title": "path",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "key"
+              ],
+              "title": "ca",
+              "type": "object"
+            },
+            "certManager": {
+              "additionalProperties": false,
+              "properties": {
+                "duration": {
+                  "default": "",
+                  "description": "Duration to be used in the Certificate resource,",
+                  "title": "duration",
+                  "type": "string"
+                },
+                "enabled": {
+                  "default": false,
+                  "description": "Whether to use cert-manager to issue and rotate the certificate. If set to false, mariadb-operator's cert-controller will be used instead.",
+                  "title": "enabled",
+                  "type": "boolean"
+                },
+                "issuerRef": {
+                  "additionalProperties": false,
+                  "description": "Issuer reference to be used in the Certificate resource. If not provided, a self-signed issuer will be used.",
+                  "required": [],
+                  "title": "issuerRef",
+                  "type": "object"
+                },
+                "renewBefore": {
+                  "default": "",
+                  "description": "Renew before duration to be used in the Certificate resource.",
+                  "title": "renewBefore",
+                  "type": "string"
+                },
+                "revisionHistoryLimit": {
+                  "default": 3,
+                  "description": "The maximum number of CertificateRequest revisions that are maintained in the Certificate’s history.",
+                  "title": "revisionHistoryLimit",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "enabled",
+                "issuerRef",
+                "duration",
+                "renewBefore",
+                "revisionHistoryLimit"
+              ],
+              "title": "certManager",
+              "type": "object"
+            },
+            "path": {
+              "default": "/tmp/k8s-webhook-server/serving-certs",
+              "description": "Path where the certificate will be mounted. 'tls.crt' and 'tls.key' certificates files should be under this path.",
+              "title": "path",
+              "type": "string"
+            },
+            "secretAnnotations": {
+              "additionalProperties": false,
+              "description": "Annotatioms to be added to webhook TLS secret.",
+              "required": [],
+              "title": "secretAnnotations",
+              "type": "object"
+            },
+            "secretLabels": {
+              "additionalProperties": false,
+              "description": "Labels to be added to webhook TLS secret.",
+              "required": [],
+              "title": "secretLabels",
+              "type": "object"
+            }
+          },
+          "required": [
+            "certManager",
+            "secretAnnotations",
+            "secretLabels",
+            "ca",
+            "path"
+          ],
+          "title": "cert",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Specifies whether the webhook should be created.",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraArgs": {
+          "description": "Extra arguments to be passed to the webhook entrypoint",
+          "items": {
+            "required": []
+          },
+          "title": "extraArgs",
+          "type": "array"
+        },
+        "extraVolumeMounts": {
+          "description": "Extra volumes to mount to webhook container",
+          "items": {
+            "required": []
+          },
+          "title": "extraVolumeMounts",
+          "type": "array"
+        },
+        "extraVolumes": {
+          "description": "Extra volumes to pass to webhook Pod",
+          "items": {
+            "required": []
+          },
+          "title": "extraVolumes",
+          "type": "array"
+        },
+        "ha": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable high availability",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "replicas": {
+              "default": 3,
+              "description": "Number of replicas",
+              "title": "replicas",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "replicas"
+          ],
+          "title": "ha",
+          "type": "object"
+        },
+        "hostNetwork": {
+          "default": false,
+          "description": "Expose the webhook server in the host network",
+          "title": "hostNetwork",
+          "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "docker-registry3.mariadb.com/mariadb-operator/mariadb-operator",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Image tag to use. By default the chart appVersion is used",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "pullPolicy",
+            "tag"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "imagePullSecrets": {
+          "items": {
+            "required": []
+          },
+          "title": "imagePullSecrets",
+          "type": "array"
+        },
+        "nodeSelector": {
+          "additionalProperties": false,
+          "description": "requests:\n  cpu: 10m\n  memory: 32Mi\nNode selectors to add to webhook Pod",
+          "required": [],
+          "title": "nodeSelector",
+          "type": "object"
+        },
+        "pdb": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable PodDisruptionBudget for the webhook.",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "maxUnavailable": {
+              "default": 1,
+              "description": "Maximum number of unavailable Pods. You may also give a percentage, like `50%`",
+              "title": "maxUnavailable",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "maxUnavailable"
+          ],
+          "title": "pdb",
+          "type": "object"
+        },
+        "podAnnotations": {
+          "additionalProperties": false,
+          "description": "Annotations to add to webhook Pod",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "description": "Security context to add to webhook Pod",
+          "required": [],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "port": {
+          "default": 9443,
+          "description": "Port to be used by the webhook server",
+          "title": "port",
+          "type": "integer"
+        },
+        "priorityClassName": {
+          "default": "",
+          "description": "priorityClassName to add to webhook Pod",
+          "title": "priorityClassName",
+          "type": "string"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "description": "Resources to add to webhook container",
+          "required": [],
+          "title": "resources",
+          "type": "object"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "description": "Security context to add to webhook container",
+          "required": [],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations to add to the service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "automount": {
+              "default": true,
+              "description": "Automounts the service account token in all containers of the Pod",
+              "title": "automount",
+              "type": "boolean"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Specifies whether a service account should be created",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "extraLabels": {
+              "additionalProperties": false,
+              "description": "Extra Labels to add to the service account",
+              "required": [],
+              "title": "extraLabels",
+              "type": "object"
+            },
+            "name": {
+              "default": "",
+              "description": "The name of the service account to use.\nIf not set and enabled is true, a name is generated using the fullname template",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "automount",
+            "annotations",
+            "extraLabels",
+            "name"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "serviceMonitor": {
+          "additionalProperties": false,
+          "properties": {
+            "additionalLabels": {
+              "additionalProperties": false,
+              "description": "Labels to be added to the webhook ServiceMonitor",
+              "required": [],
+              "title": "additionalLabels",
+              "type": "object"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Enable webhook ServiceMonitor. Metrics must be enabled",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "interval": {
+              "default": "30s",
+              "description": "release: kube-prometheus-stack\n Interval to scrape metrics",
+              "title": "interval",
+              "type": "string"
+            },
+            "metricRelabelings": {
+              "description": "MetricRelabelConfigs to apply to samples before ingestion.",
+              "items": {
+                "required": []
+              },
+              "title": "metricRelabelings",
+              "type": "array"
+            },
+            "relabelings": {
+              "description": "RelabelConfigs to apply to samples before scraping.",
+              "items": {
+                "required": []
+              },
+              "title": "relabelings",
+              "type": "array"
+            },
+            "scrapeTimeout": {
+              "default": "25s",
+              "description": "Timeout if metrics can't be retrieved in given time interval",
+              "title": "scrapeTimeout",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "additionalLabels",
+            "interval",
+            "scrapeTimeout",
+            "metricRelabelings",
+            "relabelings"
+          ],
+          "title": "serviceMonitor",
+          "type": "object"
+        },
+        "tolerations": {
+          "description": "Tolerations to add to webhook Pod",
+          "items": {
+            "required": []
+          },
+          "title": "tolerations",
+          "type": "array"
+        },
+        "topologySpreadConstraints": {
+          "description": "topologySpreadConstraints to add to webhook Pod",
+          "items": {
+            "required": []
+          },
+          "title": "topologySpreadConstraints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "image",
+        "imagePullSecrets",
+        "ha",
+        "cert",
+        "port",
+        "hostNetwork",
+        "serviceMonitor",
+        "serviceAccount",
+        "annotations",
+        "extraArgs",
+        "extraVolumes",
+        "extraVolumeMounts",
+        "podAnnotations",
+        "podSecurityContext",
+        "securityContext",
+        "resources",
+        "nodeSelector",
+        "tolerations",
+        "topologySpreadConstraints",
+        "priorityClassName",
+        "affinity",
+        "pdb"
+      ],
+      "title": "webhook",
+      "type": "object"
+    }
+  },
+  "required": [
+    "nameOverride",
+    "fullnameOverride",
+    "crds",
+    "image",
+    "imagePullSecrets",
+    "logLevel",
+    "clusterName",
+    "currentNamespaceOnly",
+    "ha",
+    "metrics",
+    "serviceAccount",
+    "rbac",
+    "extraArgs",
+    "extraEnv",
+    "extraEnvFrom",
+    "extraVolumes",
+    "extraVolumeMounts",
+    "podAnnotations",
+    "podSecurityContext",
+    "securityContext",
+    "resources",
+    "nodeSelector",
+    "tolerations",
+    "topologySpreadConstraints",
+    "priorityClassName",
+    "affinity",
+    "pdb",
+    "pprof",
+    "webhook",
+    "certController",
+    "config"
+  ],
+  "type": "object"
+}

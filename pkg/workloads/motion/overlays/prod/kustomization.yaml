@@ -1,17 +1,42 @@
 ---
 resources:
   - ../../base
+  - certificates/mariadb-motion-client-cert.yaml
 
-# TODO find the correct patch operation to append database.conf into motion.conf (base)
+  - mariadb/connections/motion-connection.yaml
+  - mariadb/connections/sqljobs-connection.yaml
+
+  - mariadb/grants/motion-grant.yaml
+  - mariadb/grants/sqljobs-grant.yaml
+
+  - mariadb/sqljobs/sql-01-create-security-table-sqljob.yaml
+
+  - mariadb/users/motion-user.yaml
+  - mariadb/users/sqljobs-user.yaml
+
+  - mariadb/database.yaml
+
 patches:
   - path: deployment.yaml
-  - path: pvc/media-pvc.yaml
+
+  - path: pvc/recordings-pvc-patch.yaml
+    target:
+      version: v1
+      kind: PersistentVolumeClaim
+      name: recordings-pvc
+      namespace: motion
+
+  - path: namespace-patch.yaml
+    target:
+      version: v1
+      kind: Namespace
+      name: motion
 
 generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-  - name: camera1-conf-cm
+  - name: cameras-cm
     namespace: motion
     behavior: create
     files:
@@ -24,3 +49,27 @@ configMapGenerator:
     behavior: merge
     files:
       - configmap/motion.conf
+  
+  - name: sql-01-create-security-table
+    namespace: motion
+    files:
+      - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
+
+secretGenerator:
+  - name: mariadb-motion-auth
+    namespace: motion
+    behavior: create
+    files:
+      - motion=secrets/mariadb-motion-auth.txt
+    options:
+      labels:
+        k8s.mariadb.com/watch: ""
+
+  - name: mariadb-motion-auth
+    namespace: motion
+    behavior: merge
+    files:
+      - sqljobs=secrets/mariadb-motion-sqljobs-auth.txt
+    options:
+      labels:
+        k8s.mariadb.com/watch: ""

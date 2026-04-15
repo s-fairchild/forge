@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- helmcharts/mariadb-operator.yaml
+- namespace.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- name: mariadb-operator-values
+  namespace: kube-system
+  files:
+    - base-values.yaml=values/values.yaml
+
+# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
+crds:
+  - crds/helmcharts-cattle-openapi-spec.yaml

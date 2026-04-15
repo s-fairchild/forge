@@ -4,3 +4,4 @@ resources:
 - deployment.yaml
 - service/rtsp0-hls-svc-service.yaml
 - service/rtsp0-svc-service.yaml
+- ingress-routes/rtsp-hls-ir.yaml

@@ -1,0 +1,12 @@
+---
+- op: add
+  path: /metadata/labels
+  value: {}
+
+- op: add
+  path: "/metadata/labels/linkerd.io~1inject"
+  value: enabled
+
+- op: add
+  path: "/metadata/labels/app.kubernetes.io~1part-of"
+  value: mariadb

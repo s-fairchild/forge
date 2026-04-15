@@ -1,0 +1,470 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "commonLabels": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "commonLabels",
+      "type": "object"
+    },
+    "configmap": {
+      "additionalProperties": false,
+      "properties": {
+        "helperPod": {
+          "additionalProperties": false,
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "name": {
+              "default": "helper-pod",
+              "title": "name",
+              "type": "string"
+            },
+            "namespaceOverride": {
+              "default": "",
+              "description": "Allows to run the helper pod in another namespace. Uses release namespace by default.",
+              "title": "namespaceOverride",
+              "type": "string"
+            },
+            "priorityClassName": {
+              "default": "system-node-critical",
+              "description": "Priority class name for the helper pod (defaults to system-node-critical)",
+              "title": "priorityClassName",
+              "type": "string"
+            },
+            "tolerations": {
+              "items": {
+                "required": []
+              },
+              "title": "tolerations",
+              "type": "array"
+            }
+          },
+          "required": [
+            "namespaceOverride",
+            "name",
+            "annotations",
+            "tolerations",
+            "priorityClassName"
+          ],
+          "title": "helperPod",
+          "type": "object"
+        },
+        "name": {
+          "default": "local-path-config",
+          "description": "specify the config map name",
+          "title": "name",
+          "type": "string"
+        },
+        "setup": {
+          "default": "#!/bin/sh\nset -eu\nmkdir -m 0777 -p \"$VOL_DIR\"",
+          "description": "specify the custom script for setup and teardown",
+          "title": "setup",
+          "type": "string"
+        },
+        "teardown": {
+          "default": "#!/bin/sh\nset -eu\nrm -rf \"$VOL_DIR\"",
+          "title": "teardown",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "setup",
+        "teardown",
+        "helperPod"
+      ],
+      "title": "configmap",
+      "type": "object"
+    },
+    "defaultSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "registrySecret": {
+          "default": "~",
+          "title": "registrySecret",
+          "type": "null"
+        }
+      },
+      "required": [
+        "registrySecret"
+      ],
+      "title": "defaultSettings",
+      "type": "object"
+    },
+    "extraArgs": {
+      "description": " provisioningRetryCount: 15 Number of retries of failed volume deletion. 0 means retry indefinitely. deletionRetryCount: 15 Extra arguments to pass to the CLI",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "extraArgs"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "helperImage": {
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "default": "busybox",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "latest",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "tag"
+      ],
+      "title": "helperImage",
+      "type": "object"
+    },
+    "helperPod": {
+      "additionalProperties": false,
+      "properties": {
+        "resources": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "resources",
+          "type": "object"
+        }
+      },
+      "required": [
+        "resources"
+      ],
+      "title": "helperPod",
+      "type": "object"
+    },
+    "hostUsers": {
+      "default": true,
+      "title": "hostUsers",
+      "type": "boolean"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "rancher/local-path-provisioner",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "v0.0.35",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "tag",
+        "pullPolicy"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "nameOverride": {
+      "default": "",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "namespaceOverride": {
+      "default": "",
+      "title": "namespaceOverride",
+      "type": "string"
+    },
+    "nodePathMap": {
+      "description": " 1. If one node is not listed on the nodePathMap, and Kubernetes wants to create volume on it, the paths specified in    DEFAULT_PATH_FOR_NON_LISTED_NODES will be used for provisioning. 2. If one node is listed on the nodePathMap, the specified paths will be used for provisioning.     1. If one node is listed but with paths set to [], the provisioner will refuse to provision on this node.     2. If more than one path was specified, the path would be chosen randomly when provisioning.  The configuration must obey following rules: 1. A path must start with /, a.k.a an absolute path. 2. Root directory (/) is prohibited. 3. No duplicate paths allowed for one node. 4. No duplicate node allowed.",
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "node": {
+                "default": "DEFAULT_PATH_FOR_NON_LISTED_NODES",
+                "title": "node",
+                "type": "string"
+              },
+              "paths": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "paths",
+                "type": "array"
+              }
+            },
+            "required": [
+              "node",
+              "paths"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "required": [],
+      "title": "nodePathMap"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "description": " nodes at the same time. In this case all access modes are supported: `ReadWriteOnce`, `ReadOnlyMany` and `ReadWriteMany` for storage claims. In addition `volumeBindingMode: Immediate` can be used in  StorageClass definition. Please note that `nodePathMap` and `sharedFileSystemPath` are mutually exclusive. If `sharedFileSystemPath` is used, then `nodePathMap` must be set to `[]`. sharedFileSystemPath: \"\" `storageClassConfigs` allows the provisioner to manage multiple independent storage classes. Each storage class must have a unique name, and contains the same fields as shown above for a single storage class setup, EXCEPT for the provisionerName, which is the same for all storage classes, and name, which is the key of the map. storageClassConfigs: {}   my-storage-class:     storageClass:       create: true       defaultClass: false       defaultVolumeType: hostPath       reclaimPolicy: Delete     sharedFileSystemPath: \"\"     ## OR     # See above     nodePathMap: []",
+      "required": [],
+      "title": "podAnnotations"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "priorityClassName": {
+      "default": "",
+      "description": "Priority class name for the pod",
+      "title": "priorityClassName",
+      "type": "string"
+    },
+    "privateRegistry": {
+      "additionalProperties": false,
+      "properties": {
+        "registryPasswd": {
+          "default": "~",
+          "title": "registryPasswd",
+          "type": "null"
+        },
+        "registryUrl": {
+          "default": "~",
+          "title": "registryUrl",
+          "type": "null"
+        },
+        "registryUser": {
+          "default": "~",
+          "title": "registryUser",
+          "type": "null"
+        }
+      },
+      "required": [
+        "registryUrl",
+        "registryUser",
+        "registryPasswd"
+      ],
+      "title": "privateRegistry",
+      "type": "object"
+    },
+    "rbac": {
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "default": true,
+          "description": "Specifies whether RBAC resources should be created",
+          "title": "create",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "create"
+      ],
+      "title": "rbac",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "resources",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "default": true,
+          "description": "Specifies whether a ServiceAccount should be created",
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "description": " If not set and create is true, a name is generated using the fullname template",
+          "required": [],
+          "title": "name"
+        }
+      },
+      "required": [
+        "create"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "storageClass": {
+      "additionalProperties": false,
+      "description": "# For creating the StorageClass automatically:",
+      "properties": {
+        "allowedTopologies": {
+          "description": "# allowedTopologies field controls on which nodes the volumes can be dynamically provisioned, an empty value means no topology constraints",
+          "items": {
+            "required": []
+          },
+          "title": "allowedTopologies",
+          "type": "array"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "description": "# annotations to add to the StorageClass",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "create": {
+          "default": true,
+          "title": "create",
+          "type": "boolean"
+        },
+        "defaultClass": {
+          "default": "false",
+          "description": " provisionerName: rancher.io/local-path # Set StorageClass as the default StorageClass # Ignored if storageClass.create is false",
+          "required": [],
+          "title": "defaultClass"
+        },
+        "defaultVolumeType": {
+          "default": "hostPath",
+          "description": "# The default volume type this storage class creates, can be \"local\" or \"hostPath\"",
+          "title": "defaultVolumeType",
+          "type": "string"
+        },
+        "name": {
+          "default": "local-path",
+          "description": " # Ignored if storageClass.create is false",
+          "required": [],
+          "title": "name"
+        },
+        "reclaimPolicy": {
+          "default": "Delete",
+          "description": "# ReclaimPolicy field of the class, which can be either Delete or Retain",
+          "title": "reclaimPolicy",
+          "type": "string"
+        },
+        "volumeBindingMode": {
+          "default": "WaitForFirstConsumer",
+          "description": "# volumeBindingMode field controls when volume binding and dynamic provisioning should occur, can be  \"Immediate\" or \"WaitForFirstConsumer\"",
+          "title": "volumeBindingMode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "defaultVolumeType",
+        "reclaimPolicy",
+        "volumeBindingMode",
+        "allowedTopologies",
+        "annotations"
+      ],
+      "title": "storageClass",
+      "type": "object"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "replicaCount",
+    "commonLabels",
+    "namespaceOverride",
+    "image",
+    "helperImage",
+    "defaultSettings",
+    "privateRegistry",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "storageClass",
+    "podSecurityContext",
+    "hostUsers",
+    "securityContext",
+    "resources",
+    "helperPod",
+    "rbac",
+    "serviceAccount",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "priorityClassName",
+    "podDisruptionBudget",
+    "configmap"
+  ],
+  "type": "object"
+}

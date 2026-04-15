@@ -2,7 +2,10 @@
 resources:
 - namespace.yaml
 - deployment.yaml
-- pvc/media-pvc.yaml
+- pvc/recordings-pvc.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
 
 configMapGenerator:
   - name: motion-conf-cm
@@ -10,5 +13,3 @@ configMapGenerator:
     behavior: create
     files:
       - configmap/motion.conf
-    options:
-      disableNameSuffixHash: true

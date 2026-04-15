@@ -1,0 +1,20 @@
+---
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    app.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    "*.app.rick.expresso.lan"
+
+- op: replace
+  path: /spec/duration
+  value:
+    8760h # 1 year

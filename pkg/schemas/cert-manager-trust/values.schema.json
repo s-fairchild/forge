@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "app": {
+      "additionalProperties": false,
+      "properties": {
+        "logLevel": {
+          "default": "1",
+          "description": "Verbosity of trust logging; takes a value from 1-5, with higher being more verbose",
+          "required": [],
+          "title": "logLevel"
+        },
+        "metrics": {
+          "additionalProperties": false,
+          "properties": {
+            "port": {
+              "default": "9402",
+              "description": "Port for exposing Prometheus metrics on 0.0.0.0 on path '/metrics'.",
+              "required": [],
+              "title": "port"
+            },
+            "service": {
+              "additionalProperties": false,
+              "description": "Service to expose metrics endpoint.",
+              "properties": {
+                "enabled": {
+                  "default": "true",
+                  "description": "Create a Service resource to expose metrics endpoint.",
+                  "required": [],
+                  "title": "enabled"
+                },
+                "servicemonitor": {
+                  "additionalProperties": false,
+                  "description": "ServiceMonitor resource for this Service.",
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "title": "enabled",
+                      "type": "boolean"
+                    },
+                    "interval": {
+                      "default": "10s",
+                      "title": "interval",
+                      "type": "string"
+                    },
+                    "labels": {
+                      "additionalProperties": false,
+                      "required": [],
+                      "title": "labels",
+                      "type": "object"
+                    },
+                    "prometheusInstance": {
+                      "default": "default",
+                      "title": "prometheusInstance",
+                      "type": "string"
+                    },
+                    "scrapeTimeout": {
+                      "default": "5s",
+                      "title": "scrapeTimeout",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "enabled",
+                    "prometheusInstance",
+                    "interval",
+                    "scrapeTimeout",
+                    "labels"
+                  ],
+                  "title": "servicemonitor"
+                },
+                "type": {
+                  "default": "ClusterIP",
+                  "description": "Service type to expose metrics.",
+                  "required": [],
+                  "title": "type"
+                }
+              },
+              "required": [],
+              "title": "service"
+            }
+          },
+          "required": [],
+          "title": "metrics",
+          "type": "object"
+        },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/readyz",
+              "description": "Path on which to expose trust HTTP readiness probe using default network interface.",
+              "required": [],
+              "title": "path"
+            },
+            "port": {
+              "default": "6060",
+              "description": "Container port on which to expose trust HTTP readiness probe using default network interface.",
+              "required": [],
+              "title": "port"
+            }
+          },
+          "required": [],
+          "title": "readinessProbe",
+          "type": "object"
+        },
+        "trust": {
+          "additionalProperties": false,
+          "properties": {
+            "namespace": {
+              "default": "cert-manager",
+              "description": "Namespace used as trust source. Note that the namespace _must_ exist before installing cert-manager/trust.",
+              "required": [],
+              "title": "namespace"
+            }
+          },
+          "required": [],
+          "title": "trust",
+          "type": "object"
+        },
+        "webhook": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "default": "0.0.0.0",
+              "description": "Host that the webhook listens on.",
+              "required": [],
+              "title": "host"
+            },
+            "port": {
+              "default": "6443",
+              "description": "Port that the webhook listens on.",
+              "required": [],
+              "title": "port"
+            },
+            "service": {
+              "additionalProperties": false,
+              "description": "Type of Kubernetes Service used by the Webhook",
+              "properties": {
+                "type": {
+                  "default": "ClusterIP",
+                  "title": "type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "title": "service"
+            },
+            "timeoutSeconds": {
+              "default": "5",
+              "description": "Timeout of webhook HTTP request.",
+              "required": [],
+              "title": "timeoutSeconds"
+            }
+          },
+          "required": [],
+          "title": "webhook",
+          "type": "object"
+        }
+      },
+      "required": [
+        "metrics",
+        "readinessProbe",
+        "trust",
+        "webhook"
+      ],
+      "title": "app",
+      "type": "object"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "Kubernetes imagePullPolicy on Deployment.",
+          "required": [],
+          "title": "pullPolicy"
+        },
+        "repository": {
+          "default": "quay.io/jetstack/cert-manager-trust",
+          "description": "Target image repository.",
+          "required": [],
+          "title": "repository"
+        },
+        "tag": {
+          "default": "v0.2.0",
+          "description": "Target image version tag.",
+          "required": [],
+          "title": "tag"
+        }
+      },
+      "required": [],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "description": "For Private docker registries, authentication is needed. Registry secrets are applied to the service account",
+      "items": {
+        "required": []
+      },
+      "required": [],
+      "title": "imagePullSecrets"
+    },
+    "replicaCount": {
+      "default": "1",
+      "description": "Number of replicas of trust to run.",
+      "required": [],
+      "title": "replicaCount"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "resources",
+      "type": "object"
+    }
+  },
+  "required": [
+    "image",
+    "app",
+    "resources"
+  ],
+  "type": "object"
+}

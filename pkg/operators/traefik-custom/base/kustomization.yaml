@@ -5,8 +5,8 @@ kind: Kustomization
 resources:
   - helmcharts/traefik-crd.yaml
   - helmcharts/traefik.yaml
-  - certificate/default-certificate.yaml
-  - tlsstore/default.yaml
+  - certificates/default-certificate.yaml
+  # - tlsstores/default.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -14,6 +14,7 @@ generatorOptions:
 secretGenerator:
   - name: traefik-custom-values
     namespace: kube-system
+    behavior: create
     files:
       - values/values.yaml
 

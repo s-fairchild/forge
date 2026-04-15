@@ -1,0 +1,68 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/cert-manager/cert-manager/refs/tags/v1.19.4/deploy/charts/cert-manager/values.schema.json
+#
+# References:
+#   * https://github.com/cert-manager/cert-manager/blob/v1.19.4/deploy/charts/cert-manager/README.template.md
+#   * https://github.com/cert-manager/cert-manager/blob/v1.19.4/deploy/charts/cert-manager/values.schema.json
+#   * https://github.com/cert-manager/cert-manager/blob/v1.19.4/deploy/charts/cert-manager/values.yaml
+
+# yaml-language-server-disable Missing property
+global:
+  podSecurityPolicy:
+    useAppArmor: true
+
+  logLevel: 2
+
+  leaderElection:
+    namespace: kube-system
+
+  rbac:
+    create: true
+    aggregateClusterRoles: true
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+enableCertificateOwnerRef: true
+
+replicaCount: 3
+
+podDisruptionBudget:
+  enabled: true
+
+strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+webhook:
+  replicaCount: 3
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+
+  podDisruptionBudget:
+    enabled: false
+
+cainjector:
+  replicaCount: 3
+  strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 0
+        maxUnavailable: 1
+
+  podDisruptionBudget:
+    enabled: true
+
+prometheus:
+  # TODO enable once prometheus has been deployed
+  enabled: false
+
+  servicemonitor:
+    # TODO enable once prometheus has been deployed
+    enabled: false

@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "allocationPolicy": {
+      "default": "none",
+      "title": "allocationPolicy",
+      "type": "string"
+    },
+    "allowIDs": {
+      "default": "",
+      "title": "allowIDs",
+      "type": "string"
+    },
+    "bypathMode": {
+      "default": "single",
+      "title": "bypathMode",
+      "type": "string"
+    },
+    "denyIDs": {
+      "default": "",
+      "title": "denyIDs",
+      "type": "string"
+    },
+    "enableMonitoring": {
+      "default": true,
+      "title": "enableMonitoring",
+      "type": "boolean"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "hub": {
+          "default": "intel",
+          "title": "hub",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hub",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "initImage": {
+      "additionalProperties": false,
+      "properties": {
+        "enable": {
+          "default": false,
+          "title": "enable",
+          "type": "boolean"
+        },
+        "hub": {
+          "default": "intel",
+          "title": "hub",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enable",
+        "hub",
+        "tag"
+      ],
+      "title": "initImage",
+      "type": "object"
+    },
+    "logLevel": {
+      "default": 2,
+      "title": "logLevel",
+      "type": "integer"
+    },
+    "name": {
+      "default": "gpudeviceplugin-sample",
+      "description": "yaml-language-server: $schema=values.schema.json",
+      "title": "name",
+      "type": "string"
+    },
+    "nodeFeatureRule": {
+      "default": true,
+      "title": "nodeFeatureRule",
+      "type": "boolean"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "intel.feature.node.kubernetes.io/gpu": {
+          "default": "true",
+          "title": "intel.feature.node.kubernetes.io/gpu",
+          "type": "string"
+        }
+      },
+      "required": [
+        "intel.feature.node.kubernetes.io/gpu"
+      ],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "sharedDevNum": {
+      "default": 1,
+      "title": "sharedDevNum",
+      "type": "integer"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "image",
+    "initImage",
+    "sharedDevNum",
+    "logLevel",
+    "enableMonitoring",
+    "allocationPolicy",
+    "allowIDs",
+    "denyIDs",
+    "bypathMode",
+    "nodeSelector",
+    "tolerations",
+    "nodeFeatureRule"
+  ],
+  "type": "object"
+}

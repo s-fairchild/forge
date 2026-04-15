@@ -4,19 +4,47 @@ kind: Kustomization
 
 resources:
 - ../../base
-- issuers/my-ca-issuer.yaml
-- issuers/selfsigned-issuer.yaml
+- bundles/root-ca-bundle.yaml
 
 patches:
-- path: certificate/root-ca-patch.yaml
-  target:
-    version: cert-manager.io/v1
-    kind: Certificate
-    name: root-ca
+  - path: certificates/root-ca-patch.yaml
+    target:
+      version: v1
+      group: cert-manager.io
+      kind: Certificate
+      name: root-ca
+      namespace: cert-manager
+
+  - path: helmcharts/cert-manager-patch.yaml
+    target:
+      version: v1
+      group: helm.cattle.io
+      kind: HelmChart
+      name: cert-manager
+      namespace: kube-system
+
+  - path: helmcharts/trust-manager-patch.yaml
+    target:
+      version: v1
+      group: helm.cattle.io
+      kind: HelmChart
+      name: trust-manager
+      namespace: kube-system
+
+generatorOptions:
+  disableNameSuffixHash: true
 
 secretGenerator:
   - name: cert-manager-values
     namespace: kube-system
     behavior: merge
     files:
-      - values/values.yaml
+    - prod-values.yaml=values/cert-manager/values.yaml
+
+  - name: trust-manager-values
+    namespace: kube-system
+    behavior: merge
+    files:
+    - values/trust-manager/crds-values.yaml
+    - values/trust-manager/secret-targets-values.yaml
+    - values/trust-manager/app-values.yaml

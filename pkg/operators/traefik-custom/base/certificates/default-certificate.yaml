@@ -1,0 +1,18 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-certificate
+  namespace: traefik-system
+
+spec:
+  secretName: default-certificate
+
+  dnsNames: []
+
+  duration: 43800h # 5 years
+
+  issuerRef:
+    name: root-ca
+    kind: ClusterIssuer
+    group: cert-manager.io

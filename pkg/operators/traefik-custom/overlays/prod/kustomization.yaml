@@ -12,6 +12,14 @@ patches:
       name: traefik
       namespace: kube-system
 
+  - path: certificates/default-certificate-patch.yaml
+    target:
+      kind: Certificate
+      version: v1
+      group: cert-manager.io
+      name: default-certificate
+      namespace: traefik-system
+
 secretGenerator:
   - name: traefik-custom-values
     namespace: kube-system
@@ -22,4 +30,4 @@ secretGenerator:
       - values/ports.yaml
       - values/providers.yaml
       - values/service.yaml
-      - values/values.yaml
+      - values/values.yaml # values.yaml key from base is overwritten here

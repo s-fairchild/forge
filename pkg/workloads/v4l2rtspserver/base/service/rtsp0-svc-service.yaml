@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     app: rtsp0
-  trafficDistribution: PreferClose
+  trafficDistribution: PreferSameZone
   sessionAffinity: ClientIP
   ports:
   - name: rtsp-tcp

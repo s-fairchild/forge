@@ -1,0 +1,27 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: trust-manager
+  namespace: kube-system
+spec:
+  # https://github.com/cert-manager/trust-manager/blob/main/deploy/charts/trust-manager/Chart.yaml
+  chart: trust-manager
+  repo: https://charts.jetstack.io
+  version: v0.22.0
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  targetNamespace: cert-manager
+  takeOwnership: true
+  failurePolicy: abort
+
+  valuesSecrets:
+  - name: trust-manager-values
+    ignoreUpdates: false
+    keys:
+      - default-package-values.yaml
+      - image-values.yaml
+      - replicas-values.yaml
+      - values.yaml

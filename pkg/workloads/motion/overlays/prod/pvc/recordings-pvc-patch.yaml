@@ -1,0 +1,8 @@
+---
+- op: add
+  path: /spec/storageClassName
+  value: local-path-cctv
+
+- op: add
+  path: /spec/resources/requests/storage
+  value: 1.0T
