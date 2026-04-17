@@ -2,29 +2,4 @@
 - op: add
   path: /spec/valuesSecrets/0/keys/-
   value:
-    ingress-route.yaml
-
-- op: add
-  path: /spec/valuesSecrets/0/keys/-
-  value:
-    logs.yaml
-
-- op: add
-  path: /spec/valuesSecrets/0/keys/-
-  value:
-    ports.yaml
-
-- op: add
-  path: /spec/valuesSecrets/0/keys/-
-  value:
-    ports.yaml
-
-- op: add
-  path: /spec/valuesSecrets/0/keys/-
-  value:
-    providers.yaml
-
-- op: add
-  path: /spec/valuesSecrets/0/keys/-
-  value:
-    service.yaml
+    prod-values.yaml

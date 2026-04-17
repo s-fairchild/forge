@@ -10,6 +10,7 @@ resources:
 - middlewares/web-svc-headers-mw.yaml
 - middlewares/web-svc-https-redirect-mw.yaml
 - middlewares/web-svc-secured-chain-mw.yaml
+- middlewares/web-svc-stripprefix-mw.yaml
 
 - pvc/cache-pvc.yaml
 - pvc/plugins-pvc.yaml

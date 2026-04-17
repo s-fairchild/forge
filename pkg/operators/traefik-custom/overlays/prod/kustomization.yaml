@@ -25,9 +25,4 @@ secretGenerator:
     namespace: kube-system
     behavior: merge
     files:
-      - values/ingress-route.yaml
-      - values/logs.yaml
-      - values/ports.yaml
-      - values/providers.yaml
-      - values/service.yaml
-      - values/values.yaml # values.yaml key from base is overwritten here
+    - prod-values.yaml=values/values.yaml

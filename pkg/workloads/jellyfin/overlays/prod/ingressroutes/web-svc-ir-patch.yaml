@@ -2,7 +2,10 @@
 - op: replace
   path: /spec/routes/0/match
   value:
-    Host(`jellyfin.app.rick.expresso.lan`)
+    # https://doc.traefik.io/traefik/v3.6/reference/routing-configuration/http/routing/rules-and-priority/#host-and-hostregexp
+    HostRegexp(`(^.+\.)*jellyfin\.app\.rick\.expresso\.lan$`) ||
+    PathRegexp(`(?i)^/jellyfin`)
+
 
 - op: replace
   path: /spec/routes/0/services/0/sticky/cookie/maxAge

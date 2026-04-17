@@ -6,7 +6,6 @@ resources:
   - helmcharts/traefik-crd.yaml
   - helmcharts/traefik.yaml
   - certificates/default-certificate.yaml
-  # - tlsstores/default.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
@@ -16,8 +15,4 @@ secretGenerator:
     namespace: kube-system
     behavior: create
     files:
-      - values/values.yaml
-
-# https://github.com/kubernetes-sigs/kustomize/issues/815#issuecomment-722675365
-crds:
-  - crds/helmcharts-cattle-openapi-spec.yaml
+      - base-values.yaml=values/values.yaml

@@ -9,3 +9,4 @@ spec:
     middlewares:
     - name: web-svc-https-redirect-mw
     - name: web-svc-headers-mw
+    - name: web-svc-stripprefix-mw

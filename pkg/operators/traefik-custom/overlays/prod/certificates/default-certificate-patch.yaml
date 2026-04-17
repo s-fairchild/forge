@@ -37,4 +37,4 @@
 - op: replace
   path: /spec/duration
   value:
-    8760h # 1 year
+    4320h # 6 months

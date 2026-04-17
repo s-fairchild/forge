@@ -8,13 +8,17 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`jellyfin`)
+  - match: Host(`jellyfin.jellyfin.svc.cluster.local`)
     kind: Rule
+
     middlewares:
     - name: web-svc-secured-chain-mw
+
     observability:
       metrics: false
-      accessLogs: true
+      accessLogs: false
+      tracing: false
+
     services:
     - name: web-svc
       namespace: jellyfin
@@ -25,6 +29,7 @@ spec:
       scheme: http
       responseForwarding:
         flushInterval: 1ms
+
       sticky:
         cookie:
           # httpOnly: true
