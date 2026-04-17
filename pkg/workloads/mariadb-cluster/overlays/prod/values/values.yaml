@@ -3,7 +3,7 @@
 
 # yaml-language-server-disable Missing property
 mariadb:
-  replicas: 3
+  replicas: 1
 
   podDisruptionBudget:
     maxUnavailable: 33%
@@ -15,7 +15,7 @@ mariadb:
     waitForVolumeResize: true
 
     volumeClaimTemplate: 
-      storageClassName: local-path
+      storageClassName: local-path-nvme
       accessModes:
       - ReadWriteOnce
       resources:
@@ -23,7 +23,7 @@ mariadb:
           storage: 1Gi
 
   nodeSelector:
-    k8s.mariadb.com/node: "ha" 
+    k8s.mariadb.com/node: "" 
 
   affinity:
     # For now all should run on a single node
@@ -38,7 +38,6 @@ mariadb:
   tls:
     enabled: true
     required: false
-    galeraSSTEnabled: true
 
     serverCertIssuerRef:
       name: root-ca
@@ -62,33 +61,7 @@ mariadb:
 
   # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galera
   galera:
-    enabled: true
-
-  # yaml-language-server-disable Property recovery is not allowed
-    recovery:
-      enabled: true
-    
-    # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#sst
-    #
-    # yaml-language-server-disable Property sst is not allowed
-    sst: mariabackup
-
-    # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galeraconfig
-    #
-    # yaml-language-server-disable Property config is not allowed
-    config:
-      reuseStorageVolume: true
-
-      volumeClaimTemplate:
-        storageClassName: local-path
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-
-      # https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/api_reference.md#galerarecoveryjob
-      # job:
+    enabled: false
 
 backups:
   - name: backup
@@ -100,6 +73,8 @@ backups:
     storage:
       persistentVolumeClaim:
         storageClassName: local-path-nvme
+        accessModes:
+        - ReadWriteOnce
 
 physicalBackups:
   - name: physical-backup
@@ -115,6 +90,8 @@ physicalBackups:
     storage:
       persistentVolumeClaim:
         storageClassName: local-path-nvme
+        accessModes:
+        - ReadWriteOnce
 
     affinity:
       # For now all should run on a single node
