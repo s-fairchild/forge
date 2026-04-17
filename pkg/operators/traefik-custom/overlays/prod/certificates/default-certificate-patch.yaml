@@ -1,8 +1,13 @@
 ---
+- op: replace
+  path: /spec/commonName
+  value:
+    traefik.app.rick.expresso.lan
+
 - op: add
   path: /spec/dnsNames/-
   value:
-    rick.expresso.lan
+    traefik.rick.expresso.lan
 
 - op: add
   path: /spec/dnsNames/-
@@ -12,7 +17,22 @@
 - op: add
   path: /spec/dnsNames/-
   value:
+    traefik.app.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
     "*.app.rick.expresso.lan"
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.traefik.rick.expresso.lan'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.traefik.app.rick.expresso.lan'
 
 - op: replace
   path: /spec/duration

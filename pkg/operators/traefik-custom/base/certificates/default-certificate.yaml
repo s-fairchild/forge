@@ -6,9 +6,26 @@ metadata:
   namespace: traefik-system
 
 spec:
+  commonName: traefik.traefik-system.svc.cluster.local
+
   secretName: default-certificate
 
-  dnsNames: []
+  dnsNames:
+  - traefik.traefik-system.svc
+  - traefik.traefik-system
+  - traefik
+
+  - traefik-internal.traefik-system.svc.cluster.local
+  - traefik-internal.traefik-system.svc
+  - traefik-internal
+
+  - '*.traefik.traefik-system.svc'
+  - '*.traefik.traefik-system'
+  - '*.traefik'
+
+  - '*.traefik-internal.traefik-system.svc.cluster.local'
+  - '*.traefik-internal.traefik-system.svc'
+  - '*.traefik-internal'
 
   duration: 43800h # 5 years
 
