@@ -14,6 +14,14 @@ secretGenerator:
 patches:
 - path: deployment.yaml
 
+- path: certificates/web-svc-certificate-patch.yaml
+  target:
+    version: v1
+    group: cert-manager.io
+    kind: Certificate
+    name: jellyfin-web-cert
+    namespace: jellyfin
+
 - path: pvc/metadata-pvc-patch.yaml
   target:
     version: v1

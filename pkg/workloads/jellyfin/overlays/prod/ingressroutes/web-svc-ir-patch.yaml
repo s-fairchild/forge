@@ -7,4 +7,4 @@
 - op: replace
   path: /spec/routes/0/services/0/sticky/cookie/maxAge
   value:
-    1440 # 24h
+    3600 # 1 hour

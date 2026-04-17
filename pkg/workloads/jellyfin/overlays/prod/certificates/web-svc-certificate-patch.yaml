@@ -1,0 +1,60 @@
+---
+- op: replace
+  path: /spec/commonName
+  value:
+    jellyfin.app.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    jellyfin.app.rick.expresso
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    jellyfin.app.rick
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    jellyfin
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    jellyfin.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    jellyfin.rick.expresso
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin.app.rick.expresso.lan'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin.app.rick.expresso'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin.app.rick'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin.rick.expresso.lan'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.jellyfin.rick.expresso'
