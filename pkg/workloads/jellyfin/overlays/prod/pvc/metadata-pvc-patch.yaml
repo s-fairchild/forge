@@ -1,7 +1,8 @@
 ---
 - op: add
   path: /spec/storageClassName
-  value: local-path
+  value: local-path-nvme
+
 - op: replace
   path: /spec/resources/requests/storage
   value: 5Gi

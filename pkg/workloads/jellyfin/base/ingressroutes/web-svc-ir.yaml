@@ -15,8 +15,6 @@ spec:
     observability:
       metrics: false
       accessLogs: true
-      tracing: true
-      traceVerbosity: detailed
     services:
     - name: web-svc
       namespace: jellyfin
@@ -35,5 +33,5 @@ spec:
           sameSite: none
           maxAge: 0 # Never expires
 
-  # Use default certificate
-  tls: {}
+  tls:
+    secretName: jellyfin-web-cert

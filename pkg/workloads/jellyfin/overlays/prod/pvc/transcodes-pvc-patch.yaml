@@ -2,6 +2,7 @@
 - op: add
   path: /spec/storageClassName
   value: local-path
+
 - op: replace
   path: /spec/resources/requests/storage
   value: 15Gi
