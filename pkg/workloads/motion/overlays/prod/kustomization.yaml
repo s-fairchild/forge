@@ -81,24 +81,41 @@ generatorOptions:
 
 # TODO Create configmaps for sound devices, libcamera, rtsp cameras
 configMapGenerator:
+  - name: motion-webcontrol-conf
+    namespace: motion
+    behavior: merge
+    envs:
+    - configmaps/motion-webcontrol-conf.txt
+
   - name: motion-cameras-cm
     namespace: motion
     behavior: create
     files:
-      - configmap/camera1.conf
+    - configmaps/camera1.conf
 
   - name: sql-01-create-security-table
     namespace: motion
     behavior: create
     files:
-      - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
+    - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
+
+    # Move this into base if other overlays will be sharing sql statements
+  - name: motion-conf-sql-statements-cm
+    namespace: motion
+    behavior: create
+    files:
+    - EVENT_START=mariadb/sql/event-start.sql
+    - EVENT_END=mariadb/sql/event-end.sql
+    - MOVIE_START=mariadb/sql/movie-start.sql
+    - MOVIE_END=mariadb/sql/movie-end.sql
+    - PIC_SAVE=mariadb/sql/pic-save.sql
 
 secretGenerator:
   - name: mariadb-motion-auth
     namespace: motion
     behavior: create
     files:
-      - motion=secrets/mariadb-motion-auth.txt
+    - motion=secrets/mariadb-motion-auth.txt
     options:
       labels:
         k8s.mariadb.com/watch: ""
@@ -107,7 +124,13 @@ secretGenerator:
     namespace: motion
     behavior: merge
     files:
-      - sqljobs=secrets/mariadb-motion-sqljobs-auth.txt
+    - sqljobs=secrets/mariadb-motion-sqljobs-auth.txt
     options:
       labels:
         k8s.mariadb.com/watch: ""
+
+  - name: motion-webcontrol-authentication
+    namespace: motion
+    behavior: create
+    envs:
+    - secrets/motion-webcontrol-authentication.txt

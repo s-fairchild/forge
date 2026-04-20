@@ -1,0 +1,1 @@
+INSERT IGNORE INTO security(event_id, camera, time_stamp, event_text, sound_alert_number, sound_alert_name, sound_trigger_freq) VALUES (%{eventid}, '%t', '%Y-%m-%d %T', '%C', '%{trig_nbr}', '%{trig_nm}', '%{trig_freq}')

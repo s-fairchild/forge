@@ -1,0 +1,14 @@
+# TODO update motion.conf and initContainer to replace these configs
+WEBCONTROL_PORT=80
+WEBCONTROL_LOCALHOST=on
+
+WEBCONTROL_AUTH_METHOD=none
+
+# https://motion-project.github.io/motionv5_config.html#webcontrol_actions
+WEBCONTROL_ACTIONS_MOVIES=on
+WEBCONTROL_ACTIONS_RESTART=off
+WEBCONTROL_ACTIONS_SNAPSHOT=on
+WEBCONTROL_ACTIONS_CONFIG=off
+WEBCONTROL_ACTIONS_PTZ=off
+
+WEBCONTROL_PARMS=0

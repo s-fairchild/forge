@@ -151,7 +151,7 @@ k3s-token-upload:
 
 ctr_repo_remote := "docker.io/steve51516"
 ctr_repo_local := "localhost/steve51516"
-ctr_context_local_dir := "pkg/containers"
+ctr_build_context := "pkg/containers"
 ctr_build_env_dir := "hack/env/podman/build"
 ctr_build_constant_env_file := "hack/lib/podman/build/constants.env"
 ctr_build_script_file := "hack/bin/podman-build.sh"
@@ -159,11 +159,8 @@ ctr_build_script_file := "hack/bin/podman-build.sh"
 DEBUG?=
 export DEBUG
 
-# TODO setup these targets once their respective context directory Containerfiles have been corrected with the new podman-build.sh expected format
-# container-build-archlinuxarm-base:
-#    * TODO rework this image build to be much slimmer. It's currently massive.
-# container-build-ffmpeg-rpi: container-build-archlinuxarm-base
-
+# TODO convert these away from using podman-build.sh script and use podman build directly in make targets
+# podman-build.sh is proving to be more complicated than it's worth
 LIBCAMERA_VERSION_GIT_TAG_OVERRIDE?=
 export LIBCAMERA_VERSION_GIT_TAG_OVERRIDE
 container-build-libcamera:
@@ -171,7 +168,7 @@ container-build-libcamera:
 	. ${ctr_build_env_dir}/$${IMAGE_LIBCAMERA}.env
 
 	[ -v LIBCAMERA_VERSION_GIT_TAG_OVERRIDE ] && echo "LIBCAMERA_VERSION_GIT_TAG_OVERRIDE=$${LIBCAMERA_VERSION_GIT_TAG_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_LIBCAMERA}
+	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_LIBCAMERA}
 
 RPICAM_APPS_VERSION_TAG_OVERRIDE?=
 export RPICAM_APPS_VERSION_TAG_OVERRIDE
@@ -180,7 +177,7 @@ container-build-rpicam-apps:
 	. ${ctr_build_env_dir}/$${IMAGE_RPICAM_APPS}.env
 
 	[ -v RPICAM_APPS_VERSION_TAG_OVERRIDE ] && echo "RPICAM_APPS_VERSION_TAG_OVERRIDE=$${RPICAM_APPS_VERSION_TAG_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_RPICAM_APPS}
+	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_RPICAM_APPS}
 
 FFMPEG_VERSION_TAG_OVERRIDE?=
 export RPICAM_APPS_VERSION_TAG_OVERRIDE
@@ -189,7 +186,7 @@ container-build-ffmpeg:
 	. ${ctr_build_env_dir}/$${IMAGE_FFMPEG}.env
 
 	[ -v FFMPEG_VERSION_TAG_OVERRIDE ] && echo "FFMPEG_VERSION_TAG_OVERRIDE=$${FFMPEG_VERSION_TAG_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_FFMPEG}
+	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_FFMPEG}
 
 MOTION_VERSION_OVERRIDE?=
 export MOTION_VERSION_OVERRIDE
@@ -198,18 +195,48 @@ container-build-motion:
 	. ${ctr_build_env_dir}/$${IMAGE_MOTION}.env
 
 	[ -v MOTION_VERSION_OVERRIDE ] && echo "MOTION_VERSION_OVERRIDE=$${MOTION_VERSION_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_MOTION}
+	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_MOTION}
 
 container-build-btrfs-progs:
 	. ${ctr_build_constant_env_file}
 	. ${ctr_build_env_dir}/$${IMAGE_BTRFS_PROGS}.env
 
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_BTRFS_PROGS}
+	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_BTRFS_PROGS}
 
 container-build-envsubst:
-	. ${ctr_build_constant_env_file}
-	. ${ctr_build_env_dir}/$${IMAGE_ENVSUBST}.env
+	image_name=envsubst
+	pushd ${ctr_build_context}/$${image_name} 1> /dev/null
+	. argfile.conf
 
-	hack/bin/podman-build.sh ${ctr_context_local_dir}/$${IMAGE_ENVSUBST}
+	podman build \
+		--format=docker \
+		--platform=linux/amd64 \
+		--platform=linux/arm64 \
+		--manifest=docker.io/steve51516/envsubst:$${ENVSUBST_VERSION} \
+		--build-arg-file=argfile.conf \
+		-f Containerfile-01.builder \
+		-f Containerfile-02.release \
+		.
+	
+	popd 1> /dev/null
+	
+	podman tag \
+		docker.io/steve51516/$${image_name}:$${ENVSUBST_VERSION} \
+		docker.io/steve51516/$${image_name}:latest
+
+container-push-envsubst:
+	image_name=envsubst
+	. ${ctr_build_context}/$${image_name}/argfile.conf
+
+	podman manifest \
+		push \
+		docker.io/steve51516/envsubst:v1.4.3
+
+	podman manifest \
+		push \
+		docker.io/steve51516/envsubst:latest
+
+
+container-build-push-envsubst: container-build-envsubst container-push-envsubst
 
 ### Containerfile End ###

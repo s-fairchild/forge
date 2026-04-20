@@ -1,56 +1,17 @@
 ---
 - op: add
-  path: /spec/template/spec/initContainers
-  value: []
+  path: /spec/template/spec/initContainers/0/envFrom
+  value:
+    - configMapRef:
+        name: motion-conf-sql-statements-cm
+      prefix: SQL_
+
+    - secretRef:
+        name: mariadb-motion-connection
+      prefix: DATABASE_
 
 - op: add
-  path: /spec/template/spec/initContainers
+  path: /spec/template/spec/initContainers/0/env
   value:
-  - name: envsubst
-    image: docker.io/steve51516/envsubst:ubi10-micro
-
-    command: ["/bin/bash", "-c"]
-    args:
-    # Variables are escaped with $$ to be passed as literal values rather than replaced on container start.
-    - "envsubst '$$DATABASE_TYPE $$DATABASE_NAME $$DATABASE_HOST $$DATABASE_PORT $$DATABASE_USER $$DATABASE_PASSWORD' < /root/.motion/motion.conf > /tmp/.motion/motion.conf"
-
-    env:
     - name: DATABASE_TYPE
       value: mariadb
-
-    - name: DATABASE_NAME
-      valueFrom:
-        secretKeyRef:
-          name: mariadb-motion-connection
-          key: database
-
-    - name: DATABASE_HOST
-      valueFrom:
-        secretKeyRef:
-          name: mariadb-motion-connection
-          key: host
-
-    - name: DATABASE_PORT
-      valueFrom:
-        secretKeyRef:
-          name: mariadb-motion-connection
-          key: port
-
-    - name: DATABASE_USER
-      valueFrom:
-        secretKeyRef:
-          name: mariadb-motion-connection
-          key: username
-
-    - name: DATABASE_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: mariadb-motion-connection
-          key: password
-
-    volumeMounts:
-    - name: motion-conf
-      mountPath: /root/.motion
-
-    - name: motion-conf-tmp
-      mountPath: /tmp/.motion

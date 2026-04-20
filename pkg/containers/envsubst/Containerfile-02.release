@@ -1,8 +1,9 @@
-ARG RELEASE_IMAGE_REGISTRY
-ARG RELEASE_IMAGE_REPOSITORY
-ARG RELEASE_IMAGE_TAG
-FROM --platform=${BUILDPLATFORM} ${IMAGE_REGISTRY}/${IMAGE_REPOSITORY}:${IMAGE_TAG} AS release
+ARG IMAGE_TAG
+FROM registry.access.redhat.com/ubi10-micro:${IMAGE_TAG}
 
-COPY --from=builder /usr/bin/envsubst /usr/bin/envsubst
+COPY --from=builder --chmod=551 /tmp/envsubst /usr/local/bin/
+
+LABEL envsubst.source=${ENVSUBST_SOURCE}
+LABEL envsubst.version=${ENVSUBST_VERSION}
 
 ENTRYPOINT [ "envsubst" ]

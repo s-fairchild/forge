@@ -1,0 +1,1 @@
+UPDATE security SET event_end='%Y-%m-%d %T' WHERE event_id='%{eventid}'

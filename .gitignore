@@ -8,7 +8,6 @@
 deploy/ignition/*
 deploy/butane/.*.tmp
 deploy/manifests/*
-*.txt
 .ansible
 # ignore helm charts downloaded by kustomize
 # **/charts

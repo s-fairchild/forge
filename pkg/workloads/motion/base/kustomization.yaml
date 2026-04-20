@@ -13,8 +13,14 @@ generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-  - name: motion-conf-cm
-    namespace: motion
-    behavior: create
-    files:
-      - configmap/motion.conf
+- name: motion-conf-cm
+  namespace: motion
+  behavior: create
+  files:
+    - configmap/motion.conf
+
+- name: motion-webcontrol-conf
+  namespace: motion
+  behavior: create
+  envs:
+  - configmap/motion-webcontrol-conf.txt

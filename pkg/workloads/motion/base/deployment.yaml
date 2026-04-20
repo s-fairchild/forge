@@ -19,6 +19,27 @@ spec:
         app: motion
     spec:
       restartPolicy: Always
+      initContainers:
+      - name: envsubst
+        image: docker.io/steve51516/envsubst:ubi10-micro
+        command: ["/bin/bash", "-c"]
+        envFrom:
+        - configMapRef:
+            name: motion-webcontrol-conf
+
+        args:
+        # Variables are escaped with $$ to be passed as literal values rather than replaced on container start.
+        # - "envsubst '$$DATABASE_TYPE $$DATABASE_DBNAME $$DATABASE_HOST $$DATABASE_PORT $$DATABASE_USER $$DATABASE_PASSWORD $$SQL_EVENT_START $$SQL_EVENT_END $$SQL_MOVIE_START $$SQL_MOVIE_END $$SQL_PIC_SAVE' < /root/.motion/motion.conf > /tmp/.motion/motion.conf"
+        - "envsubst < /root/.motion/motion.conf > /tmp/.motion/motion.conf"
+
+        volumeMounts:
+        - name: motion-conf
+          mountPath: /root/.motion
+          readOnly: true
+
+        - name: motion-conf-tmp
+          mountPath: /tmp/.motion
+
       containers:
       - name: motion
         # Documentation:
@@ -31,6 +52,10 @@ spec:
         #   * https://hub.docker.com/repository/docker/steve51516/motion/tags
         image: docker.io/steve51516/motion:5.0
         imagePullPolicy: Always
+
+        args:
+        - -c
+        - /tmp/.motion/motion.conf
 
         ports:
         - containerPort: 80
@@ -49,6 +74,10 @@ spec:
           readOnly: true
           recursiveReadOnly: IfPossible
           mountPropagation: None
+
+        - name: motion-conf-tmp
+          mountPath: /tmp/.motion
+          readOnly: true
 
         - name: recordings
           mountPath: /var/motion
@@ -72,6 +101,11 @@ spec:
         configMap:
           name: motion-cameras-cm
           optional: true
+
+      - name: motion-conf-tmp
+        emptyDir:
+          sizeLimit: 0.02Mi
+          medium: Memory
 
       - name: recordings
         persistentVolumeClaim:

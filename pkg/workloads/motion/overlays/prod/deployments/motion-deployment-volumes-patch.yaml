@@ -12,12 +12,6 @@
     name: card1
     mountPath: /dev/dri/card1
 
-- op: add
-  path: /spec/template/spec/containers/0/volumeMounts/-
-  value:
-    name: motion-conf-tmp
-    mountPath: /tmp/.motion
-
 ##### volumeMounts Start #####
 
 ##### volumes Start #####
@@ -36,13 +30,5 @@
     hostPath:
       path: /dev/dri/card1
       type: CharDevice
-
-- op: add
-  path: /spec/template/spec/volumes/-
-  value:
-    name: motion-conf-tmp
-    emptyDir:
-      sizeLimit: 0.5Mi
-      medium: Memory
 
 ##### volumes End #####

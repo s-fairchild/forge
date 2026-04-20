@@ -21,12 +21,12 @@ spec:
       annotations:
         app.kubernetes.io/managed-by: mariadb-operator
 
-    key: dsn
-    usernameKey: username
-    passwordKey: password
-    hostKey: host
-    portKey: port
-    databaseKey: database
+    key: DSN
+    usernameKey: USER
+    passwordKey: PASSWORD
+    hostKey: HOST
+    portKey: PORT
+    databaseKey: DBNAME
   
   passwordSecretKeyRef:
     name: mariadb-motion-auth

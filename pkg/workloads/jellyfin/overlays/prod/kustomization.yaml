@@ -9,7 +9,7 @@ secretGenerator:
 - name: web-password
   namespace: jellyfin
   files:
-  - web.password.txt
+  - secrets/web.password.txt
 
 patches:
 - path: deployment.yaml
