@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 builder AS libcamera
+FROM --platform=linux/arm64 builder AS build
 
 ARG LIBCAMERA_VERSION
 ARG PREFIX

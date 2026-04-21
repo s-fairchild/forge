@@ -19,8 +19,32 @@ configMapGenerator:
   files:
     - configmap/motion.conf
 
+- name: motion-system-conf
+  namespace: motion
+  behavior: create
+  envs:
+  - configmap/motion-system-conf.env
+
+- name: motion-image-conf
+  namespace: motion
+  behavior: create
+  envs:
+  - configmap/motion-image-conf.env
+
+- name: motion-movies-conf
+  namespace: motion
+  behavior: create
+  envs:
+  - configmap/motion-movies-conf.env
+
 - name: motion-webcontrol-conf
   namespace: motion
   behavior: create
   envs:
-  - configmap/motion-webcontrol-conf.txt
+  - configmap/motion-webcontrol-conf.env
+
+- name: motion-stream-conf
+  namespace: motion
+  behavior: create
+  envs:
+  - configmap/motion-stream-conf.env
