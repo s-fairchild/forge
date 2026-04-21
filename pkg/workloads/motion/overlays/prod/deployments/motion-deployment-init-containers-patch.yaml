@@ -1,14 +1,22 @@
 ---
 - op: add
-  path: /spec/template/spec/initContainers/0/envFrom
+  path: /spec/template/spec/initContainers/0/envFrom/-
   value:
-    - configMapRef:
-        name: motion-conf-sql-statements-cm
-      prefix: SQL_
+    configMapRef:
+      name: motion-conf-sql-statements-cm
+    prefix: SQL_
 
-    - secretRef:
-        name: mariadb-motion-connection
-      prefix: DATABASE_
+- op: add
+  path: /spec/template/spec/initContainers/0/envFrom/-
+  value:
+    secretRef:
+      name: mariadb-motion-connection
+    prefix: DATABASE_
+- op: add
+  path: /spec/template/spec/initContainers/0/envFrom/-
+  value:
+    secretRef:
+      name: motion-webcontrol-authentication
 
 - op: add
   path: /spec/template/spec/initContainers/0/env

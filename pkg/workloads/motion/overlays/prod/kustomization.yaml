@@ -81,11 +81,35 @@ generatorOptions:
 
 # TODO Create configmaps for sound devices, libcamera, rtsp cameras
 configMapGenerator:
+  - name: motion-system-conf
+    namespace: motion
+    behavior: merge
+    envs:
+    - configmaps/motion-system-conf.env
+
+  - name: motion-image-conf
+    namespace: motion
+    behavior: merge
+    envs:
+    - configmaps/motion-image-conf.env
+
+  - name: motion-movies-conf
+    namespace: motion
+    behavior: merge
+    envs:
+    - configmaps/motion-movies-conf.env
+
   - name: motion-webcontrol-conf
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-webcontrol-conf.txt
+    - configmaps/motion-webcontrol-conf.env
+
+  - name: motion-stream-conf
+    namespace: motion
+    behavior: merge
+    envs:
+    - configmaps/motion-stream-conf.env
 
   - name: motion-cameras-cm
     namespace: motion
@@ -103,6 +127,7 @@ configMapGenerator:
   - name: motion-conf-sql-statements-cm
     namespace: motion
     behavior: create
+    # SQL statements are placed in .sql files (rather than env files) to allow sql linting
     files:
     - EVENT_START=mariadb/sql/event-start.sql
     - EVENT_END=mariadb/sql/event-end.sql
