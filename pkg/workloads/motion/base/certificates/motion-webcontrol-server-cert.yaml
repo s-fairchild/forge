@@ -2,7 +2,7 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: webcontrol-cert
+  name: motion-webcontrol-server-cert
   namespace: motion
 spec:
   commonName: webcontrol.motion.svc.cluster.local
@@ -12,10 +12,12 @@ spec:
   - webcontrol.motion.svc
   - webcontrol.motion
   - webcontrol
+
   - '*.webcontrol.motion.svc.cluster.local'
   - '*.webcontrol.motion.svc'
   - '*.webcontrol.motion'
   - '*.webcontrol'
+
   - localhost
 
   issuerRef:
@@ -28,11 +30,10 @@ spec:
     encoding: PKCS1
     size: 256
 
-  secretName: webcontrol-cert
-  secretTemplate:
-    labels:
-      app.kubernetes.io/part-of: motion
+  secretName: motion-webcontrol-server-cert
 
   usages:
-    - "digital signature"
-    - "key agreement"
+  - digital signature
+  - key agreement
+  - key encipherment
+  - server auth

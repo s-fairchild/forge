@@ -10,11 +10,11 @@ spec:
   - websecure
 
   routes:
-  - match: Host(`motion.motion.svc.cluster.local`)
+  # Note: Currently unused. motion is connecting via the service dns name, bypassing this route.
+  - match: Host(`webcontrol.motion.svc.cluster.local`)
     kind: Rule
 
     middlewares:
-    # Chain is used to make adding more middlewares easier later on
     - name: webcontrol-svc-secured-chain-mw
 
     observability:
@@ -35,4 +35,4 @@ spec:
           maxAge: 600 # 10 minutes
 
   tls:
-    secretName: webcontrol-cert
+    secretName: motion-webcontrol-server-cert

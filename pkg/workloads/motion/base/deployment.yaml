@@ -8,16 +8,22 @@ metadata:
     app: motion
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: motion
+
   template:
     metadata:
       name: motion
       namespace: motion
       labels:
         app: motion
+
     spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+
       restartPolicy: Always
       initContainers:
       - name: envsubst
@@ -43,7 +49,7 @@ spec:
 
         - configMapRef:
             name: motion-movies-conf
-          prefix: MOVIES_
+          prefix: MOVIE_
 
         - configMapRef:
             name: motion-webcontrol-conf

@@ -10,12 +10,11 @@ service:
 
   spec:
     internalTrafficPolicy: Cluster
-    externalTrafficPolicy: Local
     trafficDistribution: PreferSameZone
     sessionAffinity: ClientIP
 
   ipFamilies:
-    - IPv4
+  - IPv4
 
   loadBalancerSourceRanges:
   - 10.50.0.0/24
@@ -23,6 +22,8 @@ service:
   additionalServices:
     internal:
       enabled: true
+      labels:
+        traefik-service-label: internal
 
       type: ClusterIP
 
@@ -30,10 +31,10 @@ service:
         trafficDistribution: PreferSameZone
         sessionAffinity: ClientIP
 
-      single: false
+      single: true
       ipFamilyPolicy: "SingleStack"
       ipFamilies:
-        - IPv4
+      - IPv4
 
       loadBalancerSourceRanges:
       - 10.11.0.0/16
@@ -51,6 +52,24 @@ ports:
       default: false
       internal: true
 
+  rtsp-tcp:
+    port: 8555
+    exposedPort: 8555
+    protocol: TCP
+
+    expose:
+      default: false
+      internal: true
+
+  rtsp-udp:
+    port: 8554
+    exposedPort: 8554
+    protocol: UDP
+
+    expose:
+      default: false
+      internal: true
+
   web:
     port: 80
     exposedPort: 80
@@ -61,7 +80,12 @@ ports:
       default: true
 
     forwardedHeaders:
-      trustedIPs: ["10.50.0.0/24"]
+      trustedIPs:
+      - 10.50.0.0/24
+      - 10.11.0.0/16
+      - 10.10.0.0/16
+      - 10.16.0.0/16
+      - 10.43.0.0/16
       insecure: false
 
   websecure:

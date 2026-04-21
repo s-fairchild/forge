@@ -1,0 +1,49 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rtsp0-server-cert
+  namespace: v4l2rtspserver
+spec:
+  commonName: rtsp0.v4l2rtspserver.svc.cluster.local
+
+  dnsNames:
+  - rtsp0.v4l2rtspserver.svc.cluster.local
+  - rtsp0.v4l2rtspserver.svc
+  - rtsp0.v4l2rtspserver
+  - rtsp0
+
+  - '*.rtsp0.v4l2rtspserver.svc.cluster.local'
+  - '*.rtsp0.v4l2rtspserver.svc'
+  - '*.rtsp0.v4l2rtspserver'
+  - '*.rtsp0'
+
+  - rtsp0.app.rick.expresso.lan
+  - rtsp0.app.rick
+  - rtsp0.app
+  - rtsp0
+
+  - '*.rtsp0.app.rick.expresso.lan'
+  - '*.rtsp0.app.rick'
+  - '*.rtsp0.app'
+  - '*.rtsp0'
+
+  - localhost
+
+  issuerRef:
+    name: root-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+  
+  privateKey:
+    algorithm: ECDSA
+    encoding: PKCS1
+    size: 256
+
+  secretName: rtsp0-server-cert
+
+  usages:
+  - digital signature
+  - key agreement
+  - key encipherment
+  - server auth

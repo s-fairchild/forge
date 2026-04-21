@@ -7,19 +7,8 @@ metadata:
 spec:
   commonName: mariadb-motion-client
 
-  usages:
-    - "client auth"
-    - "digital signature"
-    - "key agreement"
-
-  # TODO add motion service dns names once they have been created
-  # dnsNames:
-    # - mariadb-client
-
-  secretName: mariadb-motion-client-cert
-  secretTemplate:
-    labels:
-      enterprise.mariadb.com/watch: ""
+  dnsNames:
+  - mariadb-motion-client
 
   issuerRef:
     name: root-ca
@@ -30,3 +19,13 @@ spec:
     algorithm: ECDSA
     encoding: PKCS1
     size: 256
+
+  secretName: mariadb-motion-client-cert
+  secretTemplate:
+    labels:
+      enterprise.mariadb.com/watch: ""
+
+  usages:
+    - "client auth"
+    - "digital signature"
+    - "key agreement"

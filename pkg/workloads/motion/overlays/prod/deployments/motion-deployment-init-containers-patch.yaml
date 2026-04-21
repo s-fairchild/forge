@@ -12,11 +12,13 @@
     secretRef:
       name: mariadb-motion-connection
     prefix: DATABASE_
+
 - op: add
   path: /spec/template/spec/initContainers/0/envFrom/-
   value:
     secretRef:
       name: motion-webcontrol-authentication
+    prefix: WEBCONTROL_
 
 - op: add
   path: /spec/template/spec/initContainers/0/env

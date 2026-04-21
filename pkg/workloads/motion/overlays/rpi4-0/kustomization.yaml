@@ -1,0 +1,19 @@
+---
+resources:
+- ../../base
+
+patches:
+  - path: deployments/deployment-patch.yaml
+    target:
+      version: v1
+      group: apps
+      kind: Deployment
+      name: motion
+      namespace: motion
+
+configMapGenerator:
+- name: motion-cameras-cm
+  namespace: motion
+  behavior: create
+  files:
+  - configmaps/camera0.conf
