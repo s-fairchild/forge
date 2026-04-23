@@ -1,0 +1,7 @@
+---
+- op: add
+  path: /spec/template/spec/nodeSelector
+  value:
+    kubernetes.io/arch: arm64
+    kubernetes.io/hostname: k3s-agent-1
+    node-role.kubernetes.io/agent: "true"

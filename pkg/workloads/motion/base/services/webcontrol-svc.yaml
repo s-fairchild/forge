@@ -17,4 +17,4 @@ spec:
 
   type: ClusterIP
   sessionAffinity: ClientIP
-  internalTrafficPolicy: Local
+  internalTrafficPolicy: Cluster

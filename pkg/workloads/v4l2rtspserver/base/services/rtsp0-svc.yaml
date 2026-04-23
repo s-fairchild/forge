@@ -9,16 +9,21 @@ metadata:
 spec:
   selector:
     app: rtsp0
-  trafficDistribution: PreferSameZone
-  sessionAffinity: ClientIP
+
+
   ports:
   - name: rtsp-tcp
     port: 555
     targetPort: rtsp-tcp
-    protocol: TCP
+
   - name: rtsp-udp
     port: 554
     targetPort: rtsp-udp
     protocol: UDP
-  type: LoadBalancer
-  internalTrafficPolicy: Cluster
+
+  # TODO create this as a separate service if it will be used
+  # - name: hls-web
+    # port: 8086
+    # targetPort: hls
+
+  type: ClusterIP

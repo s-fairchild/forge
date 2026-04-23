@@ -2,7 +2,7 @@
 resources:
 - ../../base
 - certificates/mariadb-motion-client-cert.yaml
-
+- ingress-route-tcp/rtsp0-ir-tcp.yaml
 - mariadb/connections/motion-connection.yaml
 - mariadb/connections/sqljobs-connection.yaml
 - mariadb/grants/motion-grant.yaml
@@ -62,12 +62,12 @@ patches:
       name: recordings-pvc
       namespace: motion
   
-  - path: certificates/webcontrol-motion-cert-patch.yaml
+  - path: certificates/motion-webcontrol-server-cert-patch.yaml
     target:
       version: v1
       group: cert-manager.io
       kind: Certificate
-      name: webcontrol-motion-cert
+      name: motion-webcontrol-server-cert
       namespace: motion
 
   - path: namespace-patch.yaml

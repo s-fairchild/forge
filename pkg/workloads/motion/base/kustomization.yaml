@@ -1,6 +1,7 @@
 ---
 resources:
-- certificates/webcontrol-motion-cert.yaml
+- certificates/motion-webcontrol-server-cert.yaml
+- certificates/motion-client-cert.yaml
 - pvc/recordings-pvc.yaml
 - deployment.yaml
 - namespace.yaml

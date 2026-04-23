@@ -191,11 +191,41 @@ container-build-ffmpeg:
 MOTION_VERSION_OVERRIDE?=
 export MOTION_VERSION_OVERRIDE
 container-build-motion:
-	. ${ctr_build_constant_env_file}
-	. ${ctr_build_env_dir}/$${IMAGE_MOTION}.env
+	image_name=motion
+	pushd ${ctr_build_context}/$${image_name} 1> /dev/null
+	. argfile.conf
+	
+	podman build \
+		--format=docker \
+		--platform=linux/amd64 \
+		--platform=linux/arm64 \
+		--manifest=docker.io/steve51516/motion:$${MOTION_VERSION} \
+		--build-arg-file=argfile.conf \
+		--build-arg=BUILD_THREADS=$$(nproc) \
+		-f Containerfile-01.builder \
+		-f Containerfile-02.build \
+		-f Containerfile-03.release \
+		.
+	
+	popd 1> /dev/null
+	
+	podman tag \
+		docker.io/steve51516/$${image_name}:$${MOTION_VERSION} \
+		docker.io/steve51516/$${image_name}:latest
 
-	[ -v MOTION_VERSION_OVERRIDE ] && echo "MOTION_VERSION_OVERRIDE=$${MOTION_VERSION_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_MOTION}
+container-push-motion:
+	image_name=motion
+	. ${ctr_build_context}/$${image_name}/argfile.conf
+
+	podman manifest \
+		push \
+		docker.io/steve51516/motion:$${MOTION_VERSION}
+
+	podman manifest \
+		push \
+		docker.io/steve51516/motion:latest
+
+container-build-push-motion: container-build-motion container-push-motion
 
 container-build-btrfs-progs:
 	. ${ctr_build_constant_env_file}
@@ -230,7 +260,7 @@ container-push-envsubst:
 
 	podman manifest \
 		push \
-		docker.io/steve51516/envsubst:v1.4.3
+		docker.io/steve51516/envsubst:$${ENVSUBST_VERSION}
 
 	podman manifest \
 		push \

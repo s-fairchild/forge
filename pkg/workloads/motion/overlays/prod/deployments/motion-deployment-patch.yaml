@@ -2,7 +2,11 @@
 - op: add
   path: /spec/template/spec/nodeSelector
   value:
+    kubernetes.io/arch: amd64
     intel.feature.node.kubernetes.io/gpu: "true"
+    feature.node.kubernetes.io/cpu-model.vendor_id: Intel
+    gpu.intel.com/device-id.0300-3e98.present: "true"
+    node-role.kubernetes.io/agent: "true"
 
 - op: replace
   path: /spec/template/spec/containers/0/resources

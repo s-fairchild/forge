@@ -1,6 +1,9 @@
 ---
 resources:
 - ../../base
+- certificates/rtsp0-client-cert.yaml
+- certificates/rtsp0-server-cert.yaml
+- servers-transport-tcp/rtsp0-tcp-transport.yaml
 
 patches:
   - path: deployment.yaml
@@ -13,10 +16,17 @@ patches:
       name: rtsp-hls-ingressroute
       namespace: v4l2rtspserver
 
+  - path: namespace-patch.yaml
+    target:
+      version: v1
+      kind: Namespace
+      name: v4l2rtspserver
+
+generatorOptions:
+  disableNameSuffixHash: true
+
 secretGenerator:
-- name: rtsp0-password
+- name: rtsp0-auth
   namespace: v4l2rtspserver
-  files:
-  - rtsp0.password.txt
-  options:
-    disableNameSuffixHash: true
+  envs:
+  - secrets/rtsp0-password.env

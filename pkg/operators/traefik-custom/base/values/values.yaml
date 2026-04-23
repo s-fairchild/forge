@@ -23,12 +23,9 @@ image:
 providers:
   kubernetesCRD:
     enabled: true
-    allowCrossNamespace: false
+    allowCrossNamespace: true
     allowExternalNameServices: true
     allowEmptyServices: true
-
-  kubernetesIngress:
-    enabled: false
 
 nodeSelector:
   svccontroller.k3s.cattle.io/enablelb: "true"
@@ -51,9 +48,6 @@ rbac:
   enabled: true
   namespaced: false
 
-serviceAccount:
-  name: ""
-
 tlsStore:
   default:
     defaultCertificate:
@@ -64,7 +58,7 @@ logs:
     level: INFO
   access:
     enabled: true
-    addInternals: false
+    addInternals: true
     fields:
       headers:
         defaultmode: keep

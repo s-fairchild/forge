@@ -1,0 +1,28 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rtsp0-client-cert
+  namespace: v4l2rtspserver
+spec:
+  commonName: rtsp-client
+
+  dnsNames:
+  - rtsp-client
+
+  issuerRef:
+    name: root-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+
+  privateKey:
+    algorithm: ECDSA
+    encoding: PKCS1
+    size: 256
+
+  secretName: rtsp0-client-cert
+
+  usages:
+  - digital signature
+  - key agreement
+  - client auth

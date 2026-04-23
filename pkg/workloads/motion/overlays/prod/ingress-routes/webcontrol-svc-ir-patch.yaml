@@ -4,7 +4,7 @@
   value:
     # https://doc.traefik.io/traefik/v3.6/reference/routing-configuration/http/routing/rules-and-priority/#host-and-hostregexp
     (
-        HostRegexp(`(^.+\.)*motion\.app\.rick\.expresso\.lan`) ||
+        HostRegexp(`(^.+\.)*webcontrol.motion\.app\.rick\.expresso\.lan`) ||
         PathRegexp(`(?i)^/motion`)
     ) &&
     Method(`GET`)

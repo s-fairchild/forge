@@ -1,0 +1,35 @@
+---
+- op: replace
+  path: /spec/commonName
+  value:
+    webcontrol.motion.app.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    webcontrol.motion.app.rick.expresso.lan
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    webcontrol.motion.app.rick
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    webcontrol.motion.app
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.webcontrol.motion.app.rick.expresso.lan'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.webcontrol.motion.app.rick'
+
+- op: add
+  path: /spec/dnsNames/-
+  value:
+    '*.webcontrol.motion.app'
