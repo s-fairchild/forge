@@ -1,0 +1,45 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  directories:
+  - path: /usr/local/lib
+    overwrite: true
+
+  - path: /usr/local/etc
+    overwrite: true
+
+  # Static helm charts must be uploaded separately from the ignition file.
+  # the a helm chart tarball string is too long for json format.
+  # TODO Add this to overrides.conf of k3s-servers
+  - path: /usr/local/lib/rancher/k3s/server/static/charts/extra
+
+  # TODO decide if I want to remotely load these or embed in the ignition config
+  # trees:
+  # - path: /usr/local/lib/rancher/k3s/server/manifests
+    # local: butane/overlays/prod/usr/local/lib/rancher/k3s/server/manifests
+
+  links:
+  - path: /usr/local/etc/k3s/k3s@agent-0.yaml
+    target: /usr/local/etc/k3s/k3s@agent.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-0.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-1.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-2.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@svclb-0.yaml
+    target: /usr/local/etc/k3s/k3s@svclb.yaml
+    overwrite: true
+
+  trees:
+  - path: /usr/local/etc
+    local: usr/local/etc

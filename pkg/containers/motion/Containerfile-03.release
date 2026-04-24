@@ -27,7 +27,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             libva-x11-2 libva-drm2 \
             # motion runtime dependencies
             libmicrohttpd12t64 libcamera0.2 libopencv-objdetect406t64 \
-            libopencv-imgcodecs406t64 libmariadb3
+            libopencv-imgcodecs406t64 libmariadb3 libavutil58 \
+            libavformat60 libswscale7 libavdevice60
 
 ARG PREFIX
 

@@ -1,3 +1,0 @@
-# shellcheck shell=bash
-# shellcheck disable=SC2034
-EDITOR=/usr/bin/vi

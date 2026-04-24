@@ -1,0 +1,78 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  # Existing config directory has been wiped via base
+  trees:
+  - path: /etc/containers/systemd
+    local: containers/systemd
+
+  links:
+  ######################
+  ##### Containers #####
+  ######################
+  - path: /etc/containers/systemd/k3s-apiserverlb@0.container
+    target: /etc/containers/systemd/k3s-apiserverlb@.container
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@agent-0.container
+    target: /etc/containers/systemd/k3s@.container
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@server-0.container
+    target: /etc/containers/systemd/k3s@.container
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@server-1.container
+    target: /etc/containers/systemd/k3s@.container
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@server-2.container
+    target: /etc/containers/systemd/k3s@.container
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@svclb-0.container
+    target: /etc/containers/systemd/k3s@.container
+    overwrite: true
+
+  ######################
+  ####### Images #######
+  ######################
+  - path: /etc/containers/systemd/k3s@nginx.image
+    target: /etc/containers/systemd/k3s@.image
+    overwrite: true
+
+  ######################
+  ###### Networks ######
+  ######################
+  - path: /etc/containers/systemd/k3s@server.network
+    target: /etc/containers/systemd/k3s@.network
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@service.network
+    target: /etc/containers/systemd/k3s@.network
+    overwrite: true
+
+  - path: /etc/containers/systemd/k3s@external.network
+    target: /etc/containers/systemd/k3s@.network
+    overwrite: true
+
+  ######################
+  ###### Volumes #######
+  ######################
+  - path: /etc/containers/systemd/local-path@appdata.volume
+    target: /etc/containers/systemd/local-path@.volume
+    overwrite: true
+
+  - path: /etc/containers/systemd/local-path@cctv.volume
+    target: /etc/containers/systemd/local-path@.volume
+    overwrite: true
+
+  - path: /etc/containers/systemd/local-path@default.volume
+    target: /etc/containers/systemd/local-path@.volume
+    overwrite: true
+
+  - path: /etc/containers/systemd/local-path@nvme.volume
+    target: /etc/containers/systemd/local-path@.volume
+    overwrite: true
+

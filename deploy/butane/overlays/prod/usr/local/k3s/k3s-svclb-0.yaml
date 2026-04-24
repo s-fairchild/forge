@@ -1,3 +1,0 @@
----
-node-label: node-role.kubernetes.io/agent="true"
-node-label: svccontroller.k3s.cattle.io/enablelb="true"

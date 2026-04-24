@@ -1,0 +1,11 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  directories:
+  - path: /root/.bashrc.d
+    overwrite: true
+
+  trees:
+  - path: /root/.bashrc.d
+    local: root/bashrc.d

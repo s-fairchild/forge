@@ -5,7 +5,6 @@
 *.ign
 *.ign.*
 # TODO get rid of these tmp file writes
-deploy/ignition/*
 deploy/butane/.*.tmp
 deploy/manifests/*
 .ansible
