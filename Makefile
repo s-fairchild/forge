@@ -268,15 +268,15 @@ container-tag-motion:
 		localhost/steve51516/$${image_name}:$${MOTION_VERSION} \
 		docker.io/steve51516/$${image_name}:latest
 
-container-push-motion:
+container-push-motion: container-tag-motion
 	image_name=motion
 	. ${ctr_build_context}/$${image_name}/argfile.conf
 
-	podman manifest \
+	podman image \
 		push \
 		docker.io/steve51516/$${image_name}:$${MOTION_VERSION}
 
-	podman manifest \
+	podman image \
 		push \
 		docker.io/steve51516/$${image_name}:latest
 

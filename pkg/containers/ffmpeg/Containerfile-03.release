@@ -11,10 +11,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
             # FFmpeg required shared libraries
             libxcb1 libxcb-shm0 libasound2t64 libsndio7.0 libsdl2-2.0-0 libxv1 \
             libzimg2 ocl-icd-libopencl1 libvpx9 libwebpmux3 libzvbi0t64 \
-            libtwolame0 libx264-164 libx265-199 libxvidcore4 libva-x11-2 \
+            libtwolame0 libx264-164 libx265-199 libxvidcore4 \
             # https://github.com/Intel-Media-SDK/MediaSDK/wiki/Intel-media-stack-on-Ubuntu#available-drivers
-            # Intel QSV Runtime drivers
-            libmfx-tools libmfx1 libva-drm2 i965-va-driver intel-media-va-driver
+            # Intel Media SDK Runtime dependencies
+            libmfx-tools libmfx1 \
+            # VAAPI Backends
+            libva-drm2  libva-glx2 libva-x11-2 \
+            # Intel Media SDK Driver
+            intel-media-va-driver-non-free
 
 ARG PREFIX
 
@@ -23,21 +27,15 @@ COPY --link --from=builder ${PREFIX}/lib ${PREFIX}/lib
 
 ARG FFMPEG_VERSION
 ARG CONFIGURE_GENERAL
-ARG CONFIGURE_ENV
 ARG CONFIGURE_LICENSE
 
 ARG MAKE_EXCLUDE
-ARG MAKE_HWACCELS
-ARG MAKE_EXTERNAL_LIBRARIES
 
 LABEL ffmpeg.version=${FFMPEG_VERSION}
 LABEL ffmpeg.configure.general=${CONFIGURE_GENERAL}
-LABEL ffmpeg.configure.env=${CONFIGURE_ENV}
 LABEL ffmpeg.configure.license=${CONFIGURE_LICENSE}
 
 LABEL ffmpeg.make.exclude=${MAKE_EXCLUDE}
-LABEL ffmpeg.make.hwaccels=${MAKE_HWACCELS}
-LABEL ffmpeg.make.external-libraries=${MAKE_EXTERNAL_LIBRARIES}
 
 ENV LD_LIBRARY_PATH="$PREFIX/lib"
 
