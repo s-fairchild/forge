@@ -16,27 +16,46 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
           && apt-get upgrade -y \
         && DEBIAN_FRONTEND=noninteractive \
           apt-get install --no-install-recommends -y \
-              # Install QSV driver packages for intel GPU acceleration.
-              ffmpeg intel-media-va-driver-non-free libmfx-dev \
-              # motion runtime dependencies
-              libmicrohttpd12t64 libcamera0.2 libopencv-objdetect406t64 \
-              libopencv-imgcodecs406t64 libmariadb3
+            # ffmpeg required shared libraries
+            libxcb1 libxcb-shm0 libasound2t64 libsndio7.0 libsdl2-2.0-0 libxv1 \
+            libzimg2 ocl-icd-libopencl1 libvpx9 libwebpmux3 libzvbi0t64 \
+            libtwolame0 libx264-164 libx265-199 libxvidcore4 libfftw3-bin \
+            # https://github.com/Intel-Media-SDK/MediaSDK/wiki/Intel-media-stack-on-Ubuntu#runtime-environment
+            # https://github.com/Intel-Media-SDK/MediaSDK/wiki/Intel-media-stack-on-Ubuntu#available-drivers
+            # Intel QSV Runtime drivers
+            libmfx1 libmfx-tools libva-drm2 i965-va-driver intel-media-va-driver \
+            libva-x11-2 libva-drm2 \
+            # motion runtime dependencies
+            libmicrohttpd12t64 libcamera0.2 libopencv-objdetect406t64 \
+            libopencv-imgcodecs406t64 libmariadb3
 
-ARG INSTALL_PREFIX
+ARG PREFIX
 
-COPY --from=build "$INSTALL_PREFIX/var/lib/motion" "$INSTALL_PREFIX/var/lib/motion"
-COPY --from=build "$INSTALL_PREFIX/bin/motion" "$INSTALL_PREFIX/bin/motion"
-COPY --from=build "$INSTALL_PREFIX/share/locale" "$INSTALL_PREFIX/share/locale"
-COPY --from=build "/usr/share/zoneinfo/$TZ" /etc/localtime 
+COPY --from=builder "$PREFIX/var/lib/motion" "$PREFIX/var/lib/motion"
+COPY --from=builder "$PREFIX/bin/motion" "$PREFIX/bin/motion"
+COPY --from=builder "$PREFIX/share/locale" "$PREFIX/share/locale"
+COPY --from=builder "/usr/share/zoneinfo/$TZ" /etc/localtime 
+
+ARG FFMPEG_VERSION
+
+COPY --from=docker.io/steve51516/ffmpeg:${FFMPEG_VERSION} \
+    "$PREFIX/bin/ffmpeg" \
+    "$PREFIX/bin/ffmpeg"
+COPY --from=docker.io/steve51516/ffmpeg:${FFMPEG_VERSION} \
+    --exclude=$PREFIX/lib/pkgconfig \
+    "$PREFIX/lib" \
+    "$PREFIX/lib"
 
 ARG LIBVA_DRIVER_NAME
 ARG MOTION_VERSION
 
-LABEL motion.build.prefix="${INSTALL_PREFIX}"
+LABEL motion.build.prefix=${PREFIX}
 LABEL motion.version=${MOTION_VERSION}
+LABEL ffmpeg.version=${FFMPEG_VERSION}
 LABEL system.timezone=${TZ}
 LABEL system.libva.driver.name=${LIBVA_DRIVER_NAME}
 
 ENV LIBVA_DRIVER_NAME=${LIBVA_DRIVER_NAME}
+ENV LD_LIBRARY_PATH="$PREFIX/lib"
 
 ENTRYPOINT [ "motion" ]

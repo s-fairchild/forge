@@ -22,3 +22,14 @@
 - op: add
   path: /spec/template/spec/containers/0/args
   value: ["-c", "/tmp/.motion/motion.conf"]
+
+- op: add
+  path: /spec/template/spec/containers/0/env
+  value:
+    - name: LIBVA_DRIVER_NAME
+      value: iHD
+
+- op: add
+  path: /spec/template/spec/containers/0/securityContext
+  value:
+    privileged: true

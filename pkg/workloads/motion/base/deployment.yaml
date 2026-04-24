@@ -35,7 +35,6 @@ spec:
         - -c
 
         args:
-        # TODO evaluate if -no-empty should be added
         - "envsubst -no-digit -no-unset -fail-fast -o /tmp/.motion/motion.conf  < /root/.motion/motion.conf"
 
         envFrom:

@@ -148,6 +148,8 @@ k3s-token-upload:
 							 ${vm_ip_address}
 
 ### Containerfile Start ###
+# TODO convert this into a *simple* reusable shell script
+# TODO find and sort by version all Containerfile* to be passed (reference podman-build.sh library)
 
 ctr_repo_remote := "docker.io/steve51516"
 ctr_repo_local := "localhost/steve51516"
@@ -179,51 +181,104 @@ container-build-rpicam-apps:
 	[ -v RPICAM_APPS_VERSION_TAG_OVERRIDE ] && echo "RPICAM_APPS_VERSION_TAG_OVERRIDE=$${RPICAM_APPS_VERSION_TAG_OVERRIDE}"
 	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_RPICAM_APPS}
 
-FFMPEG_VERSION_TAG_OVERRIDE?=
-export RPICAM_APPS_VERSION_TAG_OVERRIDE
 container-build-ffmpeg:
-	. ${ctr_build_constant_env_file}
-	. ${ctr_build_env_dir}/$${IMAGE_FFMPEG}.env
+	image_name=ffmpeg
+	pushd ${ctr_build_context}/$${image_name} 1> /dev/null
+	. <(grep "^FFMPEG_VERSION" argfile.conf)
 
-	[ -v FFMPEG_VERSION_TAG_OVERRIDE ] && echo "FFMPEG_VERSION_TAG_OVERRIDE=$${FFMPEG_VERSION_TAG_OVERRIDE}"
-	hack/bin/podman-build.sh ${ctr_build_context}/$${IMAGE_FFMPEG}
+	podman build \
+			--format=docker \
+			--platform=linux/amd64 \
+			--tag=steve51516/$${image_name}:$${FFMPEG_VERSION} \
+			--build-arg-file=argfile.conf \
+			--build-arg=BUILD_THREADS=$$(nproc) \
+			-f Containerfile-01.base \
+			-f Containerfile-02.builder \
+			-f Containerfile-03.release \
+			.
 
-MOTION_VERSION_OVERRIDE?=
-export MOTION_VERSION_OVERRIDE
+	popd 1> /dev/null
+
+container-tag-ffmpeg:
+	image_name=ffmpeg
+	. <(grep "^FFMPEG_VERSION" ${ctr_build_context}/$${image_name}/argfile.conf)
+
+	podman tag \
+			localhost/steve51516/$${image_name}:$${FFMPEG_VERSION} \
+			localhost/steve51516/$${image_name}:latest
+
+	podman tag \
+			localhost/steve51516/$${image_name}:$${FFMPEG_VERSION} \
+			docker.io/steve51516/$${image_name}:$${FFMPEG_VERSION}
+
+	podman tag \
+			localhost/steve51516/$${image_name}:$${FFMPEG_VERSION} \
+			docker.io/steve51516/$${image_name}:latest
+
+container-build-tag-ffmpeg: container-build-ffmpeg container-tag-ffmpeg
+
+container-push-ffmpeg:
+	image_name=ffmpeg
+	. <(grep "^FFMPEG_VERSION" ${ctr_build_context}/$${image_name}/argfile.conf)
+
+	podman image \
+			push \
+			docker.io/steve51516/$${image_name}:$${FFMPEG_VERSION}
+
+	podman image \
+			push \
+			docker.io/steve51516/$${image_name}:latest
+
+container-build-push-ffmpeg: container-build-tag-ffmpeg
+
 container-build-motion:
 	image_name=motion
 	pushd ${ctr_build_context}/$${image_name} 1> /dev/null
-	. argfile.conf
-	
+	. <(grep "^MOTION_VERSION=" argfile.conf)
+	. <(grep "^FFMPEG_VERSION" ../ffmpeg/argfile.conf)
+
+	# TODO add --platform=linux/arm64 once ffmpeg arm build is complete
 	podman build \
 		--format=docker \
 		--platform=linux/amd64 \
-		--platform=linux/arm64 \
-		--manifest=docker.io/steve51516/motion:$${MOTION_VERSION} \
+		--tag=steve51516/$${image_name}:$${MOTION_VERSION} \
 		--build-arg-file=argfile.conf \
 		--build-arg=BUILD_THREADS=$$(nproc) \
-		-f Containerfile-01.builder \
-		-f Containerfile-02.build \
+		--build-arg=FFMPEG_VERSION=$${FFMPEG_VERSION} \
+		-f Containerfile-01.base \
+		-f Containerfile-02.builder \
 		-f Containerfile-03.release \
 		.
-	
+
 	popd 1> /dev/null
-	
+
+container-tag-motion:
+	image_name=motion
+	. <(grep "^MOTION_VERSION=" ${ctr_build_context}/$${image_name}/argfile.conf)
+
 	podman tag \
-		docker.io/steve51516/$${image_name}:$${MOTION_VERSION} \
+		localhost/steve51516/$${image_name}:$${MOTION_VERSION} \
+		localhost/steve51516/$${image_name}:latest
+
+	podman tag \
+		localhost/steve51516/$${image_name}:$${MOTION_VERSION} \
+		docker.io/steve51516/$${image_name}:$${MOTION_VERSION}
+
+	podman tag \
+		localhost/steve51516/$${image_name}:$${MOTION_VERSION} \
 		docker.io/steve51516/$${image_name}:latest
 
-container-push-motion:
+container-push-motion: container-tag-motion
 	image_name=motion
 	. ${ctr_build_context}/$${image_name}/argfile.conf
 
-	podman manifest \
+	podman image \
 		push \
-		docker.io/steve51516/motion:$${MOTION_VERSION}
+		docker.io/steve51516/$${image_name}:$${MOTION_VERSION}
 
-	podman manifest \
+	podman image \
 		push \
-		docker.io/steve51516/motion:latest
+		docker.io/steve51516/$${image_name}:latest
 
 container-build-push-motion: container-build-motion container-push-motion
 
