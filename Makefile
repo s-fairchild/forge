@@ -217,7 +217,7 @@ container-tag-ffmpeg:
 
 container-build-tag-ffmpeg: container-build-ffmpeg container-tag-ffmpeg
 
-container-push-ffmpeg:
+container-push-ffmpeg: container-tag-ffmpeg
 	image_name=ffmpeg
 	. <(grep "^FFMPEG_VERSION" ${ctr_build_context}/$${image_name}/argfile.conf)
 
