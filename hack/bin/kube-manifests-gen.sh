@@ -12,6 +12,7 @@ main() {
     local -r base_dir="$1"
     local -r manifests="$2"
     local -r overlay="$3"
+
     if [ ! -d "$base_dir" ]; then
         abort "$base_dir not found, aborting"
     elif [ ! -d "$manifests" ]; then
@@ -27,7 +28,6 @@ generate_kube_manifests() {
     local -r base="$1"
     local -r dest="$2"
     local -r overlay="$3"
-    log "starting"
 
     mapfile kustomize <<< "$(find "$base" -type d -name "$overlay")"
 
@@ -39,11 +39,11 @@ generate_kube_manifests() {
         if is_disabled "$app_name" "$disabled_pkgs"; then
             kustomize_out="$dest/$app_manifest"
 
-            log "Generating $app_manifest from $k"
+            info "Generating $app_manifest from $k"
             if kubectl kustomize \
                     --enable-helm=true \
                     "$k" > "$kustomize_out"; then
-                log "Successfully created manifest file: $kustomize_out"
+                info "Successfully created manifest file: $kustomize_out"
             fi
         fi
     done
@@ -61,23 +61,28 @@ is_disabled() {
     local -r app="$1"
     local -r disabled="$2"
     if [[ $app =~ ${disabled[*]} ]]; then
-        log "$app is disabled."
+        info "$app is disabled."
         return 1
     fi
 
     return 0
 }
 
-declare -r utils="hack/lib/util.sh"
-if [ -f "$utils" ]; then
-    # shellcheck source=lib/util.sh
-    source "$utils"
+if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_opt_bash_utils_logging="hack/lib/opt-bash-utils-logging.sh"
+    [ -f "$__lib_opt_bash_utils_logging" ] || eval "$(echo "Cannot source: $__lib_opt_bash_utils_logging; file not found"; exit 5)"
+
+    # shellcheck source=../lib/opt-bash-utils-logging.sh
+    . "$__lib_opt_bash_utils_logging"
 fi
 
-declare -r env_file="hack/env/gen_kube_manifests.env"
-if [ -f "$env_file" ]; then
-    # shellcheck source=env/gen_kube_manifests.env
-    source "$env_file"
+if [ "${__env_gen_kub_manifests_sourced:-}" != "true" ]; then
+    # declare -r __env_gen_kub_manifests="hack/env/kube-manifests-gen.env"
+    declare -r __env_gen_kub_manifests="hack/env/kube-manifests-gen.env"
+    [ -f "$__env_gen_kub_manifests" ] || fatal --status=5 "Cannot source: ${__env_gen_kub_manifests}; file not found."
+
+    # shellcheck source=../env/kube-manifests-gen.env
+    . "$__env_gen_kub_manifests"
 fi
 
 main "$@"

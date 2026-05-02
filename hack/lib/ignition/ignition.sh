@@ -9,7 +9,8 @@ declare -r __ignition_sourced="true"
 # TODO rename this function
 gen_all_ignitions() {
     local -n arr="$1"
-    info "starting"
+
+    info "Generating all ignitions."
 
     # shellcheck disable=SC2068
     for i in ${!arr[@]}; do
@@ -24,7 +25,6 @@ gen_all_ignitions() {
 # 1) $1 - string; butane file to process
 gen_ignition() {
     local -n butane_in="$1"
-    info "starting"
 
     butane_opts=(
         "--strict"
@@ -38,7 +38,8 @@ gen_ignition() {
         files_dir="${butane_in%%/*}"
         butane_opts+=("--files-dir=$files_dir")
 
-        info "Generating ignition from: ${butane_in}, files-dir: ${files_dir}"
+        info "Generating ignition from: ${butane_in}"
+        debug "files-dir: ${files_dir}"
         # shellcheck disable=SC2068
         butane ${butane_opts[@]} "$butane_in"
     else
@@ -54,7 +55,7 @@ gen_ignition() {
 # 1) main_bu - string; Butane file to parse for configs
 # 2) files - nameref; Empty array, populated with butane config files
 gen_merge_ignitions() {
-    info "starting"
+    info "Generating merge ignitions."
 
     # shellcheck disable=SC2034
     gather_butane_files "$1" "$2"

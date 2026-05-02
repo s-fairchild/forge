@@ -53,10 +53,9 @@ gather_butane_files() {
 #     - String holding the config in memory. Not a written file.
 gen_butane_main() {
     local -r butane_main="$1"
-    # local -r out_dir="$2"
     local -n ignitions_merge="$2"
     local -n butane_out="$3"
-    info "starting"
+    info "Generating main ignition file."
 
     validate_config_dest_length "$2" "$butane_main"
     tmp_butane="$(yq "$butane_main")"
@@ -64,12 +63,18 @@ gen_butane_main() {
     # shellcheck disable=SC2068
     for i in ${!ignitions_merge[@]}; do
         merge_ignition="${ignitions_merge[$i]}"
-        export YQ_pathEnv=".ignition.config.merge[$i].inline" YQ_valueEnv="$merge_ignition"
+
+        export YQ_pathEnv=".ignition.config.merge[$i].inline"
+        export YQ_valueEnv="$merge_ignition"
+
         tmp_butane="$(yq -e=1 'eval(strenv(YQ_pathEnv)) = strenv(YQ_valueEnv)' <<< "$tmp_butane")"
     done
 
     info "Checking merged butane config."
-    butane --check --strict <<< "$tmp_butane"
+    butane --check \
+            --strict \
+            <<< "$tmp_butane"
+
     # shellcheck disable=SC2034
     butane_out="$tmp_butane"
 }
@@ -85,7 +90,7 @@ write_butane() {
 
     out="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".main_butane.XXX")"
     out="$out/main.bu"
-    echo "$butane_contents" > "$out"
+    echo "$butane_contents" > "$out" || fatal "Failed to write butane_contents"
 
     TEMP_DATA+=("$out")
     TEMP_DATA+=("$(dirname "$out")")
@@ -100,12 +105,10 @@ write_butane() {
 validate_config_dest_length() {
     local -n configs="$1"
     local -r butane_config="$2"
-    info "starting"
 
     local -i butane_config_merge_len
     butane_config_merge_len="$(yq '(.ignition.config.merge | length)' "$butane_config")"
-    if [ "${#configs[@]}" -ne "$butane_config_merge_len" ]; then
-        info "configs length: ${#configs[@]} != ${butane_config_merge_len}"
-        return 1
-    fi
+
+    [ "${#configs[@]}" -ne "$butane_config_merge_len" ] \
+        && error "configs length: ${#configs[@]} != ${butane_config_merge_len}"
 }

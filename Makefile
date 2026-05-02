@@ -13,49 +13,43 @@ clean:
 	rm -rf ${manifests_prod_dir}/*
 	rm -rf ${manifests_base_dir}/*
 	rm -rf ${manifests_staging_dir}/*
-	find . -type d -iname "gen_ignition.sh.*" -exec rm -rf {} \;
+	# TODO script deletion of existing podman volumes
+	# podman volume exists prod-main-bu && podman volume rm prod-main-bu
+	# podman volume exists prod-main-ign && podman volume rm prod-main-ign
 
 kube-manifests-gen-base:
-	hack/gen_kube_manifests.sh ${kustomize_base_dir} ${manifests_base_dir} base
-
-kube-manifests-gen-prod:
-	hack/gen_kube_manifests.sh ${kustomize_base_dir} ${manifests_prod_dir} prod
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} ${manifests_base_dir} base
 
 kube-manifests-gen-staging:
-	hack/gen_kube_manifests.sh ${kustomize_base_dir} ${manifests_staging_dir} staging
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} ${manifests_staging_dir} staging
 
 kube-manifests-gen-rpi4-0:
-	hack/gen_kube_manifests.sh ${kustomize_base_dir} ${manifests_prod_dir} rpi4-0
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} ${manifests_prod_dir} rpi4-0
+
+kube-manifests-gen-prod:
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} ${manifests_prod_dir} prod
 
 kube-manifests-gen-all: clean kube-manifests-gen-prod kube-manifests-gen-rpi4-0
 
 ignition_dest := "deploy/.ignition"
 ignition-gen-staging: kube-manifests-gen-staging
-	hack/ignition/gen_ignition.sh deploy/butane/overlays/staging/main.bu ${ignition_dest}/staging_main.ign
-
-ignition-gen-prod: kube-manifests-gen-all
-	DEBUG=$${DEBUG:-} hack/ignition/gen_ignition.sh deploy/butane/overlays/prod/main.bu
+	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/staging/main.bu
 
 ignition-gen-rpi4:
-	hack/ignition/gen_ignition.sh deploy/butane/overlays/rpi4/main.bu ${ignition_dest}/rpi4_main.ign
+	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/rpi4/main.bu
 
-ignition-gen-rpi02w-0:
-	hack/ignition/gen_ignition.sh deploy/butane/overlays/rpi02w.0/main.bu ${ignition_dest}/rpi02w-0_main.ign
-
-ignition-serve-http-base:
-	hack/ignition/deploy/serve_ignition.sh base
+ignition-gen-prod: kube-manifests-gen-all
+	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/prod/main.bu
 
 ignition-serve-http-staging:
-	hack/ignition/deploy/serve_ignition.sh staging
-
-ignition-serve-http-prod: ignition-gen-prod
-	hack/ignition/deploy/serve_ignition.sh prod
+	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh staging-main-ign
 
 ignition-serve-http-rpi4:
-	hack/ignition/deploy/serve_ignition.sh rpi4
+	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh rpi4-main-ign
 
-ignition-serve-http-rpi02w-0: ignition-gen-rpi02w-0
-	hack/ignition/deploy/serve_ignition.sh rpi02w-0
+ignition-serve-http-prod: ignition-gen-prod
+	# TODO progromatically get the volume name to be served the same way ignition-gen-main.sh generates the volume name
+	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh prod-main-ign
 
 # TODO add --post-install to setup btrfs subvolumes
 installer-download-baremetal:
