@@ -1,0 +1,7 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  trees:
+  - path: /etc/security/limits.d
+    local: etc/security/limits.d

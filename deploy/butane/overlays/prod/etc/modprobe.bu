@@ -1,7 +1,0 @@
----
-variant: fcos
-version: 1.5.0
-storage:
-  trees:
-  - path: /etc/modprobe.d
-    local: modprobe.d

@@ -1,0 +1,49 @@
+# disable-qsr: qsr020
+[Service]
+Restart=always
+RestartSec=30
+ExecStartPre=modprobe iptable_filter
+ExecStartPre=modprobe iptable_nat
+ExecStartPre=/usr/bin/podman secret exists k3s-token
+# TODO replace agent with var pulling instance name
+Environment="NAME=k3s-agent-%i"
+# Optional environment for systemd service
+EnvironmentFile=-/usr/local/etc/sysconfig/%p
+
+[Container]
+# TODO test and see if the default instantiated systemd service name can be used here
+ContainerName=${NAME}
+HostName=${NAME}
+Label="app=k3s"
+Image=k3s@stable.image
+DNSSearch=expresso.lan
+Timezone=UTC
+Pull=never
+ShmSize=5g
+LogDriver=journald
+
+# Optional environment for container
+EnvironmentFile=-/usr/local/etc/sysconfig/%N
+
+# K3S configuration via environment
+# https://docs.k3s.io/cli/server#cluster-options
+Environment=K3S_NODE_NAME=${NAME}
+Environment=K3S_TOKEN_FILE=/run/secrets/k3s-token
+Environment=K3S_AGENT_TOKEN_FILE=/run/secrets/k3s-agent-token
+Secret=k3s-token,mode=0400
+Secret=k3s-agent-token,mode=0400
+
+PodmanArgs=--oom-score-adj=1000 --privileged
+
+Volume=/etc/machine-id:/etc/machine-id:ro
+Volume=${NAME}-kubelet:/var/lib/kubelet:Z,rslave
+Volume=${NAME}-pod-logs:/var/log/pods:Z,rslave
+Volume=${NAME}-data:/var/lib/rancher/k3s:Z,rslave
+Volume=${NAME}-rancher:/etc/rancher,rslave
+Volume=/usr/local/lib/rancher/k3s/server/manifests/custom:/var/lib/rancher/k3s/server/manifests/custom:z
+
+# https://docs.k3s.io/installation/configuration?_highlight=config&_highlight=file#configuration-file
+Volume=/usr/local/etc/k3s/%N:/etc/rancher/k3s/config.yaml,Z,ro
+
+[Install]
+WantedBy=default.target

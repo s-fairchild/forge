@@ -1,0 +1,14 @@
+[Unit]
+Description=Podman Network %i - Each K3S host (physical machine, VM) will need a route to this network.
+
+[Network]
+NetworkName=k3s-%i
+
+Label=butane=base
+Label=kube-network=%i
+Label=app=k3s
+
+Options=com.docker.network.bridge.name=%i
+
+[Install]
+WantedBy=default.target

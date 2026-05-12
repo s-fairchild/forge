@@ -1,0 +1,31 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  links:
+  - path: /usr/local/etc/k3s/k3s@agent-0.yaml
+    target: /usr/local/etc/k3s/k3s@agent.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-0.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-1.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@server-2.yaml
+    target: /usr/local/etc/k3s/k3s@server.yaml
+    overwrite: true
+
+  - path: /usr/local/etc/k3s/k3s@svclb-0.yaml
+    target: /usr/local/etc/k3s/k3s@svclb.yaml
+    overwrite: true
+
+  trees:
+  - path: /usr/local/etc
+    local: files/usr/local/etc
+  
+  - path: /usr/local/lib/rancher/k3s/server/manifests/custom
+    local: usr/local/lib/rancher/k3s/server/manifests/custom

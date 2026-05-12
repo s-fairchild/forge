@@ -3,93 +3,102 @@ variant: fcos
 version: 1.5.0
 systemd:
   units:
-  # Services
+  ####################
+  ###   Services   ###
+  ####################
   - name: btrfs-scrub.service
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-scrub.service
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-scrub.service
 
   - name: btrfs-defrag.service
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-defrag.service
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-defrag.service
 
   - name: btrfs-balance.service
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-balance.service
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-balance.service
 
   - name: btrfs-trim.service
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-trim.service
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-trim.service
 
-  # btrfsmaintenance-refresh updates timers configs from /usr/local/etc/sysconfig/btrfsmaintenance
   - name: btrfsmaintenance-refresh.service
-    contents_local: coreos/storage/btrfsmaintenance/btrfsmaintenance-refresh.service
+    contents_local: usr/local/src/btrfsmaintenance/btrfsmaintenance-refresh.service
 
   - name: btrfsmaintenance-refresh.path
-    contents_local: coreos/storage/btrfsmaintenance/btrfsmaintenance-refresh.path
+    contents_local: usr/local/src/btrfsmaintenance/btrfsmaintenance-refresh.path
 
-  # Timers
+  ##################
+  ###   Timers   ###
+  ##################
   - name: btrfs-scrub.timer
     enabled: true
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-scrub.timer
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-scrub.timer
 
   - name: btrfs-defrag.timer
     enabled: true
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-defrag.timer
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-defrag.timer
 
   - name: btrfs-balance.timer
     enabled: true
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-balance.timer
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-balance.timer
 
   - name: btrfs-trim.timer
     enabled: true
-    contents_local: coreos/storage/btrfsmaintenance/btrfs-trim.timer
+    contents_local: usr/local/src/btrfsmaintenance/btrfs-trim.timer
 
 storage:
   files:
-  # Service environment configuration
-  # Should be overridden/configured in overlays
+  #########################
+  ###   Configuration   ###
+  #########################
   - path: /etc/sysconfig/btrfsmaintenance
     overwrite: true
     contents:
-      local: coreos/storage/btrfsmaintenance/sysconfig.btrfsmaintenance
+      local: usr/local/src/btrfsmaintenance/sysconfig.btrfsmaintenance
 
+  ####################
+  ###   Binaries   ###
+  ####################
   - path: /usr/local/sbin/btrfsmaintenance/btrfsmaintenance-functions
     overwrite: true
     mode: 0440
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfsmaintenance-functions
+      local: usr/local/src/btrfsmaintenance/btrfsmaintenance-functions
 
   - path: /usr/local/sbin/btrfsmaintenance/btrfsmaintenance-fresh-cron.sh
     overwrite: true
     mode: 0544
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfsmaintenance-refresh-cron.sh
+      local: usr/local/src/btrfsmaintenance/btrfsmaintenance-refresh-cron.sh
 
   - path: /usr/local/sbin/btrfsmaintenance/btrfs-balance.sh
     overwrite: true
     mode: 0544
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfs-balance.sh
+      local: usr/local/src/btrfsmaintenance/btrfs-balance.sh
 
   - path: /usr/local/sbin/btrfsmaintenance/btrfs-defrag.sh
     overwrite: true
     mode: 0544
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfs-defrag.sh
+      local: usr/local/src/btrfsmaintenance/btrfs-defrag.sh
 
   - path: /usr/local/sbin/btrfsmaintenance/btrfs-scrub.sh
     overwrite: true
     mode: 0544
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfs-scrub.sh
+      local: usr/local/src/btrfsmaintenance/btrfs-scrub.sh
 
   - path: /usr/local/sbin/btrfsmaintenance/btrfs-trim.sh
     overwrite: true
     mode: 0544
     contents:
-      local: coreos/storage/btrfsmaintenance/btrfs-trim.sh
+      local: usr/local/src/btrfsmaintenance/btrfs-trim.sh
 
-  # btrfsmaintenance documentation
+  #########################
+  ###   Documentation   ###
+  #########################
   - path: /usr/local/share/doc/btrfsmaintenance/README.man
     overwrite: true
     contents:
-      local: coreos/storage/btrfsmaintenance/README.man
+      local: usr/local/src/btrfsmaintenance/README.man
 
   links:
   - path: /usr/local/share/doc/packages/btrfsmaintenance/README.man

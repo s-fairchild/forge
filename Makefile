@@ -4,40 +4,52 @@ SHELL = /bin/bash
 deploy-manifests-prod:
 	hack/deploy_manifests.sh deploy/butane/base/coreos/files/k3s/manifests
 
-kustomize_base_dir := "pkg"
-manifests_prod_dir := "deploy/butane/overlays/prod/usr/local/lib/rancher/k3s/server/manifests"
-manifests_base_dir := "deploy/butane/base/usr/local/lib/rancher/k3s/server/manifests"
-manifests_staging_dir := "deploy/butane/base/usr/local/lib/rancher/k3s/server/manifests"
+kustomize_base_path := pkg
+manifests_relative_path := files/usr/local/lib/rancher/k3s/server/manifests/custom
+deploy_butane_path := deploy/butane
+manifests_custom_base := ${deploy_butane_path}/base/${manifests_relative_path}
+manifests_custom_staging := ${deploy_butane_path}/overlays/staging/${manifests_relative_path}
+manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
+manifests_custom_rpi4_0 := ${deploy_butane_path}/overlays/rpi4/${manifests_relative_path}
 
 clean:
-	rm -rf ${manifests_prod_dir}/*
-	rm -rf ${manifests_base_dir}/*
-	rm -rf ${manifests_staging_dir}/*
-	# TODO script deletion of existing podman volumes
-	# podman volume exists prod-main-bu && podman volume rm prod-main-bu
-	# podman volume exists prod-main-ign && podman volume rm prod-main-ign
+	if compgen -G ${manifests_custom_base}/*.yaml > /dev/null; then
+		rm -v ${manifests_custom_base}/*.yaml
+	fi
+
+	if compgen -G ${manifests_custom_staging}/*.yaml > /dev/null; then
+		rm -v ${manifests_custom_staging}/*.yaml
+	fi
+
+	if compgen -G ${manifests_custom_prod}/*.yaml > /dev/null; then
+		rm -v ${manifests_custom_prod}/*.yaml
+	fi
+
+	if compgen -G ${manifests_custom_rpi4_0}/*.yaml > /dev/null; then
+		rm -v ${manifests_custom_rpi4_0}/*.yaml
+	fi
 
 kube-manifests-gen-base:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} \
-													${manifests_base_dir} \
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+													${manifests_custom_base} \
 													base
 
 kube-manifests-gen-staging:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} \
-													${manifests_staging_dir} \
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+													${manifests_custom_staging} \
 													staging
 
 kube-manifests-gen-rpi4-0:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} \
-													${manifests_prod_dir} \
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+													${manifests_custom_rpi4_0} \
 													rpi4-0
 
-kube-manifests-gen-prod:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_dir} \
-													${manifests_prod_dir} \
+kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
+	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+													${manifests_custom_prod} \
 													prod
 
-kube-manifests-gen-all: clean kube-manifests-gen-prod kube-manifests-gen-rpi4-0
+kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
 ignition-gen-staging: kube-manifests-gen-staging
 	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/staging/main.bu
@@ -45,10 +57,12 @@ ignition-gen-staging: kube-manifests-gen-staging
 ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0
 	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/rpi4-0/main.bu
 
-ignition-gen-base: kube-manifests-gen-base
+# ignition-gen-base: kube-manifests-gen-base
+ignition-gen-base:
 	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/base/main.bu
 
-ignition-gen-prod: kube-manifests-gen-all
+# ignition-gen-prod: kube-manifests-gen-all
+ignition-gen-prod:
 	DEBUG=$${DEBUG:-} VERBOSE=$${VERBOSE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/prod/main.bu
 
 ignition-serve-http-staging: ignition-gen-staging
@@ -332,3 +346,9 @@ container-push-envsubst:
 container-build-push-envsubst: container-build-envsubst container-push-envsubst
 
 ### Containerfile End ###
+
+podman-secrets-create-update:
+	secret_src_dir="$${PODMAN_SECRET_SOURCE_DIR?'PODMAN_SECRET_SOURCE_DIR must be set.'}"
+	. hack/lib/podman/secrets/podman_secrets_create.sh
+
+	podman_secret_create_from_file "$${secret_src_dir}"

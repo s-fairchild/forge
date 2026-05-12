@@ -1,5 +1,5 @@
 [submodule "deploy/butane/base/coreos/storage/btrfsmaintenance"]
-	path = deploy/butane/base/coreos/storage/btrfsmaintenance
+	path = deploy/butane/base/files/usr/local/src/btrfsmaintenance
 	url = git@github.com:kdave/btrfsmaintenance.git
 [submodule "hack/opt/bash-utils"]
 	path = hack/opt/bash-utils

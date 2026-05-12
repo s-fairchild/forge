@@ -1,0 +1,11 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  directories:
+  - path: /etc/sysctl.d
+    overwrite: true
+
+  trees:
+  - path: /etc
+    local: etc/sysctl.d

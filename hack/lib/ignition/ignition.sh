@@ -29,7 +29,7 @@ gen_ignition() {
 
         # Only search for local files at the same depth as the butane file path
         # This simplifies creating the local file references in each butane config file.
-        butane_opts+=("--files-dir=$(dirname "$input")")
+        butane_opts+=("--files-dir=$(dirname "$input")/files")
 
         # shellcheck disable=SC2068
         butane ${butane_opts[@]} "$input" || fatal "failed to generate ignition"
@@ -72,22 +72,16 @@ butane_check() {
 gen_ign_config_merge_inlines() {
     local -ra butane_path="${1?$(fatal "$__fatal_err_msg_missing_butane")}"
 
-    local ign_json
-    # TODO only load merge
     ign_json="$(yq -o json -I 0 '... comments="" | . | select(. != null)' "$butane_path")"
     debug "ign_json=$ign_json"
 
-    yq_persist butane_path
-    local -r butane_f="$(basename "${butane_path[0]}")"
+    # local -r butane_f="$(basename "${butane_path[0]}")"
 
     debug "Getting .ignition.config.merge length."
 
-    local ign_config_merge_len
     local -ri ign_config_merge_len="$(jq '.ignition.config.merge | length' <<< "$ign_json")"
-
     debug "ign_config_merge_len=$ign_config_merge_len"
 
-    local ign_json
     for ((i=0; i<"$ign_config_merge_len"; i++)); do
         debug "Getting raw value: .ignition.config.merge[$i].inline"
         config_inline_path="$(jq -r \
@@ -115,8 +109,8 @@ gen_ign_config_merge_inlines() {
                     || fatal "failed to update .ignition.config.merge[$i].inline")"
     done
 
-    printf '%s' "$ign_json"
-    # gen_ignition "$ign_json"
+    # printf '%s' "$ign_json"
+    yq "$ign_json" | gen_ignition
 }
 
 # podman_secret_create_ignition()

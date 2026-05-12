@@ -1,3 +1,7 @@
 {
-  "podmanVersion": "5.8.2"
+  "disable": ["qsr020"],
+  "podmanVersion": "5.8.1",
+  "project": {
+    "rootDir": "deploy/butane"
+    }
 }

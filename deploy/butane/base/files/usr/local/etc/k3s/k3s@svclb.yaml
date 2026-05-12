@@ -1,0 +1,12 @@
+---
+# https://docs.k3s.io/installation/configuration#configuration-file
+
+# https://docs.k3s.io/cli/agent#node
+node-label:
+- "node-role.kubernetes.io/agent=true"
+- "svccontroller.k3s.cattle.io/enablelb=true"
+
+# TODO configure svclb operator to ignore this taint
+# This will prevent workloads from being scheduled on this node
+# node-taint:
+# - "enablelb=true:NoSchedule"

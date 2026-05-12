@@ -3,47 +3,27 @@ variant: fcos
 version: 1.5.0
 ignition:
   config:
-    # TODO Recursively generate base/main.bu to load all configs without duplicating it's entries.
     merge:
     ####################
     ### Base configs ###
     ####################
     - inline: deploy/butane/base/btrfsmaintenance.bu
+    - inline: deploy/butane/base/containers.bu
+    - inline: deploy/butane/base/firewalld.bu
     - inline: deploy/butane/base/root.bu
+    - inline: deploy/butane/base/security.bu
+    - inline: deploy/butane/base/sysctl.bu
     - inline: deploy/butane/base/system-config.bu
-    - inline: deploy/butane/base/usr.bu
-    - inline: deploy/butane/base/etc/containers-conf.bu
-    - inline: deploy/butane/base/etc/containers-systemd.bu
-    - inline: deploy/butane/base/etc/firewalld.bu
-    - inline: deploy/butane/base/etc/security.bu
-    - inline: deploy/butane/base/etc/sysctl.bu
+    - inline: deploy/butane/base/usr-k3s.bu
 
-    ###############
-    ### General ###
-    ###############
-    # TODO Mount required files to container for these configs
-    # - inline: deploy/butane/overlays/prod/system-config.yaml
-    ###############
-    ### Storage ###
-    ###############
-    # TODO Mount required files to container for these configs
-    # - inline: deploy/butane/overlays/prod/disks.bu
-    # - inline: deploy/butane/overlays/prod/filesystems.bu
-    # - inline: deploy/butane/overlays/prod/luks.bu
+    - inline: deploy/butane/overlays/prod/storage/disks.bu
+    - inline: deploy/butane/overlays/prod/storage/filesystems.bu
+    - inline: deploy/butane/overlays/prod/storage/luks.bu
 
-    ###############
-    ### /usr ######
-    ###############
-    - inline: deploy/butane/overlays/prod/usr.bu
-
-    ############
-    ### /etc ###
-    ############
-    - inline: deploy/butane/overlays/prod/etc/modprobe.bu
-    - inline: deploy/butane/overlays/prod/etc/NetworkManager.bu
-    - inline: deploy/butane/overlays/prod/etc/sysconfig.bu
-
-    #######################
-    ### /etc/containers ###
-    #######################
-    - inline: deploy/butane/overlays/prod/etc/containers-systemd.bu
+    - inline: deploy/butane/overlays/prod/containers.bu
+    - inline: deploy/butane/overlays/prod/modprobe.bu
+    - inline: deploy/butane/overlays/prod/NetworkManager.bu
+    - inline: deploy/butane/overlays/prod/security.bu
+    - inline: deploy/butane/overlays/prod/sysconfig.bu
+    - inline: deploy/butane/overlays/prod/system-config.bu
+    - inline: deploy/butane/overlays/prod/usr-k3s.bu

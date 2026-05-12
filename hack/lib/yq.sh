@@ -1,5 +1,7 @@
 # shellcheck shell=bash
 
+declare -r __hack_lib_yq_sourced="true"
+
 # upsert_hash_value()
 upsert_hash_value() {
     local -r f="$1"
@@ -16,41 +18,6 @@ upsert_hash_value() {
         -i \
         'eval(strenv(YQ_KEY)) |= strenv(YQ_VALUE)' \
         "$f"
-}
-
-# format_hash()
-format_hash() {
-    local f="$1"
-    local -n out="$2"
-
-    [ -f "$f" ] || abort "$f not found."
-
-    local checksum
-    parse_hash_extension "$f" checksum
-    local type
-    parse_hash_value "$f" type
-
-    # Reference: https://coreos.github.io/butane/config-fcos-v1_5
-    # shellcheck disable=SC2034
-    out="$type-$checksum"
-    log "created butane verification.hash: $out"
-}
-
-# parse_hash_extension()
-parse_hash_extension() {
-    local -n t="$2"
-
-    # shellcheck disable=SC2034
-    t="$(cut -d ' ' -f 1 < "$1")"
-}
-
-# parse_hash_value()
-parse_hash_value() {
-    local -n v="$2"
-
-    # shellcheck disable=SC2034
-    v="$(basename "$1")"
-    v="${v##*.}"
 }
 
 # declare -r YQ_DEFAULT_PERSIST_VOLUME="yq-persist"
@@ -88,7 +55,8 @@ yq_persist() {
 #   * 'YQ_*' variables within scope are exported for use by yq.
 #   * 'YQ_*' are unexported upon completion
 yq() {
-    local -r yq_vol="${1:-$YQ_DEFAULT_PERSIST_VOLUME}"
+    local -r yq_vol="${YQ_PERSIST_VOLUME:-$YQ_DEFAULT_PERSIST_VOLUME}"
+    info "Persisting files to podman volume: $yq_vol"
     # local -Ix "${!YQ_*}"
 
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
@@ -101,16 +69,17 @@ yq() {
         -i \
         --rm \
         -v "$yq_vol:/persist:z" \
-        --workdir /persist \
+        -v "$PWD:/workdir":O \
+        --workdir /workdir \
         "$image" \
             --exit-status=1 \
             "$@"
 }
 
-if [ "${shell_utils_lib:-}" != "true" ]; then
+if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
     declare -r shell_utils_logging="hack/lib/opt-bash-utils-logging.sh"
 
-    [ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
+    [ -f "$shell_utils_logging" ] || "$(echo "$shell_utils_logging file not found."; exit 1)"
     # shellcheck source=opt-bash-utils-logging.sh
-    source "$shell_utils_logging"
+    . "$shell_utils_logging"
 fi

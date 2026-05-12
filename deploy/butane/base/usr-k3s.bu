@@ -1,0 +1,18 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  directories:
+  - path: /usr/local/etc
+    overwrite: true
+  
+  - path: /usr/local/lib/rancher/k3s/server/manifests/custom
+    overwrite: true
+
+  trees:
+  # Static helm charts must be uploaded separately from the ignition file.
+  # the a helm chart tarball string is too long for json format.
+  # - path: /usr/local/lib/rancher/k3s/server/static/charts/extra
+
+  - path: /usr/local/etc
+    local: usr/local/etc

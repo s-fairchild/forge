@@ -1,0 +1,76 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  filesystems:
+  - device: /dev/disk/by-partlabel/root
+    format: btrfs
+    wipe_filesystem: true
+    label: root
+    # uuid: 0fe6d763-e2ff-454b-a8db-40469c1aa59b
+    mount_options:
+      - compress=zstd:3
+      - ssd
+      - x-systemd.device-timeout=0
+      - barrier
+      - datasum
+      - rescue=usebackuproot
+      - discard=async
+
+  - device: /dev/mapper/var
+    path: /var
+    format: btrfs
+    wipe_filesystem: false
+    with_mount_unit: true
+    label: var
+    # uuid: e55445d8-6369-4d73-a76c-4811877c2da7
+    mount_options:
+      - compress=zstd:3
+      - ssd
+      - x-systemd.device-timeout=0
+      - barrier
+      - datasum
+      - rescue=usebackuproot
+      - discard=async
+
+  - device: /dev/mapper/appdata.raid10.1
+    # This path MUST match the btrfs subvolume create path in local-path-appdata.volume
+    path: /var/local/lib/k3s/agent/local-path-appdata-volume
+    format: btrfs
+    wipe_filesystem: false
+    with_mount_unit: false
+    label: appdata
+    # uuid: a4e41b47-4567-4c43-93b0-4ac41100b4bb
+    options:
+    # yaml-language-server-disable Array has duplicate items.
+    - -m
+    - raid10
+    - -d
+    - raid10
+    - --features
+    - block-group-tree,squota
+    - /dev/mapper/appdata.raid10.1
+    - /dev/mapper/appdata.raid10.2
+    - /dev/mapper/appdata.raid10.3
+    - /dev/mapper/appdata.raid10.4
+
+  - device: /dev/mapper/cctv.raid10.1
+    # This path MUST match the btrfs subvolume create path in local-path-cctv.volume
+    path: /var/local/lib/k3s/agent/local-path-cctv-volume
+    format: btrfs
+    wipe_filesystem: false
+    with_mount_unit: false
+    label: cctv
+    # uuid: ab003959-3d23-4771-9f1d-2fc0c4fb6aa2
+    options:
+    # yaml-language-server-disable Array has duplicate items.
+    - -m
+    - raid10
+    - -d
+    - raid10
+    - --features
+    - block-group-tree,squota
+    - /dev/mapper/cctv.raid10.1
+    - /dev/mapper/cctv.raid10.2
+    - /dev/mapper/cctv.raid10.3
+    - /dev/mapper/cctv.raid10.4

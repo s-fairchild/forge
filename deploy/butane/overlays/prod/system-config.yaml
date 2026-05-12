@@ -7,6 +7,8 @@ passwd:
     system: true
     gecos: Jellyfin App Web User
     uid: 911
+  
+  - name: steven
 
   - name: core
     ssh_authorized_keys_local:
