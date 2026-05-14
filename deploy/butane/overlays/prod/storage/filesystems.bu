@@ -47,6 +47,8 @@ storage:
     - raid10
     - -d
     - raid10
+    - --checksum
+    - sha256
     - --features
     - block-group-tree,squota
     - /dev/mapper/appdata.raid10.1

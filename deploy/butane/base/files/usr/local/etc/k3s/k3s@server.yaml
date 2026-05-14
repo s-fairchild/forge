@@ -1,8 +1,12 @@
 ---
 # https://docs.k3s.io/installation/configuration#configuration-file
 tls-san:
-- "10.10.0.1"
-- "10.50.0.2"
-- "k3s-apiserverlb-0"
-- "rick.expresso.lan"
-- "api.rick.expresso.lan"
+  - "10.10.0.1"
+  - "10.50.0.2"
+  - "k3s-apiserverlb-0"
+  - "rick.expresso.lan"
+  - "api.rick.expresso.lan"
+
+# https://docs.k3s.io/cli/agent#node
+node-label:
+  - "node-role.kubernetes.io/server=true"

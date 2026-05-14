@@ -30,53 +30,55 @@ clean:
 	fi
 
 kube-manifests-gen-base:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 													${manifests_custom_base} \
 													base
 
 kube-manifests-gen-staging:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 													${manifests_custom_staging} \
 													staging
 
 kube-manifests-gen-rpi4-0:
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 													${manifests_custom_rpi4_0} \
 													rpi4-0
 
 kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
-	DEBUG=$${DEBUG:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 													${manifests_custom_prod} \
 													prod
 
 kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
 ignition-gen-staging: kube-manifests-gen-staging
-	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/staging/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/staging/main.bu
 
 ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0
-	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/rpi4-0/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/rpi4-0/main.bu
 
 # ignition-gen-base: kube-manifests-gen-base
 ignition-gen-base:
-	DEBUG=$${DEBUG:-} hack/bin/ignition-gen-main.sh deploy/butane/base/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/base/main.bu
 
 # ignition-gen-prod: kube-manifests-gen-all
 ignition-gen-prod:
-	DEBUG=$${DEBUG:-} VERBOSE=$${VERBOSE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/prod/main.bu
+	XTRACE=$${XTRACE:-} VERBOSE=$${VERBOSE:-} hack/bin/ignition-gen-main.sh \
+													${deploy_butane_path}/overlays/prod/main.bu \
+													${deploy_butane_path}/overlays/prod/secrets.env
 
 ignition-serve-http-staging: ignition-gen-staging
-	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh staging-main-ign
+	XTRACE=$${XTRACE:-} hack/bin/httpd-serve.sh staging-main-ign
 
 ignition-serve-http-rpi4-0: ignition-gen-rpi4
-	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh rpi4-main-ign
+	XTRACE=$${XTRACE:-} hack/bin/httpd-serve.sh rpi4-main-ign
 
 ignition-serve-http-base: ignition-gen-base
-	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh base-main-ign
+	XTRACE=$${XTRACE:-} hack/bin/httpd-serve.sh base-main-ign
 
 ignition-serve-http-prod: ignition-gen-prod
 	# TODO progromatically get the volume name to be served the same way ignition-gen-main.sh generates the volume name
-	DEBUG=$${DEBUG:-} hack/bin/httpd-serve.sh prod-main-ign
+	XTRACE=$${XTRACE:-} hack/bin/httpd-serve.sh prod-main-ign
 
 # TODO add --post-install to setup btrfs subvolumes
 installer-download-baremetal:
@@ -178,9 +180,6 @@ ctr_build_context := "pkg/containers"
 ctr_build_env_dir := "hack/env/podman/build"
 ctr_build_constant_env_file := "hack/lib/podman/build/constants.env"
 ctr_build_script_file := "hack/bin/podman-build.sh"
-
-DEBUG?=
-export DEBUG
 
 # TODO convert these away from using podman-build.sh script and use podman build directly in make targets
 # podman-build.sh is proving to be more complicated than it's worth

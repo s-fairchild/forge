@@ -9,10 +9,11 @@ declare -r __hack_lib_ignition_serve_sourced="true"
 #
 # https://images.redhat.com/?name=nginx&version=latest
 nginx() {
-    local -n secret_mounts="${1?$(error "\$1 secret_mounts must be provided.")}"
-
+    local -r nginx_conf="${1:-'hack/etc/nginx/nginx.conf'}"
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
     local -r image="registry.access.redhat.com/hi/nginx:latest"
+
+    [ -f nginx_conf ] || fatal "$ERROR_FILE_NOT_FOUND: $nginx_conf"
 
     # shellcheck disable=SC2128
     podman run \
@@ -22,7 +23,7 @@ nginx() {
             --env 'NGINX_*' \
             --log-level "$log_level" \
             -v "${FUNCNAME}-serve-files:/usr/share/nginx/html/:ro,Z" \
-            -v "${FUNCNAME}-config:/etc/nginx/conf.d/custom.conf:ro,Z" \
+            -v "${nginx_conf}:/etc/nginx/conf.d/custom.conf:ro,Z" \
             -p 8080:8080 \
             "$image"
 }

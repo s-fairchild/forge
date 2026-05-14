@@ -3,4 +3,4 @@
 
 # https://docs.k3s.io/cli/agent#node
 node-label:
-- "node-role.kubernetes.io/agent=true"
+  - "node-role.kubernetes.io/agent=true"

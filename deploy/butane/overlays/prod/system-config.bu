@@ -7,22 +7,19 @@ passwd:
     system: true
     gecos: Jellyfin App Web User
     uid: 911
-  
-  - name: steven
-
-  - name: core
-    ssh_authorized_keys_local:
-      - keys/id_ed25519_rick.pub
 
   - name: root
     ssh_authorized_keys_local:
-      - keys/id_ed25519_rick.pub
+      - secrets/id_ed25519_rick-root.pub
+
+  - name: core
+    ssh_authorized_keys_local:
+      - secrets/id_ed25519_rick-core.pub
 
 storage:
   files:
   - path: /etc/hostname
     overwrite: true
-    mode: 0644
     user:
       name: root
     group:

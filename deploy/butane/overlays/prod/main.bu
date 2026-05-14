@@ -4,26 +4,28 @@ version: 1.5.0
 ignition:
   config:
     merge:
-    ####################
-    ### Base configs ###
-    ####################
-    - inline: deploy/butane/base/btrfsmaintenance.bu
-    - inline: deploy/butane/base/containers.bu
-    - inline: deploy/butane/base/firewalld.bu
-    - inline: deploy/butane/base/root.bu
-    - inline: deploy/butane/base/security.bu
-    - inline: deploy/butane/base/sysctl.bu
-    - inline: deploy/butane/base/system-config.bu
-    - inline: deploy/butane/base/usr-k3s.bu
+      ####################
+      ### Base configs ###
+      ####################
+      - inline: deploy/butane/base/btrfsmaintenance.bu
+      - inline: deploy/butane/base/containers.bu
+      - inline: deploy/butane/base/firewalld.bu
+      - inline: deploy/butane/base/root.bu
+      - inline: deploy/butane/base/security.bu
+      - inline: deploy/butane/base/sysctl.bu
+      - inline: deploy/butane/base/system-config.bu
+      - inline: deploy/butane/base/usr.bu
 
-    - inline: deploy/butane/overlays/prod/storage/disks.bu
-    - inline: deploy/butane/overlays/prod/storage/filesystems.bu
-    - inline: deploy/butane/overlays/prod/storage/luks.bu
+      ####################
+      ### Prod configs ###
+      ####################
+      - inline: deploy/butane/overlays/prod/storage/disks.bu
+      - inline: deploy/butane/overlays/prod/storage/filesystems.bu
+      - inline: deploy/butane/overlays/prod/storage/luks.bu
 
-    - inline: deploy/butane/overlays/prod/containers.bu
-    - inline: deploy/butane/overlays/prod/modprobe.bu
-    - inline: deploy/butane/overlays/prod/NetworkManager.bu
-    - inline: deploy/butane/overlays/prod/security.bu
-    - inline: deploy/butane/overlays/prod/sysconfig.bu
-    - inline: deploy/butane/overlays/prod/system-config.bu
-    - inline: deploy/butane/overlays/prod/usr-k3s.bu
+      - inline: deploy/butane/overlays/prod/containers.bu
+      - inline: deploy/butane/overlays/prod/modprobe.bu
+      - inline: deploy/butane/overlays/prod/NetworkManager.bu
+      - inline: deploy/butane/overlays/prod/sysconfig.bu
+      - inline: deploy/butane/overlays/prod/system-config.bu
+      - inline: deploy/butane/overlays/prod/usr.bu
