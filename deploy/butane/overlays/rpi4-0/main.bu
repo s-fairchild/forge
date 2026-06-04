@@ -1,0 +1,19 @@
+---
+variant: fcos
+version: 1.5.0
+ignition:
+  config:
+    merge:
+    - inline: deploy/butane/base/etc/containers-conf.bu
+    - inline: deploy/butane/base/etc/containers-systemd.bu
+    - inline: deploy/butane/base/etc/firewalld.bu
+    - inline: deploy/butane/base/etc/security.bu
+    - inline: deploy/butane/base/etc/sysctl.bu
+    - inline: deploy/butane/base/btrfsmaintenance.bu
+    - inline: deploy/butane/base/root.bu
+    - inline: deploy/butane/base/system-config.bu
+    - inline: deploy/butane/base/usr.bu
+
+    - inline: deploy/butane/overlays/rpi4-0/storage.bu
+    - inline: deploy/butane/overlays/rpi4-0/system-config.bu
+    - inline: deploy/butane/overlays/rpi4-0/usr.bu

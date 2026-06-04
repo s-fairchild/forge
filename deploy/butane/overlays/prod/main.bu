@@ -4,37 +4,28 @@ version: 1.5.0
 ignition:
   config:
     merge:
-      - inline: deploy/butane/base/coreos/system-config.bu
-      - inline: deploy/butane/base/coreos/services.bu
-      - inline: deploy/butane/base/coreos/usr/local/btrfsmaintenance.bu
-      - inline: deploy/butane/base/podman/podman.bu
-      - inline: deploy/butane/base/podman/images/k3s/k3s.bu
-      - inline: deploy/butane/base/podman/images/nginx/nginx.bu
-      - inline: deploy/butane/base/podman/networks/kube-service-network/kube-service-network.bu
-      - inline: deploy/butane/base/podman/networks/kube-svclb-external-network/kube-svclb-external-network.bu
-      - inline: deploy/butane/base/podman/networks/kube-server-network/kube-server-network.bu
-      - inline: deploy/butane/base/podman/networks/kube-agent-network/kube-agent-network.bu
-      - inline: deploy/butane/base/podman/containers/agent/agent.bu
-      - inline: deploy/butane/base/podman/containers/server/server.bu
-      - inline: deploy/butane/base/podman/containers/api-server-lb/api-server-lb.bu
-      - inline: deploy/butane/base/podman/containers/svclb/svc-lb.bu
-      - inline: deploy/butane/base/coreos/etc/containers.bu
-      - inline: deploy/butane/base/coreos/etc/firewalld.bu
-      - inline: deploy/butane/base/coreos/etc/systctl.bu
-      - inline: deploy/butane/base/coreos/usr/local/lib/lib.bu
-      - inline: deploy/butane/base/root/bashrc.d.bu
-      - inline: deploy/butane/base/home/core/bashrc.d.bu
+      ####################
+      ### Base configs ###
+      ####################
+      - inline: deploy/butane/base/btrfsmaintenance.bu
+      - inline: deploy/butane/base/containers.bu
+      - inline: deploy/butane/base/firewalld.bu
+      - inline: deploy/butane/base/root.bu
+      - inline: deploy/butane/base/security.bu
+      - inline: deploy/butane/base/sysctl.bu
+      - inline: deploy/butane/base/system-config.bu
+      - inline: deploy/butane/base/usr.bu
 
-      - inline: deploy/butane/overlays/prod/storage/disks/disks.bu
-      - inline: deploy/butane/overlays/prod/storage/luks/luks.bu
-      - inline: deploy/butane/overlays/prod/storage/filesystems/filesystems.bu
-      - inline: deploy/butane/overlays/prod/etc/etc.bu
-      - inline: deploy/butane/overlays/prod/etc/passwd.bu
-      - inline: deploy/butane/overlays/prod/etc/sysconfig/sysconfig.bu
-      - inline: deploy/butane/overlays/prod/usr/local/lib.bu
-      - inline: deploy/butane/overlays/prod/usr/local/etc.bu
-      - inline: deploy/butane/overlays/prod/podman/volumes/volume.bu
-      - inline: deploy/butane/overlays/prod/podman/containers/agent/agent.bu
-      - inline: deploy/butane/overlays/prod/podman/containers/server/server.bu
-      - inline: deploy/butane/overlays/prod/podman/containers/api-server-lb/api-server-lb.bu
-      - inline: deploy/butane/overlays/prod/podman/containers/svc-lb/svc-lb.bu
+      ####################
+      ### Prod configs ###
+      ####################
+      - inline: deploy/butane/overlays/prod/storage/disks.bu
+      - inline: deploy/butane/overlays/prod/storage/filesystems.bu
+      - inline: deploy/butane/overlays/prod/storage/luks.bu
+
+      - inline: deploy/butane/overlays/prod/containers.bu
+      - inline: deploy/butane/overlays/prod/modprobe.bu
+      - inline: deploy/butane/overlays/prod/NetworkManager.bu
+      - inline: deploy/butane/overlays/prod/sysconfig.bu
+      - inline: deploy/butane/overlays/prod/system-config.bu
+      - inline: deploy/butane/overlays/prod/usr.bu

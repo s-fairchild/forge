@@ -1,114 +1,66 @@
-#!/bin/bash
-# tools to be used for processing ignition files
-# should only be used by scripts in hack/ignition/lib
+# hack/lib/ignition/butane.sh
+#
+# shellcheck shell=bash
 
-# declare -r __ignition_butane_sourced="true"
-declare -r __ignition_butane_sourced="true"
+# declare -r __hack_lib_ignition_butane_sourced="true"
+#
+declare -r __hack_lib_ignition_butane_sourced="true"
 
-# gather_butane_files()
-# 
-# Args:
-# 1) main_bu - string; Butane file to parse for configs
-# 2) files - nameref; Empty array, populated with butane config files
-gather_butane_files() {
-    local -r main_bu="$1"
-    local -n files="$2"
-    info "starting"
-
-    local raw_butane_files
-    # TODO simplify conversion into array by using yq output formatting options
-    raw_butane_files="$(yq -e=1 '.ignition.config.merge[]' "$main_bu")"
-    
-    # remove local_ prefix
-    local -r sed_opt_strip_local_prefix='s/inline_//'
-    # convert : to _
-    local -r sed_opt_trim_colon='s/: /_/g'
-    local -r sed_val_opts="${sed_opt_trim_colon};${sed_opt_strip_local_prefix}"
-    
-    # Get files in full path format
-    sed_out="$(sed "${sed_val_opts}" <<< "${raw_butane_files[*]}")"
-
-    # shellcheck disable=SC2034
-    mapfile -t files <<< "${sed_out}"
-}
-
-# gen_butane_main()
+# butane()
+#
+# Runs ignition in a container with image quay.io/coreos/butane:release
+#
+# Environment:
+#   * PODMAN_LOG_LEVEL - string; Set to change the default podman run log level.
+#   * BUTANE_VOLUME_MOUNT - string; full directory path or volume name to be mounted as the working directory.
+#   * BUTANE_SECRET_MOUNTS - nameref; array of podman secret mount options. Appended to podman_run_options.
 #
 # args:
-# * butane_main="$1" - string
-#     - Main butane file path.
-#     - .ignition.config.merge.[]
-#         + Each item contains a path to a butane file.
-#         + This butane file path is replaced with the generated ignition contents.
-#         + Required as butane does not recursively generate configs for you.
-#
-# * ignitions_merge="$2" - nameref, array
-#     - Each element contains the configuration to be merged.
-#     - Order must match .ignition.config.merge.[]
-#     - TODO investigate converting this into an associative array. The element order most likely does not match.
-#         + This shouldn't be a problem, so long as the array lengths are the same.
-#
-# * butane_out="$3" - nameref, empty
-#     - Declared empty variable used to return the final butane configuration.
-#     - String holding the config in memory. Not a written file.
-gen_butane_main() {
-    local -r butane_main="$1"
-    local -n ignitions_merge="$2"
-    local -n butane_out="$3"
-    info "Generating main ignition file."
+#   * $@) all arguments are passed to the container
+butane() {
+    podman_run_options=(
+        "--log-level=${PODMAN_LOG_LEVEL:-warn}"
+        "-i"
+        "--rm"
+        "--env='BU_*'"
+        "-v=${BUTANE_VOLUME_MOUNT:-$PWD}:$__BUTANE_WORKDIR:O"
+        "--workdir=$__BUTANE_WORKDIR"
+    )
 
-    validate_config_dest_length "$2" "$butane_main"
-    tmp_butane="$(yq "$butane_main")"
+    if [ -v BUTANE_SECRET_MOUNTS ]; then
+        # array must be expanded as a string here or it will append an extra space ' '
+        mapfile -O "${#BUTANE_SECRET_MOUNTS[@]}" \
+                -d ' ' \
+                podman_run_options \
+                <<< "${BUTANE_SECRET_MOUNTS[*]}"
+    fi
+
+    local -r image="quay.io/coreos/butane:release"
+    debug "$(declare -p image)"
+    debug "$(declare -p podman_run_options)"
+    debug "butane options: $*"
 
     # shellcheck disable=SC2068
-    for i in ${!ignitions_merge[@]}; do
-        merge_ignition="${ignitions_merge[$i]}"
-
-        export YQ_pathEnv=".ignition.config.merge[$i].inline"
-        export YQ_valueEnv="$merge_ignition"
-
-        tmp_butane="$(yq -e=1 'eval(strenv(YQ_pathEnv)) = strenv(YQ_valueEnv)' <<< "$tmp_butane")"
-    done
-
-    info "Checking merged butane config."
-    butane --check \
-            --strict \
-            <<< "$tmp_butane"
-
-    # shellcheck disable=SC2034
-    butane_out="$tmp_butane"
+    podman run \
+        ${podman_run_options[@]} \
+        "$image" \
+        "$@"
 }
 
-# write_butane()
-# args
-# 1) $1 - string; butane file path
-# 2) butane_contents - nameref; final butane file contents
-# 3) out - nameref; empty, for returning the tmp file path
-write_butane() {
-    local -n butane_contents="$2"
-    local -n out="$3"
+export -f butane
 
-    out="$(mktemp -p deploy/butane -d --suffix=.tmp -t ".main_butane.XXX")"
-    out="$out/main.bu"
-    echo "$butane_contents" > "$out" || fatal "Failed to write butane_contents"
+if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_opt_bash_utils_logging="hack/lib/opt-bash-utils-logging.sh"
+    [ -f "$__lib_opt_bash_utils_logging" ] || "$(echo "$ERROR_FILE_NOT_FOUND: $__lib_opt_bash_utils_logging"; exit 1)"
 
-    TEMP_DATA+=("$out")
-    TEMP_DATA+=("$(dirname "$out")")
-}
+    # shellcheck source=../opt-bash-utils-logging.sh
+    . "$__lib_opt_bash_utils_logging" || "$(echo "failed to source file: $__lib_opt_bash_utils_logging"; exit 1)"
+fi
 
-# validate_config_dest_length()
-# Compares an array to an integer, aborts if they aren't equal
-#
-# args
-#    * 1) configs - array
-#    * 2) butane_config - butane (yaml) file path
-validate_config_dest_length() {
-    local -n configs="$1"
-    local -r butane_config="$2"
+if [ "${__hack_lib_ignition_constants_sourced:-}" != "true" ]; then
+    declare -r __hack_lib_ignition_constants="hack/lib/ignition/constants.env"
+    [ -f "$__hack_lib_ignition_constants" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_ignition_constants"
 
-    local -i butane_config_merge_len
-    butane_config_merge_len="$(yq '(.ignition.config.merge | length)' "$butane_config")"
-
-    [ "${#configs[@]}" -ne "$butane_config_merge_len" ] \
-        && error "configs length: ${#configs[@]} != ${butane_config_merge_len}"
-}
+    # shellcheck source=constants.env
+    . "$__hack_lib_ignition_constants" || fatal "$ERROR_FILE_SOURCE_FAILED: $__hack_lib_ignition_constants"
+fi

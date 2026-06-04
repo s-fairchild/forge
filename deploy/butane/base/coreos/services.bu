@@ -1,9 +1,0 @@
-variant: fcos
-version: 1.5.0
-systemd:
-  units:
-    - name: rpm-ostree-countme.timer
-      enabled: false
-      mask: true
-    - name: systemd-timesyncd.service
-      enabled: true

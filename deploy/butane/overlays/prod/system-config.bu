@@ -1,0 +1,28 @@
+---
+variant: fcos
+version: 1.5.0
+passwd:
+  users:
+  - name: jellyfin
+    system: true
+    gecos: Jellyfin App Web User
+    uid: 911
+
+  - name: root
+    ssh_authorized_keys_local:
+      - secrets/id_ed25519_rick-root.pub
+
+  - name: core
+    ssh_authorized_keys_local:
+      - secrets/id_ed25519_rick-core.pub
+
+storage:
+  files:
+  - path: /etc/hostname
+    overwrite: true
+    user:
+      name: root
+    group:
+      name: root
+    contents:
+      inline: rick.expresso.lan

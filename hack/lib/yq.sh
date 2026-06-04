@@ -1,19 +1,11 @@
 # shellcheck shell=bash
 
-# declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
-if [ -z "${shell_utils_lib:-}" ]; then
-    declare -r shell_utils_lib="shell-utils/usr/local/lib/utils.sh"
-
-    [ -f "$shell_utils_lib" ] || "$(echo "$shell_utils_lib file not found."; exit 1)"
-    # shellcheck source=../../shell-utils/usr/local/lib/utils.sh
-    source "$shell_utils_lib"
-fi
+declare -r __hack_lib_yq_sourced="true"
 
 # upsert_hash_value()
 upsert_hash_value() {
     local -r f="$1"
     local -rx YQ_VALUE="$2"
-    log "starting"
 
     [ -f "$f" ] || abort "$f not found."
 
@@ -28,51 +20,33 @@ upsert_hash_value() {
         "$f"
 }
 
-# format_hash()
-format_hash() {
-    local f="$1"
-    local -n out="$2"
-    log "starting"
+# yq()
+#
+# Calls the yq command from $PATH preventing unintended recursion calls.
+#   * 'YQ_*' variables within scope are exported for use by yq.
+#   * 'YQ_*' are unexported upon completion
+yq() {
+    local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
+    local -r image="docker.io/mikefarah/yq:4.53.2"
+    # local -Ix "${!YQ_*}"
 
-    [ -f "$f" ] || abort "$f not found."
-
-    local checksum
-    parse_hash_extension "$f" checksum
-    local type
-    parse_hash_value "$f" type
-
-    # Reference: https://coreos.github.io/butane/config-fcos-v1_5
-    # shellcheck disable=SC2034
-    out="$type-$checksum"
-    log "created butane verification.hash: $out"
+    podman run \
+        --userns keep-id \
+        --env 'YQ_*' \
+        --log-level "$log_level" \
+        -i \
+        --rm \
+        -v "${PWD}:/workdir":O \
+        --workdir /workdir \
+        "$image" \
+            --exit-status=1 \
+            "$@"
 }
 
-# parse_hash_extension()
-parse_hash_extension() {
-    local -n t="$2"
-    log "starting"
+if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
+    declare -r shell_utils_logging="hack/lib/opt-bash-utils-logging.sh"
 
-    # shellcheck disable=SC2034
-    t="$(cut -d ' ' -f 1 < "$1")"
-}
-
-# parse_hash_value()
-parse_hash_value() {
-    local -n v="$2"
-    log "starting"
-
-    # shellcheck disable=SC2034
-    v="$(basename "$1")"
-    v="${v##*.}"
-}
-
-# eval_compression()
-eval_compression() {
-    # shellcheck disable=SC2034
-    local -n value="$2"
-    log "starting"
-
-    local -x YQ_KEY=".ignition.config.*.[].compression"
-    eval "$(yq -o shell 'strenv(YQ_KEY) | select(. != "null")' "$1")"
-    log "$1: $YQ_KEY=$value"
-}
+    [ -f "$shell_utils_logging" ] || "$(echo "file not found: $shell_utils_logging"; exit 1)"
+    # shellcheck source=opt-bash-utils-logging.sh
+    . "$shell_utils_logging" || "$(echo "failed to source file: $shell_utils_logging"; exit 1)"
+fi

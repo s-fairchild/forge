@@ -13,11 +13,8 @@ main() {
     local -r manifests="$2"
     local -r overlay="$3"
 
-    if [ ! -d "$base_dir" ]; then
-        abort "$base_dir not found, aborting"
-    elif [ ! -d "$manifests" ]; then
-        abort "$manifests not found, aborting"
-    fi
+    mkdir -p "$base_dir" || fatal "unable to create $base_dir"
+    mkdir -p "$manifests" || fatal "unable to create $manifests"
 
     generate_kube_manifests "$base_dir" \
                             "$manifests" \

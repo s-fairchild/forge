@@ -1,0 +1,8 @@
+---
+# https://docs.k3s.io/installation/configuration#configuration-file
+
+# TODO figure out how to merge node-label arrays between base and overlays
+# https://docs.k3s.io/cli/agent#node
+node-label:
+- "app=rtsp0"
+- "rtsp=0"
