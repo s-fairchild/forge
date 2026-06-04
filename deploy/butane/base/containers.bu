@@ -41,6 +41,10 @@ storage:
     target: /etc/containers/systemd/k3s@.image
     overwrite: true
 
+  - path: /etc/containers/systemd/k3s@k3s.image
+    target: /etc/containers/systemd/k3s@.image
+    overwrite: true
+
   ######################
   ###### Networks ######
   ######################

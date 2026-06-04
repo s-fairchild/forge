@@ -8,7 +8,6 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%N
 TimeoutStartSec=900
 
 [Image]
-Image=docker.io/rancher/k3s:${IMAGE_TAG_K3S}
 # One week with --retry-delay=1m
 Retry=10080
 RetryDelay=1m
