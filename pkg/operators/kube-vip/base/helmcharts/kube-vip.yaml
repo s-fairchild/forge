@@ -1,0 +1,27 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: kube-vip
+  namespace: kube-system
+
+spec:
+  # https://github.com/kube-vip/helm-charts/blob/main/charts/kube-vip-cloud-provider/Chart.yaml
+  chart: kube-vip
+  repo: https://kube-vip.github.io/helm-charts
+  # https://github.com/kube-vip/helm-charts/releases/tag/kube-vip-0.9.9
+  # https://github.com/kube-vip/helm-charts/blob/kube-vip-0.9.9/charts/kube-vip/Chart.yaml
+  version: 0.9.9
+
+  set:
+    global.systemDefaultRegistry: ""
+
+  targetNamespace: kube-vip-system
+  takeOwnership: true
+  failurePolicy: reinstall
+
+  valuesSecrets:
+    - name: kube-vip-values
+      ignoreUpdates: false
+      keys:
+        - base-values.yaml

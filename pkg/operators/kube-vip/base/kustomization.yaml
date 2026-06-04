@@ -1,0 +1,20 @@
+---
+# https://docs.k3s.io/datastore/cluster-loadbalancer?ext-load-balancer=Kube-VIP#kube-vip
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # https://kube-vip.io/docs/usage/k3s/#step-2-upload-kube-vip-rbac-manifest
+  - https://kube-vip.io/manifests/rbac.yaml
+  - helmcharts/kube-vip.yaml
+  - namespace.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: kube-vip-values
+    namespace: kube-system
+    behavior: create
+    files:
+      - base-values.yaml=values/kube-vip-values.yaml

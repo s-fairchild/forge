@@ -1,0 +1,60 @@
+---
+# References:
+#   * https://github.com/kube-vip/helm-charts/releases/tag/kube-vip-0.9.9
+#   * https://github.com/kube-vip/helm-charts/blob/kube-vip-0.9.9/charts/kube-vip/values.yaml
+#
+# Values derived from running kube-vip manifest daemonset on a server node
+#   Command used: podman -r \
+#                        run \
+#                        --network=kube-server \
+#                        --network=kube-agent \
+#                        --network=kube-service \
+#                        --rm \
+#                        ghcr.io/kube-vip/kube-vip:v1.2.0 \
+#                            manifest \
+#                            daemonset \
+#                            --inCluster \
+#                            --taint \
+#                            --controlplane \
+#                            --arp \
+#                            --leaderElection \
+#                            --interface \
+#                            server0 \
+#                            --address 10.43.0.1
+
+# https://kube-vip.io/docs/installation/flags/#flags
+#
+# I believe only address works here.
+# Everything else must be set via environment variables.
+config:
+  address: 10.10.0.100
+
+# https://kube-vip.io/docs/installation/flags/#environment-variables
+env:
+  address: 10.10.0.100
+  vip_interface: server0
+  vip_loglevel: -4
+  svc_enable: "false"
+  svc_election: "false"
+
+# Check https://kube-vip.io/docs/installation/flags/
+# env: []
+  # address: 10.10.0.254
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+volumes:
+  - hostPath:
+      path: /etc/rancher/k3s/k3s.yaml
+      type: File
+    name: kubeconfig
+
+volumeMounts:
+  - mountPath: /etc/kubernetes/admin.conf
+    name: kubeconfig

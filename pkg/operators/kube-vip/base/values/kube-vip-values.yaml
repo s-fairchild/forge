@@ -1,0 +1,87 @@
+---
+# References:
+#   * https://github.com/kube-vip/helm-charts/releases/tag/kube-vip-0.9.9
+#   * https://github.com/kube-vip/helm-charts/blob/kube-vip-0.9.9/charts/kube-vip/values.yaml
+
+image:
+  repository: ghcr.io/kube-vip/kube-vip
+  pullPolicy: IfNotPresent
+  # https://github.com/kube-vip/kube-vip/releases/tag/v1.2.0
+  tag: v1.2.0
+
+# https://kube-vip.io/docs/installation/flags/#flags
+config:
+  address: ""
+
+# https://kube-vip.io/docs/installation/flags/#environment-variables
+env:
+  vip_arp: "true"
+  enable_node_labeling: true
+  lb_enable: "true"
+  lb_port: "6443"
+  lb_fwdmethod: local
+  cp_enable: "true"
+  cp_namespace: kube-vip-system
+  dhcp_mode: ipv4
+  vip_leaderelection: "true"
+  vip_retryperiod: 0
+  EGRESS_CLEAN: "true"
+  egress_withnftables: "true"
+  # TODO enable prometheus metrics server once prometheus has been configured
+  prometheus_server: ""
+
+envValueFrom:
+  vip_nodename:
+    fieldRef:
+      fieldPath: spec.nodeName
+
+serviceAccount:
+  create: true
+
+securityContext:
+  capabilities:
+    add:
+      - NET_ADMIN
+      - NET_RAW
+    drop:
+      - ALL
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+
+hostAliases:
+  - hostnames:
+      - kubernetes
+    ip: 127.0.0.1
+
+tolerations:
+  - key: node.kubernetes.io/disk-pressure
+    operator: Exists
+    effect: NoSchedule
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+# nodeSelector:
+  # node-role.kubernetes.io/control-plane: "true"
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 10
+        preference:
+          matchExpressions:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+
+podMonitor:
+  enabled: false
+
+priorityClassName: "system-cluster-critical"

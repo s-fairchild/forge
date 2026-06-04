@@ -3,8 +3,8 @@
 
 # https://docs.k3s.io/cli/agent#node
 node-label:
-- "node-role.kubernetes.io/agent=true"
-- "svccontroller.k3s.cattle.io/enablelb=true"
+  - "node-role.kubernetes.io/agent=true"
+  - "metallb.io/addresspool=expresso"
 
 # TODO configure svclb operator to ignore this taint
 # This will prevent workloads from being scheduled on this node

@@ -10,10 +10,6 @@ storage:
   ######################
   ##### Containers #####
   ######################
-  - path: /etc/containers/systemd/k3s-apiserverlb@0.container
-    target: /etc/containers/systemd/k3s-apiserverlb@.container
-    overwrite: true
-
   - path: /etc/containers/systemd/k3s@agent-0.container
     target: /etc/containers/systemd/k3s@.container
     overwrite: true
@@ -37,10 +33,6 @@ storage:
   ######################
   ####### Images #######
   ######################
-  - path: /etc/containers/systemd/k3s@nginx.image
-    target: /etc/containers/systemd/k3s@.image
-    overwrite: true
-
   - path: /etc/containers/systemd/k3s@k3s.image
     target: /etc/containers/systemd/k3s@.image
     overwrite: true
@@ -56,7 +48,7 @@ storage:
     target: /etc/containers/systemd/k3s@.network
     overwrite: true
 
-  - path: /etc/containers/systemd/k3s@external.network
+  - path: /etc/containers/systemd/k3s@ingress.network
     target: /etc/containers/systemd/k3s@.network
     overwrite: true
 
