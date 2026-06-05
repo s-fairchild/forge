@@ -9,3 +9,6 @@ tls-san:
 # https://docs.k3s.io/cli/agent#node
 node-label:
   - "node-role.kubernetes.io/server=true"
+
+disable:
+  - servicelb
