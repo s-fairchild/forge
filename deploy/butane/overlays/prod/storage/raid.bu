@@ -1,0 +1,26 @@
+---
+variant: fcos
+version: 1.5.0
+storage:
+  raid:
+    - name: md-appdata
+      level: "10"
+      spares: 2
+      options:
+        - --layout
+        - 10,far2
+        - --bitmap
+        - internal
+        - --consistency-policy
+        - bitmap
+        - --chunk
+        - "1024"
+      devices:
+        - /dev/sda
+        - /dev/sdb
+        - /dev/sdc
+        - /dev/sdd
+        - /dev/sde
+        - /dev/sdf
+        - /dev/sdg
+        - /dev/sdh

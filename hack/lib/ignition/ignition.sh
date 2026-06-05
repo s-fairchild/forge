@@ -37,7 +37,6 @@ ignition_gen() {
     # Only search for local files at the same depth as the butane file path
     # This simplifies creating the local file references in each butane config file.
     butane_opts+=("--files-dir=$files_dir")
-    debug "butane_opts=${butane_opts[*]}"
 
     # All referenced files must be in/under the same directory as the butane file.
     BUTANE_VOLUME_MOUNT="./$(dirname "$input")"
@@ -95,6 +94,7 @@ ignition_gen_config_merge_inlines() {
 
             fatal "failed to get $path_array_inline_index"
         fi
+        debug "$(declare -p config_inline_path)"
 
         local ignition_config_inline=""
         debug "Generating ignition from $path_array_inline_index: $config_inline_path"
@@ -107,7 +107,7 @@ ignition_gen_config_merge_inlines() {
                                 --argjson path "$path_array_merge" \
                                 --argjson idx "$i" \
                                 --argjson path_index "$path_array_inline_index" \
-                                --arg new_value "$ignition_config_inline" \
+                                --rawfile new_value <(printf '%s' "$ignition_config_inline") \
                                 -c \
                                 'if getpath($path) | length > $idx then
                                     getpath($path_index) = $new_value
@@ -122,6 +122,9 @@ ignition_gen_config_merge_inlines() {
 
     info "Checking final main_json integrity..."
     ignition_check <<< "$main_json" || fatal && info "main_json ok"
+
+    local -r ignition_main_bytes="$(printf "%s" "$main_json" | wc -c)"
+    info "Final ignition file size: $ignition_main_bytes bytes"
 
     # shellcheck disable=SC2034
     out="$main_json"

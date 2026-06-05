@@ -28,19 +28,19 @@ systemd:
   ###   Timers   ###
   ##################
   - name: btrfs-scrub.timer
-    enabled: true
+    enabled: false
     contents_local: usr/local/src/btrfsmaintenance/btrfs-scrub.timer
 
   - name: btrfs-defrag.timer
-    enabled: true
+    enabled: false
     contents_local: usr/local/src/btrfsmaintenance/btrfs-defrag.timer
 
   - name: btrfs-balance.timer
-    enabled: true
+    enabled: false
     contents_local: usr/local/src/btrfsmaintenance/btrfs-balance.timer
 
   - name: btrfs-trim.timer
-    enabled: true
+    enabled: false
     contents_local: usr/local/src/btrfsmaintenance/btrfs-trim.timer
 
 storage:

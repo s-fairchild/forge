@@ -23,22 +23,27 @@ butane() {
         "-i"
         "--rm"
         "--env='BU_*'"
-        "-v=${BUTANE_VOLUME_MOUNT:-$PWD}:$__BUTANE_WORKDIR:O"
+        "--volume=${BUTANE_VOLUME_MOUNT:-$PWD}:$__BUTANE_WORKDIR:O"
         "--workdir=$__BUTANE_WORKDIR"
     )
 
     if [ -v BUTANE_SECRET_MOUNTS ]; then
         # array must be expanded as a string here or it will append an extra space ' '
-        mapfile -O "${#BUTANE_SECRET_MOUNTS[@]}" \
-                -d ' ' \
-                podman_run_options \
-                <<< "${BUTANE_SECRET_MOUNTS[*]}"
+        # mapfile -O $(( "${#BUTANE_SECRET_MOUNTS[@]}" + 1 )) \
+                # -d ' ' \
+                # podman_run_options \
+                # <<< "${BUTANE_SECRET_MOUNTS[*]}"
+        # shellcheck disable=SC2068
+        for i in ${BUTANE_SECRET_MOUNTS[@]}; do
+            podman_run_options+=("$i")
+        done
+
     fi
 
     local -r image="quay.io/coreos/butane:release"
     debug "$(declare -p image)"
     debug "$(declare -p podman_run_options)"
-    debug "butane options: $*"
+    debug "butane options:\n$*"
 
     # shellcheck disable=SC2068
     podman run \

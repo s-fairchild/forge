@@ -2,73 +2,92 @@
 variant: fcos
 version: 1.5.0
 storage:
+  # TODO remove wipe_table: true
+  # TODO remove wipe_partition_entry: true
   disks:
   # system
   - device: /dev/disk/by-id/coreos-boot-disk
-    wipe_table: false
+    wipe_table: true
     partitions:
-    - label: root
-      number: 4
-      size_mib: 307200 # 300Gi
-      resize: true
-    - label: var
-      number: 5
-      size_mib: 0
+      - label: root
+        number: 4
+        size_mib: 51200 # 50Gi
+        resize: true
+
+      - label: var
+        number: 5
+        size_mib: 0
 
   # appdata
   - device: /dev/disk/by-id/wwn-0x5000c500e62fb786
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: appdata_raid10.1
+      - label: appdata_raid10.1_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500e643147a
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: appdata_raid10.2
+      - label: appdata_raid10.2_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500e642d1f3
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: appdata_raid10.3
+      - label: appdata_raid10.3_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8e4bd14
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: appdata_raid10.4
+      - label: appdata_raid10.4_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   # cctv
   - device: /dev/disk/by-id/wwn-0x5000c500c8e196b3
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: cctv_raid10.1
+      - label: appdata_raid10.5_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8e37087
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: cctv_raid10.2
+      - label: appdata_raid10.6_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c937816a
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: cctv_raid10.3
+      - label: appdata_raid10.7_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8a40802
-    wipe_table: false
+    wipe_table: true
     partitions:
-      - label: cctv_raid10.4
+      - label: appdata_raid10.8_p1
         number: 1
         size_mib: 0
+        type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        wipe_partition_entry: true

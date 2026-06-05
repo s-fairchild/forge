@@ -3,76 +3,35 @@ variant: fcos
 version: 1.5.0
 storage:
   luks:
-  - name: var
-    label: var_luks
-    device: /dev/disk/by-id/nvme-WD_Blue_SN570_2TB_22423T802136_1-part5
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/nvme-WD_Blue_SN570_2TB_22423T802136_1-part5-keyfile
-      local: secrets/nvme-WD_Blue_SN570_2TB_22423T802136_1-part5-keyfile
+    - name: root
+      device: /dev/disk/by-partlabel/root
+      clevis:
+        tpm2: true
+      wipe_volume: true
+      discard: true
 
-  # appdata
-  - name: appdata.raid10.1
-    label: appdata_luks_raid10.1
-    device: /dev/disk/by-id/wwn-0x5000c500e62fb786-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500e62fb786-keyfile
-      local: secrets/wwn-0x5000c500e62fb786-keyfile
+    - name: var
+      label: var_luks
+      device: /dev/disk/by-partlabel/var
+      # TODO uncomment once tmp2 is enabled on host
+      # clevis:
+        # tpm2: true
+      key_file:
+        compression: gzip
+        local: secrets/appdata.keyfile.gz
+        verification: 
+          hash: sha512-3263a7f20a3ef1daf48dae9ef2a3f19700fc7ebb8d7673edce4022af26d2f38040078bb9329459af9d8f1b9a57faf91f97ddce4b20224fe4c7b6d14908b8e145
+      wipe_volume: true
+      discard: true
 
-  - name: appdata.raid10.2
-    label: appdata_luks_raid10.2
-    device: /dev/disk/by-id/wwn-0x5000c500e643147a-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500e643147a-keyfile
-      local: secrets/wwn-0x5000c500e643147a-keyfile
-
-  - name: appdata.raid10.3
-    label: appdata_luks_raid10.3
-    device: /dev/disk/by-id/wwn-0x5000c500e642d1f3-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500e642d1f3-keyfile
-      local: secrets/wwn-0x5000c500e642d1f3-keyfile
-
-  - name: appdata.raid10.4
-    label: appdata.luks_raid10.4
-    device: /dev/disk/by-id/wwn-0x5000c500c8e4bd14-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500c8e4bd14-keyfile
-      local: secrets/wwn-0x5000c500c8e4bd14-keyfile
-
-  # cctv
-  - name: cctv.raid10.1
-    label: cctv_luks_raid10.1
-    device: /dev/disk/by-id/wwn-0x5000c500c8e196b3-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500c8e196b3-part1-keyfile
-      local: secrets/wwn-0x5000c500c8e196b3-part1-keyfile
-
-  - name: cctv.raid10.2
-    label: cctv_luks_raid10.2
-    device: /dev/disk/by-id/wwn-0x5000c500c8e37087-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500c8e37087-part1-keyfile
-      local: secrets/wwn-0x5000c500c8e37087-part1-keyfile
-
-  - name: cctv.raid10.3
-    label: cctv_luks_raid10.3
-    device: /dev/disk/by-id/wwn-0x5000c500c937816a-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500c937816a-part1-keyfile
-      local: secrets/wwn-0x5000c500c937816a-part1-keyfile
-
-  - name: cctv.raid10.4
-    label: cctv_luks_raid10.4
-    device: /dev/disk/by-id/wwn-0x5000c500c8a40802-part1
-    wipe_volume: false
-    key_file:
-      # source: https://10.50.0.202/wwn-0x5000c500c8a40802-part1-keyfile
-      local: secrets/wwn-0x5000c500c8a40802-part1-keyfile
+    - name: appdata
+      label: appdata_luks
+      device: /dev/md/md-appdata
+      clevis:
+        tpm2: true
+      key_file:
+        compression: gzip
+        local: secrets/var.keyfile.gz
+        verification: 
+          hash: sha512-0d7380a227af7b8c6e11bf3f7d2cced99fec8ecc00decb3e559a0cfe9c7151e0744c129ed6fb2dfc6df0b43d9a3921858cfb27a336f59c1df568c40f2efbf06f
+      wipe_volume: true

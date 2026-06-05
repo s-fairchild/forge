@@ -23,7 +23,6 @@ main() {
         "config=$config_layer"
     )
 
-    # TODO mount secret_ids to butane during ignition generation to include local files mounted as secrets.
     local -a secret_ids
     if [ -v SECRET_KEYS ]; then
         info "SECRET_KEYS array is set with elements. Creating podman secrets from array items."

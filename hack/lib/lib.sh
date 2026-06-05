@@ -13,7 +13,7 @@ append_array_with_text() {
     local -n a_extra="${2?$(fatal "$log_prefix: \$2 a_extra $ERROR_ARG_NOT_PROVIDED")}"
     local -r p="${3:-}"
 
-    [ -v a ] || warn "$log_prefix a=$1 array contains no elements. Is this expected?"
+    [ -v a ] || debug "$log_prefix a=$1 array contains no elements. Is this expected?"
     [ -v a_extra ] || fatal "$log_prefix \$2 a_extra=$2 array must contain elements."
     [ -n "$p" ] || warn "$log_prefix p=\"$p\" No text will be appended."
 

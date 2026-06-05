@@ -51,15 +51,16 @@ kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
 
 kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
+deploy_butane_path := deploy/butane
 ignition-gen-staging: kube-manifests-gen-staging
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/staging/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/staging/main.bu
 
 ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/overlays/rpi4-0/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/rpi4-0/main.bu
 
 # ignition-gen-base: kube-manifests-gen-base
 ignition-gen-base:
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh deploy/butane/base/main.bu
+	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/base/main.bu
 
 # ignition-gen-prod: kube-manifests-gen-all
 ignition-gen-prod:

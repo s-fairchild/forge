@@ -10,3 +10,4 @@ deploy/manifests/*
 .ansible
 # ignore helm charts downloaded by kustomize
 # **/charts
+deploy/butane/**/secrets.env
