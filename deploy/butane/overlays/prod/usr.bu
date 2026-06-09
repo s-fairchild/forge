@@ -2,6 +2,7 @@
 variant: fcos
 version: 1.5.0
 storage:
+  # /usr/local is overwritten to remove all existing files in deploy/butane/base/usr.bu
   links:
     - path: /usr/local/etc/k3s/k3s@agent-0.yaml
       target: /usr/local/etc/k3s/k3s@agent.yaml
@@ -24,5 +25,5 @@ storage:
       overwrite: true
 
   trees:
-    - path: /usr/local/lib/rancher/k3s/server/manifests/custom
-      local: usr/local/lib/rancher/k3s/server/manifests/custom
+    - path: /usr/local
+      local: usr/local

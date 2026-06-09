@@ -1,6 +1,11 @@
 ---
 variant: fcos
 version: 1.5.0
+systemd:
+  units:
+    - name: local-path@default-volume.service
+      enabled: true
+
 storage:
   directories:
   - path: /etc/containers/systemd
@@ -52,26 +57,6 @@ storage:
     target: /etc/containers/systemd/k3s@.network
     overwrite: true
 
-  ######################
-  ###### Volumes #######
-  ######################
-  - path: /etc/containers/systemd/local-path@appdata.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
-  - path: /etc/containers/systemd/local-path@cctv.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
-  - path: /etc/containers/systemd/local-path@default.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
-  - path: /etc/containers/systemd/local-path@nvme.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
   trees:
   - path: /etc/containers/systemd
     local: etc/containers/systemd
-

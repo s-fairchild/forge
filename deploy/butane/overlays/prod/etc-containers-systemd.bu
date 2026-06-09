@@ -7,10 +7,6 @@ storage:
     target: /etc/containers/systemd/local-path@.volume
     overwrite: true
 
-  - path: /etc/containers/systemd/local-path@cctv.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
   - path: /etc/containers/systemd/local-path@default.volume
     target: /etc/containers/systemd/local-path@.volume
     overwrite: true
@@ -23,9 +19,3 @@ storage:
   trees:
   - path: /etc/containers/systemd
     local: etc/containers/systemd
-
-  # - path: /etc/containers/systemd/local-path@appdata.volume.d
-    # local: butane/overlays/prod/etc/containers/systemd/local-path@appdata.volume.d
-
-  # - path: /etc/containers/systemd/local-path@cctv.volume.d
-    # local: butane/overlays/prod/etc/containers/systemd/local-path@appdata.volume.d
