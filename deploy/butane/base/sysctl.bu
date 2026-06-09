@@ -7,5 +7,5 @@ storage:
     overwrite: true
 
   trees:
-  - path: /etc
+  - path: /etc/sysctl.d
     local: etc/sysctl.d

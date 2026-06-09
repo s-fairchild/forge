@@ -5,10 +5,18 @@ declare -r __ignition_sourced="true"
 
 # ignition_gen()
 #
-# args)
-#   * $1) butane config; string - butane configuration to process be processed via `butane` stdin
-#       * butane is the actual butane config loaded into memory (i. e. Contents of example.bu)
-#       * butane file paths cannot be provided here
+# Compiles a single butane (.bu) file to ignition JSON by running
+# quay.io/coreos/butane:release in a podman container.  The directory
+# containing the .bu file is mounted as the container workdir so that
+# local file references in the config (e.g. under a "files" sub-directory)
+# resolve correctly.  Output is written to stdout.
+#
+# args:
+#   * 1) butane_file - string; relative path to a .bu file (e.g. deploy/butane/base/root.bu).
+#         The file's parent directory is mounted into the container; only files at the
+#         same depth or below are reachable by butane's --files-dir resolution.
+#   * 2) secret_ids  - nameref (optional); array of podman secret IDs to mount into the
+#         butane container at $__BUTANE_WORKDIR/files/secrets/ before compilation.
 ignition_gen() {
     local -r input="${1?$(fatal "\$1 input $ERROR_ARG_NOT_PROVIDED")}"
     # shellcheck disable=SC2034
@@ -47,8 +55,11 @@ ignition_gen() {
 
 # ignition_check()
 #
+# Validates an ignition JSON document by passing it to butane --check --strict
+# (butane -cs) via stdin.  Aborts with fatal() on validation failure or empty input.
+#
 # args:
-#   * stdin) butane config; string - butane configuration to process be processed via `butane` stdin
+#   * stdin) ignition JSON string to validate.
 ignition_check() {
     local -r input="$(cat)"
     [ -z "$input" ] && fatal "\$1 input $ERROR_STDIN_NULL"
@@ -60,74 +71,91 @@ ignition_check() {
 
 # ignition_gen_config_merge_inlines()
 #
+# Reads the top-level butane config at butane_path, iterates every subordinate .bu
+# file path listed under .ignition.config.merge[].inline, compiles each with
+# ignition_gen(), replaces the inline path string with the resulting ignition JSON,
+# then validates the fully merged document with ignition_check() before returning it.
+#
 # args:
-#   * 1) butane_path - string; Path to the main butane configuration file.
-#       * This butane config is expected to have the paths of other butane files under .ignition.config.merge[].inline
-#       * These butane configs will be converted into ignition configs and updated.
-#   * 2) out - nameref; nameref to a set but empty variable. The final ignition configuration will be written to out.
-#   * 3) $3 - nameref; nameref to an array of podman secret IDs to be mounted during ignition generation.
-#       * Optional. If not provided, no secrets will be mounted.
+#   * 1) butane_path - string; path to the top-level butane config (e.g. main.bu).
+#         Must contain an .ignition.config.merge[] array whose entries each have an
+#         "inline" field holding a relative path to a subordinate .bu file.
+#   * 2) out         - nameref; receives the final merged ignition JSON string on success.
+#   * 3) secret_ids  - nameref (optional); array of podman secret IDs passed through to
+#         ignition_gen() for mounting secrets inside the butane container.
 ignition_gen_config_merge_inlines() {
     local -r butane_path="${1?$(fatal "$ERROR_ARG_NOT_PROVIDED: \$1")}"
     local -n out="${2?$(fatal "$ERROR_ARG_NOT_PROVIDED: \$2")}"
 
-    main_json="$(yq -o json -I 0 '... comments="" | . | select(. != null)' "$butane_path")"
+    # Parse the top-level butane YAML to compact JSON, stripping all comments.
+    local config_json
+    config_json="$(yq -o json -I 0 '... comments="" | . | select(. != null)' "$butane_path")"
 
-    local -r path_array_merge='["ignition", "config", "merge"]'
-    local -ri path_array_merge_len="$(jq --argjson p "$path_array_merge" 'getpath($p) | length' <<< "$main_json")"
-    debug "path_array_merge_len=$path_array_merge_len"
+    # jq path array addressing .ignition.config.merge[].
+    local -r merge_jq_path='["ignition", "config", "merge"]'
 
-    for ((i=0; i<"$path_array_merge_len"; i++)); do
-        path_array_inline_index="$(jq --argjson idx "$i" '. += [$idx, "inline"]' <<< "$path_array_merge")"
+    local -ri entry_count="$(jq --argjson merge_jq_path "$merge_jq_path" \
+                                'getpath($merge_jq_path) | length' \
+                                <<< "$config_json")"
+    debug "merge entry count: $entry_count"
 
-        local config_inline_path
-        if ! config_inline_path="$(jq -r \
-                                    --argjson path "$path_array_merge" \
-                                    --argjson idx "$i" \
-                                    --argjson path_index "$path_array_inline_index" \
-                                    'if getpath($path) | length > $idx then
-                                        getpath($path_index)
-                                    else
-                                        "Index out of bounds" | halt_error(1)
-                                    end' \
-                            <<< "$main_json")"; then
+    # jq function shared by both per-entry calls.
+    # bounds_check(expr) guards against an out-of-range $idx before evaluating expr.
+    # shellcheck disable=SC2016
+    local -r _jq_bounds_check='def bounds_check(expr):
+        if (getpath($merge_jq_path) | length) > $idx then expr
+        else "Index \($idx) out of bounds" | halt_error(1) end;'
 
-            fatal "failed to get $path_array_inline_index"
+    local -i idx
+    local inline_jq_path butane_file_path ignition_json
+    local -a jq_args
+    for ((idx = 0; idx < entry_count; idx++)); do
+
+        # Extend the merge path with the current index and the "inline" key.
+        # e.g. ["ignition","config","merge",0,"inline"]
+        inline_jq_path="$(jq -c --argjson idx "$idx" '. += [$idx, "inline"]' \
+                            <<< "$merge_jq_path")"
+
+        # Args shared by both jq calls in this iteration.
+        jq_args=(
+            --argjson merge_jq_path  "$merge_jq_path"
+            --argjson idx            "$idx"
+            --argjson inline_jq_path "$inline_jq_path"
+        )
+
+        # Read the subordinate .bu file path from this inline entry.
+        if ! butane_file_path="$(jq -r "${jq_args[@]}" \
+                "$_jq_bounds_check bounds_check(getpath(\$inline_jq_path))" \
+                <<< "$config_json")"; then
+            fatal "failed to read inline path at merge index $idx"
         fi
-        debug "$(declare -p config_inline_path)"
+        debug "butane_file_path=$butane_file_path"
 
-        local ignition_config_inline=""
-        debug "Generating ignition from $path_array_inline_index: $config_inline_path"
-        if ! ignition_config_inline="$(ignition_gen "$config_inline_path" "${3:-}")"; then
-            fatal "failed to generate ignition config from: $config_inline_path"
+        # Compile the .bu file to ignition JSON.
+        debug "Generating ignition [$idx]: $butane_file_path"
+        if ! ignition_json="$(ignition_gen "$butane_file_path" "${3:-}")"; then
+            fatal "failed to generate ignition config from: $butane_file_path"
         fi
 
-        debug "Updating value of $path_array_inline_index"
-        if ! main_json="$(jq -r \
-                                --argjson path "$path_array_merge" \
-                                --argjson idx "$i" \
-                                --argjson path_index "$path_array_inline_index" \
-                                --rawfile new_value <(printf '%s' "$ignition_config_inline") \
-                                -c \
-                                'if getpath($path) | length > $idx then
-                                    getpath($path_index) = $new_value
-                                else
-                                    "Index out of bounds" | halt_error(1)
-                                end' \
-                    <<< "$main_json")"; then
-
-            fatal "failed to update $path_array_inline_index"
+        # Replace the inline path string with the compiled ignition JSON.
+        debug "Updating inline entry [$idx]: $inline_jq_path"
+        if ! config_json="$(jq -rc "${jq_args[@]}" \
+                --rawfile new_value <(printf '%s' "$ignition_json") \
+                "$_jq_bounds_check bounds_check(getpath(\$inline_jq_path) = \$new_value)" \
+                <<< "$config_json")"; then
+            fatal "failed to update inline entry at merge index $idx"
         fi
     done
 
-    info "Checking final main_json integrity..."
-    ignition_check <<< "$main_json" || fatal && info "main_json ok"
+    info "Checking final config integrity..."
+    ignition_check <<< "$config_json" || fatal
+    info "Config ok"
 
-    local -r ignition_main_bytes="$(printf "%s" "$main_json" | wc -c)"
-    info "Final ignition file size: $ignition_main_bytes bytes"
+    local -r config_bytes="$(printf '%s' "$config_json" | wc -c)"
+    info "Final ignition config size: $config_bytes bytes"
 
     # shellcheck disable=SC2034
-    out="$main_json"
+    out="$config_json"
 }
 
 if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then

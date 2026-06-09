@@ -17,8 +17,8 @@ storage:
       # clevis:
         # tpm2: true
       key_file:
+        local: secrets/var.keyfile.gz
         compression: gzip
-        local: secrets/appdata.keyfile.gz
         verification: 
           hash: sha512-3263a7f20a3ef1daf48dae9ef2a3f19700fc7ebb8d7673edce4022af26d2f38040078bb9329459af9d8f1b9a57faf91f97ddce4b20224fe4c7b6d14908b8e145
       wipe_volume: true
@@ -31,7 +31,7 @@ storage:
         tpm2: true
       key_file:
         compression: gzip
-        local: secrets/var.keyfile.gz
+        local: secrets/appdata.keyfile.gz
         verification: 
           hash: sha512-0d7380a227af7b8c6e11bf3f7d2cced99fec8ecc00decb3e559a0cfe9c7151e0744c129ed6fb2dfc6df0b43d9a3921858cfb27a336f59c1df568c40f2efbf06f
       wipe_volume: true

@@ -56,37 +56,37 @@ storage:
   ####################
   ###   Binaries   ###
   ####################
-  - path: /usr/local/sbin/btrfsmaintenance/btrfsmaintenance-functions
+  - path: /usr/share/btrfsmaintenance/btrfsmaintenance-functions
     overwrite: true
     mode: 0440
     contents:
       local: usr/local/src/btrfsmaintenance/btrfsmaintenance-functions
 
-  - path: /usr/local/sbin/btrfsmaintenance/btrfsmaintenance-fresh-cron.sh
+  - path: /usr/share/btrfsmaintenance/btrfsmaintenance-refresh-cron.sh
     overwrite: true
     mode: 0544
     contents:
       local: usr/local/src/btrfsmaintenance/btrfsmaintenance-refresh-cron.sh
 
-  - path: /usr/local/sbin/btrfsmaintenance/btrfs-balance.sh
+  - path: /usr/share/btrfsmaintenance/btrfs-balance.sh
     overwrite: true
     mode: 0544
     contents:
       local: usr/local/src/btrfsmaintenance/btrfs-balance.sh
 
-  - path: /usr/local/sbin/btrfsmaintenance/btrfs-defrag.sh
+  - path: /usr/share/btrfsmaintenance/btrfs-defrag.sh
     overwrite: true
     mode: 0544
     contents:
       local: usr/local/src/btrfsmaintenance/btrfs-defrag.sh
 
-  - path: /usr/local/sbin/btrfsmaintenance/btrfs-scrub.sh
+  - path: /usr/share/btrfsmaintenance/btrfs-scrub.sh
     overwrite: true
     mode: 0544
     contents:
       local: usr/local/src/btrfsmaintenance/btrfs-scrub.sh
 
-  - path: /usr/local/sbin/btrfsmaintenance/btrfs-trim.sh
+  - path: /usr/share/btrfsmaintenance/btrfs-trim.sh
     overwrite: true
     mode: 0544
     contents:

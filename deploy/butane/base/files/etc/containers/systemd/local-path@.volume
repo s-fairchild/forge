@@ -7,7 +7,7 @@ Label="storageprovider=%p"
 Label="app=k3s"
 
 Type=btrfs
-Device=LABEL=%i
 
 [Install]
 WantedBy=default.target
+DefaultInstance=default

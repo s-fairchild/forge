@@ -2,7 +2,10 @@
 # https://docs.k3s.io/installation/configuration#configuration-file
 tls-san:
   - "10.10.0.1"
-  - "10.10.0.100"
+  - "10.10.0.100" # kube-vip HA VIP
   - "10.50.0.2"
   - "rick.expresso.lan"
   - "api.rick.expresso.lan"
+
+disable:
+  - servicelb

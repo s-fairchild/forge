@@ -8,7 +8,7 @@ ignition:
       - inline: deploy/butane/base/storage/filesystems.bu
 
       - inline: deploy/butane/base/btrfsmaintenance.bu
-      - inline: deploy/butane/base/containers.bu
+      - inline: deploy/butane/base/etc-containers-systemd.bu
       - inline: deploy/butane/base/firewalld.bu
       - inline: deploy/butane/base/root.bu
       - inline: deploy/butane/base/security.bu
