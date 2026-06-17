@@ -1,12 +1,12 @@
----
+# k3s@server.yaml
+#
 # https://docs.k3s.io/installation/configuration#configuration-file
+# https://docs.k3s.io/cli/agent#node
+---
 tls-san:
   - "10.10.0.1"
-  - "10.50.0.2"
-  - "rick.expresso.lan"
-  - "api.rick.expresso.lan"
+  - "10.10.0.100" # kube-vip HA VIP
 
-# https://docs.k3s.io/cli/agent#node
 node-label:
   - "node-role.kubernetes.io/server=true"
 

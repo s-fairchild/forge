@@ -1,0 +1,8 @@
+---
+# Destination device
+dest-device: /dev/disk/by-id/nvme-WD_Blue_SN570_2TB_22423T802136
+
+# Kernel and bootloader console
+console:
+  - ttyS0,115200n8
+  - tty0

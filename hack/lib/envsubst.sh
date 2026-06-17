@@ -1,5 +1,6 @@
 # hack/lib/envsubst.sh
 #
+# TODO move this into bash-helpers repository
 # shellcheck shell=bash
 
 # args:

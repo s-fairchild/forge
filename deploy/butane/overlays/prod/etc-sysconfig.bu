@@ -1,0 +1,17 @@
+# deploy/butane/overlays/prod/sysconfig.bu
+#
+# Deploys the prod-specific btrfsmaintenance sysconfig file to /etc/sysconfig/btrfsmaintenance,
+# overriding the base defaults installed by deploy/butane/base/btrfsmaintenance.bu.
+# Prod overrides set BTRFS_LOG_OUTPUT=journal, enable weekly balance and monthly scrub
+# schedules, configure defrag paths for k3s local-path volumes, and restrict scrub to
+# the root filesystem.  btrfsmaintenance-refresh.path detects changes to this file and
+# regenerates the systemd timer schedule accordingly.
+---
+variant: fcos
+version: 1.5.0
+storage:
+  files:
+  - path: /etc/sysconfig/btrfsmaintenance
+    overwrite: true
+    contents:
+      local: etc/sysconfig/btrfsmaintenance

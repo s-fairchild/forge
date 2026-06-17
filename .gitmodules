@@ -1,6 +1,9 @@
-[submodule "deploy/butane/base/coreos/storage/btrfsmaintenance"]
-	path = deploy/butane/base/files/usr/local/src/btrfsmaintenance
-	url = git@github.com:kdave/btrfsmaintenance.git
-[submodule "hack/opt/bash-utils"]
-	path = hack/opt/bash-utils
+[submodule "hack/vendor/bash-utils"]
+	path = hack/vendor/bash-utils
 	url = git@github.com:s-fairchild/bash-utils.git
+[submodule "deploy/butane/base/vendor/btrfsmaintenance"]
+	path = deploy/butane/base/vendor/btrfsmaintenance
+	url = git@github.com:kdave/btrfsmaintenance.git
+[submodule "hack/vendor/bashkit"]
+	path = hack/vendor/bashkit
+	url = git@github.com:s-fairchild/bashkit.git

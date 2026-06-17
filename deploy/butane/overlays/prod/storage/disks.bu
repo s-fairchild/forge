@@ -1,3 +1,18 @@
+# deploy/butane/overlays/prod/storage/disks.bu
+#
+# Partitions the boot disk and the 8 HDD RAID members for the prod node.
+#
+# Boot disk (coreos-boot-disk):
+#   - Partition 4 (label: root) — 50 GiB, resized from the FCOS default root partition.
+#   - Partition 5 (label: var)  — remaining space, used for the encrypted /var filesystem.
+#
+# Data disks (8 HDDs identified by WWN):
+#   Each disk receives a single partition spanning the full disk, typed with the
+#   Linux RAID member GUID (CA7D7CCB-...) and labelled appdata_raid10.N_p1.
+#   These partitions are assembled into md-appdata by storage/raid.bu.
+#
+# NOTE: wipe_table and wipe_partition_entry are set for initial provisioning only.
+#       Remove these flags before redeploying to avoid data loss.
 ---
 variant: fcos
 version: 1.5.0

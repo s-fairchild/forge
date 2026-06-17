@@ -1,0 +1,28 @@
+# deploy/butane/overlays/prod/coreos-installer/install.bu
+#
+# Installer ignition config for the prod node.  Compiled to install.ign by
+# `make installer-ignition-gen-prod` and embedded into the FCOS ISO via
+# `make installer-iso-customize` using coreos-installer.
+#
+# Merges the gzip-compressed base installer ignition (base/coreos-installer/install.ign.gz,
+# sha512-verified) with the prod coreos-installer configuration directory tree,
+# which sets installer options such as the target disk, ignition URL, and network
+# configuration applied at install time before the node reboots into FCOS.
+#
+# Reference: https://coreos.github.io/coreos-installer/customizing-install/
+---
+# https://coreos.github.io/coreos-installer/customizing-install/#example-manual-customization-via-installerd
+variant: fcos
+version: 1.5.0
+ignition:
+  config:
+    merge:
+      - inline: deploy/butane/base/installer/install.bu
+      # - local: base/coreos-installer/install.ign.gz
+        compression: gzip
+        verification:
+          hash: sha512-066c1c5a25b5a2f2c88edcb7c4402965d0f09dedeef2ad06b4a024e994bb8d34c5c5b702f4867d22366be66491e3d9a1675e0cd524d6f60e4af030d4d4ec415b
+storage:
+  trees:
+    - path: /etc/coreos/installer.d
+      local: etc/coreos/installer.d

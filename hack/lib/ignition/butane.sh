@@ -2,9 +2,9 @@
 #
 # shellcheck shell=bash
 
-# declare -r __hack_lib_ignition_butane_sourced="true"
-#
 declare -r __hack_lib_ignition_butane_sourced="true"
+declare -r __BUTANE_WORKDIR="/data"
+declare -r __BUTANE_FILES_DIR="files"
 
 # butane()
 #
@@ -18,26 +18,27 @@ declare -r __hack_lib_ignition_butane_sourced="true"
 # args:
 #   * $@) all arguments are passed to the container
 butane() {
+    debug "Starting ${FUNCNAME[0]}()"
+
+    local -r mount_src_dir="${BUTANE_VOLUME_MOUNT:-$PWD}"
     podman_run_options=(
         "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "-i"
         "--rm"
         "--env='BU_*'"
-        "--volume=${BUTANE_VOLUME_MOUNT:-$PWD}:$__BUTANE_WORKDIR:O"
+        "--security-opt=label=disable"
+        "--mount=type=bind,src=${mount_src_dir},target=$__BUTANE_WORKDIR,bind-propagation=rslave,no-dereference,ro=true"
         "--workdir=$__BUTANE_WORKDIR"
     )
+    debug "$(declare -p mount_src_dir)"
+    debug "$(declare -p __BUTANE_WORKDIR)"
 
     if [ -v BUTANE_SECRET_MOUNTS ]; then
-        # array must be expanded as a string here or it will append an extra space ' '
-        # mapfile -O $(( "${#BUTANE_SECRET_MOUNTS[@]}" + 1 )) \
-                # -d ' ' \
-                # podman_run_options \
-                # <<< "${BUTANE_SECRET_MOUNTS[*]}"
+        debug "$(declare -p BUTANE_SECRET_MOUNTS)"
         # shellcheck disable=SC2068
         for i in ${BUTANE_SECRET_MOUNTS[@]}; do
             podman_run_options+=("$i")
         done
-
     fi
 
     local -r image="quay.io/coreos/butane:release"
@@ -54,18 +55,38 @@ butane() {
 
 export -f butane
 
-if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_opt_bash_utils_logging="hack/lib/opt-bash-utils-logging.sh"
-    [ -f "$__lib_opt_bash_utils_logging" ] || "$(echo "$ERROR_FILE_NOT_FOUND: $__lib_opt_bash_utils_logging"; exit 1)"
+# butane_check()
+#
+# Validates an ignition JSON document by passing it to butane --check --strict
+# (butane -cs) via stdin.  Aborts with fatal() on validation failure or empty input.
+#
+# args:
+#   * stdin) ignition JSON string to validate.
+butane_check() {
+    debug "Starting ${FUNCNAME[0]}()"
+    local -r files_dir="${1:-}"
+    local -r input="$(cat)"
+    [ -z "$input" ] && fatal "\$1 input $ERROR_STDIN_NULL"
 
-    # shellcheck source=../opt-bash-utils-logging.sh
-    . "$__lib_opt_bash_utils_logging" || "$(echo "failed to source file: $__lib_opt_bash_utils_logging"; exit 1)"
-fi
+    butane_opts=(
+        "--check"
+        "--strict"
+    )
 
-if [ "${__hack_lib_ignition_constants_sourced:-}" != "true" ]; then
-    declare -r __hack_lib_ignition_constants="hack/lib/ignition/constants.env"
-    [ -f "$__hack_lib_ignition_constants" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_ignition_constants"
+    [ -n "$files_dir" ] && butane_opts+=("--files-dir=$files_dir")
 
-    # shellcheck source=constants.env
-    . "$__hack_lib_ignition_constants" || fatal "$ERROR_FILE_SOURCE_FAILED: $__hack_lib_ignition_constants"
+    # shellcheck disable=SC2068
+    if ! butane ${butane_opts[@]} <<< "$input"; then
+        fatal "ignition check failed."
+    fi
+
+    info "Config ok"
+    info "Config size: $(wc -c <<< "$input") bytes"
+}
+
+if [ "${__lib_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_logging="hack/lib/logging.sh"
+    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
+    # shellcheck source=../logging.sh
+    . "$__lib_logging"
 fi

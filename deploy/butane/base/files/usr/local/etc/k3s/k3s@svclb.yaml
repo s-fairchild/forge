@@ -1,12 +1,12 @@
----
+# k3s@svclb.yaml
+#
 # https://docs.k3s.io/installation/configuration#configuration-file
-
 # https://docs.k3s.io/cli/agent#node
+---
 node-label:
   - "node-role.kubernetes.io/agent=true"
-  - "svccontroller.k3s.cattle.io/enablelb=true"
 
-# TODO configure svclb operator to ignore this taint, or add system critical taint
-# This will prevent workloads from being scheduled on this node
-# node-taint:
-  # - "enablelb=true:NoSchedule"
+# This taint is in preparation for scheduling metallb addresspools to run exclusively on this node.
+# No other workloads should be scheduled.
+node-taint:
+  - "metallb=true:NoSchedule"

@@ -3,11 +3,18 @@
 declare -r __hack_lib_yq_sourced="true"
 
 # upsert_hash_value()
+#
+# Upserts the verification.hash field at `.ignition.config.merge.[0].verification.hash`
+# inside a butane/ignition JSON file in-place using yq.
+#
+# args:
+#   * 1) f       - string; path to the JSON file to edit.
+#   * 2) YQ_VALUE - string; hash value to set.
 upsert_hash_value() {
     local -r f="$1"
     local -rx YQ_VALUE="$2"
 
-    [ -f "$f" ] || abort "$f not found."
+    [ -f "$f" ] || fatal "$f not found."
 
     local -rx YQ_KEY=".ignition.config.merge.[0].verification.hash"
     log "Editing $f in-place."
@@ -22,9 +29,10 @@ upsert_hash_value() {
 
 # yq()
 #
-# Calls the yq command from $PATH preventing unintended recursion calls.
-#   * 'YQ_*' variables within scope are exported for use by yq.
-#   * 'YQ_*' are unexported upon completion
+# Thin podman wrapper around docker.io/mikefarah/yq:4.53.2.
+# Mounts the current working directory as /workdir inside the container and
+# forwards all YQ_* environment variables so callers can pass values via the
+# environment without shell quoting issues.
 yq() {
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
     local -r image="docker.io/mikefarah/yq:4.53.2"
@@ -43,10 +51,9 @@ yq() {
             "$@"
 }
 
-if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
-    declare -r shell_utils_logging="hack/lib/opt-bash-utils-logging.sh"
-
-    [ -f "$shell_utils_logging" ] || "$(echo "file not found: $shell_utils_logging"; exit 1)"
-    # shellcheck source=opt-bash-utils-logging.sh
-    . "$shell_utils_logging" || "$(echo "failed to source file: $shell_utils_logging"; exit 1)"
+if [ "${__lib_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_logging="hack/lib/logging.sh"
+    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
+    # shellcheck source=logging.sh
+    . "$__lib_logging"
 fi

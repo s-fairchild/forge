@@ -8,6 +8,6 @@ data:
   custom.list: |
     10.50.0.100 r10.expresso.lan
     10.50.0.50 rh-thinkpad-p1.expresso.lan
-    10.50.0.10 rpi4.expresso.lan
+    10.50.0.11 rpi4-0.expresso.lan
     10.50.0.2 rick.expresso.lan
     10.50.0.1 expresso.lan

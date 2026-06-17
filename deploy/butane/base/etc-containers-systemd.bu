@@ -1,62 +1,64 @@
 ---
 variant: fcos
 version: 1.5.0
-systemd:
-  units:
-    - name: local-path@default-volume.service
-      enabled: true
-
 storage:
   directories:
-  - path: /etc/containers/systemd
-    overwrite: true
-
-  links:
-  ######################
-  ##### Containers #####
-  ######################
-  - path: /etc/containers/systemd/k3s@agent-0.container
-    target: /etc/containers/systemd/k3s@.container
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@server-0.container
-    target: /etc/containers/systemd/k3s@.container
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@server-1.container
-    target: /etc/containers/systemd/k3s@.container
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@server-2.container
-    target: /etc/containers/systemd/k3s@.container
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@svclb-0.container
-    target: /etc/containers/systemd/k3s@.container
-    overwrite: true
-
-  ######################
-  ####### Images #######
-  ######################
-  - path: /etc/containers/systemd/k3s@k3s.image
-    target: /etc/containers/systemd/k3s@.image
-    overwrite: true
-
-  ######################
-  ###### Networks ######
-  ######################
-  - path: /etc/containers/systemd/k3s@server.network
-    target: /etc/containers/systemd/k3s@.network
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@service.network
-    target: /etc/containers/systemd/k3s@.network
-    overwrite: true
-
-  - path: /etc/containers/systemd/k3s@ingress.network
-    target: /etc/containers/systemd/k3s@.network
-    overwrite: true
+    - path: /etc/containers/systemd
+      overwrite: true
 
   trees:
-  - path: /etc/containers/systemd
-    local: etc/containers/systemd
+    - path: /etc/containers/systemd
+      local: etc/containers/systemd
+
+  links:
+    ######################
+    ##### Containers #####
+    ######################
+    - path: /etc/containers/systemd/k3s@agent-0.container
+      target: /etc/containers/systemd/k3s@.container
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@server-0.container
+      target: /etc/containers/systemd/k3s@.container
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@server-1.container
+      target: /etc/containers/systemd/k3s@.container
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@server-2.container
+      target: /etc/containers/systemd/k3s@.container
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@svclb-0.container
+      target: /etc/containers/systemd/k3s@.container
+      overwrite: true
+
+    ######################
+    ####### Volumes ######
+    ######################
+    - path: /etc/containers/systemd/local-path@default.volume
+      target: /etc/containers/systemd/local-path@.volume
+      overwrite: true
+
+    ######################
+    ####### Images #######
+    ######################
+    - path: /etc/containers/systemd/k3s@v1.36.1-k3s1.image
+      target: /etc/containers/systemd/k3s@.image
+      overwrite: true
+
+    ######################
+    ###### Networks ######
+    ######################
+    - path: /etc/containers/systemd/k3s@server.network
+      target: /etc/containers/systemd/k3s@.network
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@service.network
+      target: /etc/containers/systemd/k3s@.network
+      overwrite: true
+
+    - path: /etc/containers/systemd/k3s@ingress.network
+      target: /etc/containers/systemd/k3s@.network
+      overwrite: true
