@@ -5,6 +5,11 @@ set -o nounset \
 
 [ -n "${DEBUG:-}" ] && set -x
 
+# main()
+#
+# Extracts the build context directory from the trailing positional argument,
+# derives the image name as its basename, and delegates to
+# podman_build_with_options() with any remaining caller-supplied options.
 main () {
     # shellcheck disable=SC2034
     local -a options_podman_build=("$@")
@@ -27,13 +32,10 @@ main () {
 }
 
 if [ "${__podman_build_multi_stage_sourced:-}" != "true" ]; then
-    # declare -r __podman_build_multi_stage_path="hack/lib/podman/build/build_multi_stage.sh"
     declare -r __podman_build_multi_stage_path="hack/lib/podman/build/build_multi_stage.sh"
-    [ -f "$__podman_build_multi_stage_path" ] || "$(echo "$__podman_build_multi_stage_path file not found."; exit 5)"
-
+    [ -f "$__podman_build_multi_stage_path" ] || { printf '%s\n' "$__podman_build_multi_stage_path file not found." >&2; exit 5; }
     # shellcheck source=../lib/podman/build/build_multi_stage.sh
     . "$__podman_build_multi_stage_path"
 fi
-
 
 main "$@"

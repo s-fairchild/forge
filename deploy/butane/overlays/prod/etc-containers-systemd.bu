@@ -1,13 +1,17 @@
+# deploy/butane/overlays/prod/etc-containers-systemd.bu
+#
+# Deploys prod-specific podman/quadlet unit files and symlinks for /etc/containers/systemd.
+# Creates instance symlinks for the local-path volume template (appdata, default, nvme),
+# then overlays the prod files tree on top of the base tree written by
+# deploy/butane/base/etc-containers-systemd.bu.  The prod tree supplies per-instance
+# volume drop-ins (e.g. local-path@appdata.volume.d/) and the prod-specific
+# k3s@agent-0 container drop-in.
 ---
 variant: fcos
 version: 1.5.0
 storage:
   links:
   - path: /etc/containers/systemd/local-path@appdata.volume
-    target: /etc/containers/systemd/local-path@.volume
-    overwrite: true
-
-  - path: /etc/containers/systemd/local-path@default.volume
     target: /etc/containers/systemd/local-path@.volume
     overwrite: true
 

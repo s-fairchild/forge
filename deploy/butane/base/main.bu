@@ -9,9 +9,8 @@ ignition:
 
       - inline: deploy/butane/base/btrfsmaintenance.bu
       - inline: deploy/butane/base/etc-containers-systemd.bu
-      - inline: deploy/butane/base/firewalld.bu
-      - inline: deploy/butane/base/root.bu
-      - inline: deploy/butane/base/security.bu
-      - inline: deploy/butane/base/sysctl.bu
-      - inline: deploy/butane/base/system-config.bu
-      - inline: deploy/butane/base/usr.bu
+      - inline: deploy/butane/base/etc-firewalld.bu
+      - inline: deploy/butane/base/etc-security-limits.bu
+      - inline: deploy/butane/base/etc-sysctl.bu
+      - inline: deploy/butane/base/passwd.bu
+      - inline: deploy/butane/base/usr-local.bu

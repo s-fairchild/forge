@@ -1,0 +1,12 @@
+# k3s@server.yaml
+#
+# https://docs.k3s.io/installation/configuration#configuration-file
+---
+tls-san+:
+  - "10.50.0.2"
+  - "10.50.0.24"
+  - "rick.expresso.lan"
+  - "api.rick.expresso.lan"
+
+disable:
+  - servicelb

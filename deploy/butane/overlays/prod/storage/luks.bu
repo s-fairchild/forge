@@ -1,3 +1,23 @@
+# deploy/butane/overlays/prod/storage/luks.bu
+#
+# Configures LUKS2 encryption for the three prod storage volumes.
+#
+#   root    — /dev/disk/by-partlabel/root (boot disk p4, 50 GiB)
+#               TPM2 clevis binding only; automatically unlocked at boot via
+#               the TPM2 PCR policy without a passphrase or keyfile.
+#
+#   var     — /dev/disk/by-partlabel/var (boot disk p5, remaining space)
+#               Keyfile unlock using secrets/var.keyfile.gz (gzip-compressed).
+#               TPM2 binding is commented out pending TPM2 enablement on the host.
+#               Hosts the encrypted /var btrfs filesystem.
+#
+#   appdata — /dev/md/md-appdata (RAID10 array assembled by storage/raid.bu)
+#               Keyfile secrets/appdata.keyfile.gz.
+#               Hosts the encrypted /mnt/appdata btrfs filesystem for workload storage.
+#
+# The keyfiles are injected into the butane container as podman secrets from
+# SECRET_FILES in deploy/butane/overlays/prod/secrets.env during ignition generation.
+# sha512 verification hashes guard against accidental keyfile substitution.
 ---
 variant: fcos
 version: 1.5.0
@@ -13,9 +33,6 @@ storage:
     - name: var
       label: var_luks
       device: /dev/disk/by-partlabel/var
-      # TODO uncomment once tmp2 is enabled on host
-      # clevis:
-        # tpm2: true
       key_file:
         local: secrets/var.keyfile.gz
         compression: gzip
@@ -27,8 +44,6 @@ storage:
     - name: appdata
       label: appdata_luks
       device: /dev/md/md-appdata
-      clevis:
-        tpm2: true
       key_file:
         compression: gzip
         local: secrets/appdata.keyfile.gz

@@ -1,9 +1,16 @@
 # shellcheck shell=bash
 
-# declare -r __podman_build_multi_stage_sourced="true"
 declare -r __podman_build_multi_stage_sourced="true"
 
-# podman_build() {
+# podman_build()
+#
+# Appends default build options (--format=docker, --build-arg=BUILD_THREADS)
+# to the caller-supplied options array, then runs `podman build` with those
+# options and the given context directory.
+#
+# args:
+#   * 1) build_opts - nameref; array of podman build options to append to and pass.
+#   * 2) ctx_dir    - string; path to the container build context directory.
 podman_build() {
     local -n build_opts="$1"
     local ctx_dir="$2"
@@ -33,19 +40,14 @@ podman_build() {
         "$ctx_dir"
 }
 
-# add_default_options() {
-    # local -n opts="$1"
-
-
-    # for o in ${opts[@]}; do
-
-    # done
-# }
-
-# add_build_arg_file() {
+# add_build_arg_file()
 #
-# args)
-#   * 1) local -n opts="$1"
+# Appends a --build-arg-file option to the options array when $ARGFILE_CONF
+# exists in the build context directory.  Logs a warning and returns without
+# modifying the array if the file is absent.
+#
+# args:
+#   * 1) opts - nameref; array of podman build options to append to.
 add_build_arg_file() {
     local -n opts="$1"
 
@@ -62,10 +64,17 @@ add_build_arg_file() {
     opts+=("$build_arg_file")
 }
 
-# load_podman_build_env() {
+# load_podman_build_env()
 #
-# args)
-#   * 1) local -r image="$1"
+# Sources the per-image .env file and populates build_args_out, build_contexts_out,
+# and image_tag_primary_out from the variables it defines (BUILD_ARGS, BUILD_CONTEXTS,
+# IMAGE_TAG_PRIMARY / IMAGE_TAG_LATEST).
+#
+# args:
+#   * 1) image               - string; image name used to locate $BUILD_ENV_BASE/$image.env.
+#   * 2) build_args_out      - nameref; associative array to receive BUILD_ARGS entries.
+#   * 3) build_contexts_out  - nameref; associative array to receive BUILD_CONTEXTS entries.
+#   * 4) image_tag_primary_out - nameref; string to receive the primary tag.
 load_podman_build_env() {
     local -r image="$1"
     local -n build_args_out="$2"
@@ -114,12 +123,21 @@ load_podman_build_env() {
         image_tag_primary_out="$IMAGE_TAG_LATEST"
         debug "image_tag_primary_out=$IMAGE_TAG_LATEST"
     fi
-    
+
 }
 
 # add_build_primary_tag()
 #
-# TODO seperate this into it's own build.sh library file
+# Appends a --tag option in the form --tag=<local_repo>/<image>:<tag> to the
+# options array.
+#
+# TODO separate this into its own build.sh library file
+#
+# args:
+#   * 1) opts       - nameref; array of podman build options to append to.
+#   * 2) local_repo - string; local container repository prefix.
+#   * 3) image      - string; image name.
+#   * 4) tag        - string; image tag.
 add_build_primary_tag() {
     # shellcheck disable=SC2178
     local -n opts="$1"
@@ -135,9 +153,17 @@ add_build_primary_tag() {
     opts+=("$option_image_tag")
 }
 
-# add_build_options() {
+# add_build_options()
 #
-# TODO separate this into it's own build.sh library file
+# Iterates over an associative array of key=value pairs and appends
+# <option>=<key>=<value> entries to the options array.
+#
+# TODO separate this into its own build.sh library file
+#
+# args:
+#   * 1) opts            - nameref; array to append to.
+#   * 2) additional_opts - nameref; associative array of option key/value pairs.
+#   * 3) option          - string; option prefix (e.g. "--build-arg").
 add_build_options() {
     # shellcheck disable=SC2178
     local -n opts="$1"
@@ -156,23 +182,41 @@ add_build_options() {
 
 # add_build_args()
 #
-# TODO seperate this into it's own build.sh library file
+# Convenience wrapper around add_build_options for --build-arg options.
+#
+# TODO separate this into its own build.sh library file
+#
+# args:
+#   * 1) opts      - nameref; array to append to.
+#   * 2) build_args - nameref; associative array of build-arg key/value pairs.
 add_build_args() {
-    # local -r opt_build_arg="--build-arg"
     local -r opt_build_arg="--build-arg"
     add_build_options "$1" "$2" "$opt_build_arg"
 }
 
-# add_build_additional_contexts() {
+# add_build_additional_contexts()
 #
-# TODO seperate this into it's own build.sh library file
+# Convenience wrapper around add_build_options for --build-context options.
+#
+# TODO separate this into its own build.sh library file
+#
+# args:
+#   * 1) opts           - nameref; array to append to.
+#   * 2) build_contexts - nameref; associative array of build-context key/value pairs.
 add_build_additional_contexts() {
-    # local -r opt_build_context="--build-context"
     local -r opt_build_context="--build-context"
     add_build_options "$1" "$2" "$opt_build_context"
 }
 
-# add_container_files_ordered() {
+# add_container_files_ordered()
+#
+# Discovers all files matching Containerfile* under the given context directory,
+# sorts them by version, and appends --file=<path> options to the options array.
+# Skips auto-discovery if the caller already supplied -f or --file options.
+#
+# args:
+#   * 1) opts - nameref; array to append --file options to.
+#   * 2) ctx  - string; context directory path to search for Containerfiles.
 add_container_files_ordered() {
     # shellcheck disable=SC2178
     local -n opts="$1"
@@ -194,7 +238,14 @@ add_container_files_ordered() {
 
 # build_context_get()
 #
-# TODO seperate this into it's own build.sh library file
+# Pops the last element of the options array as the build context directory,
+# validates that it exists, and assigns it to the ctx nameref.
+#
+# TODO separate this into its own build.sh library file
+#
+# args:
+#   * 1) opts - nameref; array whose last element is the context directory path.
+#   * 2) ctx  - nameref; string that receives the extracted context directory path.
 build_context_get() {
     # shellcheck disable=SC2178
     local -n opts="$1"
@@ -207,12 +258,16 @@ build_context_get() {
     info "Container build context directory: ${ctx}"
 }
 
-# log_image_tags() {
+# log_image_tags()
 #
+# Logs each tag in the provided array at info level.
+#
+# args:
+#   * 1) tags - nameref; array of image tag strings to log.
 log_image_tags() {
     local -n tags="$1"
 
-    info "The $IMAGE_LIBCAMERA will be tagged with the following:"
+    info "The image will be tagged with the following:"
     # shellcheck disable=SC2068
     for t in ${tags[@]}; do
         info "--tag=${t}"
@@ -221,14 +276,14 @@ log_image_tags() {
 
 # podman_build_with_options()
 #
-# Args:
-# 1) build_options - string, nameref
-#   * Options to be passed to podman build
-# 2) image - string, nameref
-#   * Name of the image being built
-# 3) $3 - string, nameref
-#   * Build context directory path
+# Orchestrates a full podman build: loads the per-image env file, adds build
+# args, build contexts, the primary tag, Containerfiles, and an optional
+# build-arg-file, then delegates to podman_build().
 #
+# args:
+#   * 1) build_options - nameref; caller-supplied array of additional podman build options.
+#   * 2) image         - string; image name (used to locate the .env file and tag the image).
+#   * 3) context       - string; build context directory path.
 podman_build_with_options() {
     local -r image="$2"
     local -r context="$3"
@@ -251,33 +306,21 @@ podman_build_with_options() {
                 "$image" \
                 "$image_tag_primary"
 
-    add_container_files_ordered "$1" "$context" 
+    add_container_files_ordered "$1" "$context"
     add_build_arg_file "$1"
 
     podman_build "$1" \
                 "$context"
 }
 
-if [ "${__bash_utils_util_base_sourced:-}" != "true" ]; then
-    # declare -r __bash_utils_util_base_path="hack/opt/bash-utils/util/base.sh"
-    declare -r __bash_utils_util_base_path="hack/opt/bash-utils/util/base.sh"
-    [ -f "$__bash_utils_util_base_path" ] || "$(echo "$__bash_utils_util_base_path file not found."; exit 5)"
-
-    # shellcheck source=../../../opt/bash-utils/util/base.sh
-    . "$__bash_utils_util_base_path"
-fi
-
-if [ "${__bash_utils_util_logging_sourced:-}" != "true" ]; then
-    # declare -r __bash_utils_util_logging_path="hack/opt/bash-utils/util/logging.sh"
-    declare -r __bash_utils_util_logging_path="hack/opt/bash-utils/util/logging.sh"
-    [ -f "$__bash_utils_util_logging_path" ] || "$(echo "$__bash_utils_util_base_path file not found."; exit 5)"
-
-    # shellcheck source=../../../opt/bash-utils/util/logging.sh
-    . "$__bash_utils_util_logging_path"
+if [ "${__lib_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_logging="hack/lib/logging.sh"
+    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
+    # shellcheck source=../../logging.sh
+    . "$__lib_logging"
 fi
 
 if [ "${__podman_build_constants_sourced:-}" != "true" ]; then
-    # declare -r __podman_build_constants_path="hack/lib/podman/build/constants.env"
     declare -r __podman_build_constants_path="hack/lib/podman/build/constants.env"
     [ -f "$__podman_build_constants_path" ] || fatal --status=5 "$__podman_build_constants_path file not found."
 

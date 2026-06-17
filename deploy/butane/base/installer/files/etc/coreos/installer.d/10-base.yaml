@@ -1,0 +1,27 @@
+# https://coreos.github.io/coreos-installer/customizing-install/#customizing-coreos-installer-invocation
+# https://coreos.github.io/coreos-installer/cmd/install/
+---
+# Fedora CoreOS stream
+stream: stable
+
+# Allow unsigned image
+# TODO remove this once serving ignition via https
+insecure: false
+
+# Embed an Ignition config from a URL
+ignition-url: http://10.50.0.202:8080/config.ign
+
+# Allow Ignition URL without HTTPS or hash
+insecure-ignition: true
+
+# TODO update scripts to insert hash
+# ignition-hash: "sha512-""
+
+# Copy network config from install environment
+copy-network: true
+
+# Don't clear partition table on error
+preserve-on-error: true
+
+# Fetch retries, or string "infinite"
+fetch-retries: infinite

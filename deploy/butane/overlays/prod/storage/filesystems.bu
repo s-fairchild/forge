@@ -1,12 +1,62 @@
+# deploy/butane/overlays/prod/storage/filesystems.bu
+#
+# Creates btrfs filesystems on the three LUKS-decrypted devices and defines the
+# btrfs @appdata subvolume initialisation service.
+#
+# Filesystems:
+#   root    — /dev/mapper/root  — btrfs, no mount unit (managed by FCOS internally).
+#               Mount options: zstd:3 compression, async discard, SSD optimisations.
+#   var     — /dev/mapper/var   — btrfs at /var, with_mount_unit: true so ignition
+#               generates a systemd mount unit.
+#   appdata — /dev/mapper/appdata — btrfs at /mnt/appdata, with_mount_unit: false
+#               (the podman quadlet volume unit handles mounting via Device=LABEL=appdata).
+#
+# Systemd unit (btrfs-subvol-appdata-init.service):
+#   On first boot the appdata filesystem is freshly created with no subvolumes.
+#   The local-path@appdata volume unit mounts it with subvol=@appdata, which would
+#   fail if the subvolume does not exist.  This oneshot service mounts the filesystem
+#   temporarily, creates @appdata only if absent (idempotent via `btrfs subvolume show`),
+#   then unmounts via a trap handler.  It runs after systemd-cryptsetup@appdata.service
+#   and before local-path@appdata-volume.service.
 ---
 variant: fcos
 version: 1.5.0
+systemd:
+  units:
+  - name: btrfs-subvol-appdata-init.service
+    enabled: true
+    contents: |
+      [Unit]
+      Description=Initialize btrfs @appdata subvolume on /dev/mapper/appdata
+      Before=local-path@appdata-volume.service
+      After=systemd-cryptsetup@appdata.service
+      After=dev-md-md\x2dappdata.device
+      Requires=dev-md-md\x2dappdata.device
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/bin/bash -euxc '\
+        mkdir -p /run/btrfs-appdata-init; \
+        mount -t btrfs -o noatime /dev/mapper/appdata /run/btrfs-appdata-init; \
+        trap "umount /run/btrfs-appdata-init 2>/dev/null; rmdir /run/btrfs-appdata-init 2>/dev/null" EXIT; \
+        btrfs subvolume show /run/btrfs-appdata-init/@appdata 2>/dev/null || \
+        btrfs subvolume create /run/btrfs-appdata-init/@appdata'
+
+      [Install]
+      WantedBy=local-path@appdata-volume.service
+
 storage:
   filesystems:
   - device: /dev/mapper/root
     format: btrfs
     wipe_filesystem: true
     label: root
+    options:
+      - --checksum
+      - sha256
+      - --features
+      - squota
     mount_options:
       - compress=zstd:3
       - x-systemd.device-timeout=0
@@ -19,6 +69,11 @@ storage:
     wipe_filesystem: true
     with_mount_unit: true
     label: var
+    options:
+      - --checksum
+      - sha256
+      - --features
+      - squota
     mount_options:
       - compress=zstd:3
       - x-systemd.device-timeout=0
@@ -31,7 +86,11 @@ storage:
     wipe_filesystem: true
     with_mount_unit: false
     label: appdata
+    options:
+      - --checksum
+      - sha256
+      - --features
+      - squota
     mount_options:
       - compress=zstd:3
       - x-systemd.device-timeout=0
-      - discard=async
