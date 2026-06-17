@@ -1,3 +1,17 @@
+# deploy/butane/overlays/prod/storage/raid.bu
+#
+# Assembles the 8 HDD RAID member partitions (created by storage/disks.bu) into
+# a single mdadm RAID10 array named md-appdata.
+#
+# Array configuration:
+#   - Level:   RAID10, far2 layout (striped pairs, far-2 copies for sequential read performance)
+#   - Devices: /dev/sda through /dev/sdh (8 drives)
+#   - Spares:  2 hot spares (6 active + 2 spare)
+#   - Bitmap:  internal bitmap with bitmap consistency policy for fast resync after unclean shutdown
+#   - Chunk:   1024 KiB
+#
+# The resulting /dev/md/md-appdata device is consumed by storage/luks.bu as the
+# backing device for the `appdata` LUKS volume.
 ---
 variant: fcos
 version: 1.5.0
@@ -16,11 +30,11 @@ storage:
         - --chunk
         - "1024"
       devices:
-        - /dev/sda
-        - /dev/sdb
-        - /dev/sdc
-        - /dev/sdd
-        - /dev/sde
-        - /dev/sdf
-        - /dev/sdg
-        - /dev/sdh
+        - /dev/disk/by-partlabel/appdata_raid10.1_p1
+        - /dev/disk/by-partlabel/appdata_raid10.2_p1
+        - /dev/disk/by-partlabel/appdata_raid10.3_p1
+        - /dev/disk/by-partlabel/appdata_raid10.4_p1
+        - /dev/disk/by-partlabel/appdata_raid10.5_p1
+        - /dev/disk/by-partlabel/appdata_raid10.6_p1
+        - /dev/disk/by-partlabel/appdata_raid10.7_p1
+        - /dev/disk/by-partlabel/appdata_raid10.8_p1

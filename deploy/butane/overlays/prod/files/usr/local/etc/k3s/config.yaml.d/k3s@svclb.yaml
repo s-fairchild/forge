@@ -1,0 +1,8 @@
+# k3s@svclb.yaml
+#
+# https://docs.k3s.io/installation/configuration#configuration-file
+# https://docs.k3s.io/cli/agent#node
+---
+node-label+:
+  - "node-role.kubernetes.io/agent=true"
+  - "metallb.io/addresspool=ingress"

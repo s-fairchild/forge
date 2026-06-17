@@ -1,0 +1,19 @@
+---
+variant: fcos
+version: 1.5.0
+systemd:
+  units:
+    - name: rpm-ostree-install-firewalld.service
+      enabled: true
+      contents_local: etc/systemd/system/rpm-ostree-install-firewalld.service
+
+    # TODO enable this once firewalld is configured
+    - name: firewalld.service
+      enabled: false
+
+storage:
+  files:
+    - path: /etc/firewalld/firewalld.conf
+      overwrite: true
+      contents:
+        local: etc/firewalld/firewalld.conf

@@ -1,9 +1,16 @@
----
+# k3s@server.yaml
+#
 # https://docs.k3s.io/installation/configuration#configuration-file
+<<<<<<<< HEAD:deploy/butane/overlays/prod/files/usr/local/etc/k3s/k3s@server.yaml
 tls-san:
   - "10.10.0.1"
   - "10.10.0.100" # kube-vip HA VIP
+========
+---
+tls-san+:
+>>>>>>>> installer-updates:deploy/butane/overlays/prod/files/usr/local/etc/k3s/config.yaml.d/k3s@server.yaml
   - "10.50.0.2"
+  - "10.50.0.24"
   - "rick.expresso.lan"
   - "api.rick.expresso.lan"
 

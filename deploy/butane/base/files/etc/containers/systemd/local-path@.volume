@@ -1,12 +1,16 @@
 [Unit]
-Description=Create podman volume %N with btrfs subvolume as backing volume
+Description=Create podman volume %N
 
 [Volume]
 Label="storageclass=%i"
 Label="storageprovider=%p"
 Label="app=k3s"
+<<<<<<< HEAD
 
 Type=btrfs
+=======
+Group=511
+>>>>>>> installer-updates
 
 [Install]
 WantedBy=default.target

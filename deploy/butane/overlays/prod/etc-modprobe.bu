@@ -1,0 +1,14 @@
+# deploy/butane/overlays/prod/modprobe.bu
+#
+# Deploys /etc/modprobe.d/i915.conf to configure the Intel i915 GPU driver.
+# Enables GuC firmware loading (enable_guc=2) for low-power mode and hardware
+# submission, and enables GVT-g (enable_gvt=true) for GPU virtualisation.
+# These options are required for hardware-accelerated video transcoding in Jellyfin.
+# Reference: https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/intel/
+---
+variant: fcos
+version: 1.5.0
+storage:
+  trees:
+  - path: /etc/modprobe.d
+    local: etc/modprobe.d

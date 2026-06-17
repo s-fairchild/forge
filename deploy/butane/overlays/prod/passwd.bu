@@ -1,0 +1,18 @@
+# deploy/butane/overlays/prod/system-config.bu
+#
+# Prod-specific host identity and user configuration.
+# Injects SSH authorized keys for the `root` and `core` users from podman secrets
+# (id_ed25519_rick-root.pub and id_ed25519_rick-core.pub) that are mounted into
+# the butane container from SECRET_FILES during ignition generation.
+---
+variant: fcos
+version: 1.5.0
+passwd:
+  users:
+  - name: root
+    ssh_authorized_keys_local:
+      - secrets/id_ed25519_rick-root.pub
+
+  - name: core
+    ssh_authorized_keys_local:
+      - secrets/id_ed25519_rick-core.pub

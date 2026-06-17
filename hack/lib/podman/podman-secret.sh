@@ -2,15 +2,37 @@
 #
 # shellcheck shell=bash
 
-declare -r __hack_lib_podman_secrets_create_sourced="true"
+declare -r __lib_podman_secret_sourced="true"
+
+# declare -r __empty_array=()
+#
+declare -r __empty_array=()
+
+# podman_secret_exists()
+#
+# Returns 0 if a podman secret with the given name or ID exists, non-zero otherwise.
+# Thin wrapper around `podman secret exists` for use in conditional expressions.
+#
+# args:
+#   * 1) secret - string; podman secret name or ID to check.
+podman_secret_exists() {
+    podman secret exists "$1"
+}
 
 # podman_secret_create_replace_from_stdin()
 #
+# Creates or replaces a podman secret from stdin using `podman secret create --replace`.
+# Reads secret data from stdin; aborts if stdin is empty.
+# Standard provenance labels (generating file, sourced file, function name) are always
+# applied.  Additional caller-supplied labels are appended when labels_extra is set.
+#
 # args:
-#   * 1) secret_name - string; name of podman secret to be created
-#   * 2)
+#   * 1) secret_name  - string; name of the podman secret to create or replace.
+#   * 2) labels_extra - nameref (optional); array of additional label values to apply.
+#         Each element is appended as "--label=<value>".  Pass nothing or an empty
+#         array to omit extra labels.
 podman_secret_create_replace_from_stdin() {
-    local -r secret_name="${1?$(fatal "\$1 secret_name $ERROR_ARG_NOT_PROVIDED")}"
+    local -r secret_name="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
     local -n labels_extra="${2:-__empty_array}"
 
     local -r input="$(cat)"
@@ -30,20 +52,24 @@ podman_secret_create_replace_from_stdin() {
     debug "$(declare -p labels)"
 
     # shellcheck disable=SC2068
-    podman secret \
+    printf '%s' "$input" \
+    | podman secret \
             create \
             --replace \
             ${labels[@]} \
             "$secret_name" \
             - \
-            <<< "$input" \
     || fatal "failed to create podman secret: $secret_name"
 }
 
 # podman_secret_showsecret()
 #
+# Prints the raw secret data for a named podman secret to stdout.
+# Uses `podman secret inspect --showsecret` with the SecretData Go template field.
+# Aborts if the secret name argument is missing or empty.
+#
 # args:
-#   * 1) s - string; podman secret name to be inspected
+#   * 1) s - string; podman secret name to retrieve data from.
 podman_secret_showsecret() {
     local -r s="${1?$(fatal "\$1 is unset. podman secret name must be provided.")}"
 
@@ -58,32 +84,36 @@ podman_secret_showsecret() {
 
 # podman_secret_name_from_id()
 #
+# Resolves a podman secret ID to its human-readable name and prints it to stdout
+# without a trailing newline.  Aborts if the secret does not exist.
+# Used to translate ID arrays (as returned by podman secret create) into names
+# before constructing --secret mount options.
+#
 # args:
-#   * 1) id - string; podman secret id to get name from
+#   * 1) id - string; podman secret ID to resolve.
 podman_secret_name_from_id() {
-    local -r id="${1?$(fatal "\$1 id $ERROR_ARG_NOT_PROVIDED")}"
+    local -r id="${1?$(fatal "\$1 id $ERROR_ARG_REQUIRED")}"
 
     podman secret exists "$id" || fatal "podman secret $id does not exist."
 
-    s="$(podman secret \
-            ls \
-            -f ID="$id" \
-            --format '{{.Name}}')"
-
-    # return secret name without ending \n (appended by podman secret ls).
+    s="$(podman secret inspect -f '{{.Spec.Name}}' "$id")"
     echo -n "$s"
 }
 
 # podman_secret_create_from_file()
 #
-# Pass a directory containing secret files to be created as podman secrets.
-# The secret name will be the same as the file it's created from.
+# Creates a podman secret for each file path or glob in the src_files array.
+# The secret name is the basename of the source file.  Secrets that already exist
+# are skipped with a warning — delete the secret manually to force recreation.
+# Provenance labels and any caller-supplied extra labels are applied to each secret.
 #
 # args:
-#   * $1) src_files - nameref; directory containing secret files.
-#   * $2) key_ids - nameref, array; Optional. Array to update with podman secret key ids.
+#   * 1) src_files    - nameref; array of file paths or glob patterns to create secrets
+#         from.  Each element is expanded and its basename becomes the secret name.
+#   * 2) labels_extra - nameref (optional); array of additional label values.
+#         Each element is appended as "--label=<value>".
 podman_secret_create_from_file() {
-    local -n src_files="${1?$(fatal "\$1 src_files $ERROR_ARG_NOT_PROVIDED")}"
+    local -n src_files="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
     # shellcheck disable=SC2034
     local -n labels_extra="${2:-__empty_array}"
 
@@ -93,10 +123,9 @@ podman_secret_create_from_file() {
         secret_name="$(basename "$f")"
         # secret_name="$(format_podman_secret_name "$f_name")"
 
-        if podman secret exists "$secret_name"; then
+        if podman_secret_exists "$secret_name"; then
             warn "podman secret $secret_name already exists. Delete this secret if you intend to update it."
-        else
-            info "Creating podman secret $secret_name from file $f"
+            return
         fi
 
         labels=(
@@ -108,8 +137,8 @@ podman_secret_create_from_file() {
 
         if [ -v labels_extra ]; then
             append_array_with_text labels \
-                                        labels_extra \
-                                        "--label="
+                labels_extra \
+                "--label="
         fi
         debug "$(declare -p labels)"
 
@@ -139,17 +168,25 @@ format_podman_secret_name() {
 
 # gen_secret_mount_opts()
 #
-# Converts an array of podman secret IDs into an array of --secret=$secret_name,type=mount=target=$__BUTANE_WORKDIR/files/secrets/$secret_name
-# podman secret IDs will be converted to the secret names for predictable file mounts within containers.
+# Converts an array of podman secret IDs into `--secret=` mount option strings
+# suitable for passing to `podman run`.  Each ID is resolved to its secret name
+# via podman_secret_name_from_id() so that the mount path inside the container
+# is deterministic regardless of how the ID was obtained.
+#
+# The generated option format is:
+#   --secret=<name>,type=mount,target=<target_dir>/<name>
 #
 # args:
-#   * 1) out - nameref; nameref to set (empty) array. Generated secret mount options will be assigned to out.
-#   * 2) secrets - nameref; nameref to an array of podman secret IDs.
+#   * 1) out        - nameref; empty array that receives the generated option strings.
+#   * 2) ids        - nameref; array of podman secret IDs to convert.  Must be non-empty.
+#   * 3) target_dir - string; absolute path inside the container under which each secret
+#         is mounted (e.g. $__BUTANE_WORKDIR/files/secrets).
 gen_secret_mount_opts() {
     # shellcheck disable=SC2034
-    local -n out="${1?$(fatal "$ERROR_ARG_NOT_PROVIDED")}"
+    local -n out="${1?$(fatal "$ERROR_ARG_REQUIRED")}"
+    # TODO move optional arg $2 to last or implement getopts
     local -n ids="${2:-__empty_array}"
-    local -r target_dir="${3?$(fatal "\$3 target_dir $ERROR_ARG_NOT_PROVIDED")}"
+    local -r target_dir="${3?$(fatal "$ERROR_ARG_REQUIRED: \$3")}"
 
     [ -v ids ] || fatal "\$2 secrets=\"${ids[*]}\" secrets array must contain elements."
 
@@ -165,27 +202,41 @@ gen_secret_mount_opts() {
     done
 }
 
+# podman_secret_gen_file_secretsdata()
+#
+# Generates a secretsdata.json blob in the format expected by the podman file
+# secret driver.  Reads a whitespace-separated list of secret names or IDs from
+# stdin, inspects each with `podman secret inspect --showsecret`, and produces a
+# JSON object mapping each secret ID to its raw secret data.
+#
+# The output can be written to /var/lib/containers/storage/secrets/filedriver/secretsdata.json
+# on a target host to pre-populate the podman secret store without running
+# `podman secret create` on that host (e.g. via ignition file injection).
+#
+# args:
+#   * stdin) whitespace-separated list of podman secret names or IDs to include.
+#
+# stdout) JSON object: { "<id>": "<secret_data>", ... }
+podman_secret_gen_file_secretsdata() {
+    local -r input="$(cat)"
+    [ -z "$input" ] && fatal "input $ERROR_STDIN_NULL"
 
-if [ "${__lib_opt_bash_utils_logging_sourced:-}" != "true" ]; then
-    declare -r __shell_utils_logging="hack/lib/opt-bash-utils-logging.sh"
-    [ -f "$__shell_utils_logging" ] || "$(echo "failed to find file: $__shell_utils_logging"; exit 1)"
+    local -a secrets
+    mapfile secrets <<< "$input"
+    # shellcheck disable=SC2068
+    podman_secret_showsecret ${secrets[@]} | jq -r 'map({(.ID): .SecretData}) | add'
+}
 
-    # shellcheck source=../opt-bash-utils-logging.sh
-    . "$__shell_utils_logging" || "$(echo "failed to find file: $__shell_utils_logging"; exit 1)"
+if [ "${__lib_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_logging="hack/lib/logging.sh"
+    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
+    # shellcheck source=../logging.sh
+    . "$__lib_logging"
 fi
 
-if [ "${__hack_lib_lib_sourced:-}" != "true" ]; then
-    declare -r __hack_lib_lib="hack/lib/lib.sh"
-    [ -f "$__hack_lib_lib" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_lib"
-
-    # shellcheck source=../lib.sh
-    . "$__hack_lib_lib"
-fi
-
-if [ "${__hack_lib_ignition_constants_sourced:-}" != "true" ]; then
-    declare -r __hack_lib_ignition_constants="hack/lib/ignition/constants.env"
-    [ -f "$__hack_lib_ignition_constants" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_ignition_constants"
-
-    # shellcheck source=constants.env
-    . "$__hack_lib_ignition_constants" || fatal "$ERROR_FILE_SOURCE_FAILED: $__hack_lib_ignition_constants"
+if [ "${__hack_lib_arrays_sourced:-}" != "true" ]; then
+    declare -r __hack_lib_arrays="hack/lib/arrays.sh"
+    [ -f "$__hack_lib_arrays" ] || fatal "$ERROR_FILE_SOURCE_FAILED: $__hack_lib_arrays"
+    # shellcheck source=../arrays.sh
+    . "$__hack_lib_arrays"
 fi

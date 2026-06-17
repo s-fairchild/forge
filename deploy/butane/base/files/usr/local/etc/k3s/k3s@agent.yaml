@@ -1,6 +1,7 @@
----
+# k3s@agent.yaml
+#
 # https://docs.k3s.io/installation/configuration#configuration-file
-
 # https://docs.k3s.io/cli/agent#node
+---
 node-label:
   - "node-role.kubernetes.io/agent=true"

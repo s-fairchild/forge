@@ -1,3 +1,16 @@
+# deploy/butane/overlays/prod/main.bu
+# https://coreos.github.io/butane/config-fcos-v1_7/
+#
+# Top-level butane configuration for the production overlay (node: rick.expresso.lan).
+# This file is the entry point for `make ignition-gen-prod`.
+#
+# The ignition generation pipeline (hack/bin/ignition-gen-main.sh) parses this file,
+# compiles each path listed under .ignition.config.merge[].inline into ignition JSON,
+# substitutes the compiled JSON in-place, then validates and stores the merged result
+# as the `prod-ignition` podman secret.
+#
+# Base configs apply shared FCOS settings (containers, firewalld, users, sysctl, etc.).
+# Prod configs layer production-specific storage, networking, and k3s configuration on top.
 ---
 variant: fcos
 version: 1.5.0
@@ -9,12 +22,21 @@ ignition:
       ####################
       - inline: deploy/butane/base/btrfsmaintenance.bu
       - inline: deploy/butane/base/etc-containers-systemd.bu
+<<<<<<< HEAD
       - inline: deploy/butane/base/firewalld.bu
       - inline: deploy/butane/base/root.bu
       - inline: deploy/butane/base/security.bu
       - inline: deploy/butane/base/sysctl.bu
       - inline: deploy/butane/base/system-config.bu
       - inline: deploy/butane/base/usr.bu
+=======
+      - inline: deploy/butane/base/etc-firewalld.bu
+      - inline: deploy/butane/base/etc-general.bu
+      - inline: deploy/butane/base/etc-security-limits.bu
+      - inline: deploy/butane/base/etc-sysctl.bu
+      - inline: deploy/butane/base/passwd.bu
+      - inline: deploy/butane/base/usr-local.bu
+>>>>>>> installer-updates
 
       ####################
       ### Prod configs ###
@@ -24,9 +46,20 @@ ignition:
       - inline: deploy/butane/overlays/prod/storage/raid.bu
       - inline: deploy/butane/overlays/prod/storage/luks.bu
 
-      - inline: deploy/butane/overlays/prod/containers.bu
-      - inline: deploy/butane/overlays/prod/modprobe.bu
-      - inline: deploy/butane/overlays/prod/NetworkManager.bu
-      - inline: deploy/butane/overlays/prod/sysconfig.bu
-      - inline: deploy/butane/overlays/prod/system-config.bu
-      - inline: deploy/butane/overlays/prod/usr.bu
+      - inline: deploy/butane/overlays/prod/etc-containers-secrets.bu
+      - inline: deploy/butane/overlays/prod/etc-containers-systemd.bu
+      - inline: deploy/butane/overlays/prod/etc-modprobe.bu
+      - inline: deploy/butane/overlays/prod/etc-sysconfig.bu
+      - inline: deploy/butane/overlays/prod/passwd.bu
+      - inline: deploy/butane/overlays/prod/usr-local.bu
+
+storage:
+  files:
+  - path: /etc/hostname
+    overwrite: true
+    user:
+      name: root
+    group:
+      name: root
+    contents:
+      inline: rick.expresso.lan

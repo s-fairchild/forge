@@ -1,0 +1,18 @@
+[Unit]
+Description=Pull image docker.io/rancher/k3s:${IMAGE_TAG_K3S}
+Documentation=https://docs.k3s.io/advanced?_highlight=docker#running-k3s-in-docker https://hub.docker.com/r/rancher/k3s
+Requisite=nss-lookup.target
+After=nss-lookup.target
+
+[Service]
+EnvironmentFile=-/usr/local/etc/sysconfig/%N
+TimeoutStartSec=900
+
+[Image]
+# One week with --retry-delay=1m
+Retry=10080
+RetryDelay=1m
+Image=docker.io/rancher/k3s:%i
+
+[Install]
+WantedBy=default.target
