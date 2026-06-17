@@ -1,47 +1,32 @@
 #!/bin/bash
 
-set -o nounset \
-    -o errexit
+[ "${XTRACE:-0}" -eq 1 ] && set -x
 
-DEBUG="${DEBUG:-"false"}"
-if [ "$DEBUG" == "true" ]; then
-    set -x
-fi
+set -o nounset \
+    -o errexit \
+    -o pipefail \
+    -o noclobber \
+    -o hashall
 
 main() {
     info "starting"
     local serve="$1"
 
-    podman volume exists "$serve" || warn "$serve will be mounted to the container directly."
-
     httpd "$serve"
 }
 
-if [ "${__bash_utils_util_base_sourced:-}" != "true" ]; then
-    # declare -r __bash_utils_util_base_path="hack/opt/bash-utils/util/base.sh"
-    declare -r __bash_utils_util_base_path="hack/opt/bash-utils/util/base.sh"
-
-    [ -f "$__bash_utils_util_base_path" ] || "$(echo "$__bash_utils_util_base_path file not found."; exit 5)"
-    # shellcheck source=../opt/bash-utils/util/base.sh
-    . "$__bash_utils_util_base_path"
+if [ "${__lib_logging_sourced:-}" != "true" ]; then
+    declare -r __lib_logging="hack/lib/logging.sh"
+    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
+    # shellcheck source=../lib/logging.sh
+    . "$__lib_logging"
 fi
 
-if [ "${__bash_utils_util_logging_sourced:-}" != "true" ]; then
-    # declare -r __bash_utils_util_logging_path="hack/opt/bash-utils/util/logging.sh"
-    declare -r __bash_utils_util_logging_path="hack/opt/bash-utils/util/logging.sh"
-
-    [ -f "$__bash_utils_util_logging_path" ] || "$(echo "$__bash_utils_util_base_path file not found."; exit 5)"
-    # shellcheck source=../opt/bash-utils/util/logging.sh
-    . "$__bash_utils_util_logging_path"
-fi
-
-if [ "${__hack_lib_httpd_sourced:-}" != "true" ]; then
-    # declare -r __hack_lib_httpd_path="hack/lib/httpd.sh"
-    declare -r __hack_lib_httpd_path="hack/lib/httpd.sh"
-
-    [ -f "$__hack_lib_httpd_path" ] || fatal "File not found $__hack_lib_httpd_path. Cannot source."
-    # shellcheck source=../lib/httpd.sh
-    . "$__hack_lib_httpd_path"
+if [ "${__hack_lib_ignition_serve_sourced:-}" != "true" ]; then
+    declare -r __hack_lib_ignition_serve="hack/lib/ignition/serve.sh"
+    [ -f "$__hack_lib_ignition_serve" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_ignition_serve"
+    # shellcheck source=../lib/ignition/serve.sh
+    . "$__hack_lib_ignition_serve"
 fi
 
 main "$@"
