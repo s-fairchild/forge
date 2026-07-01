@@ -4,8 +4,6 @@
 
 declare -r __lib_podman_secret_sourced="true"
 
-# declare -r __empty_array=()
-#
 declare -r __empty_array=()
 
 # podman_secret_exists()
@@ -96,8 +94,9 @@ podman_secret_name_from_id() {
 
     podman secret exists "$id" || fatal "podman secret $id does not exist."
 
+    local s
     s="$(podman secret inspect -f '{{.Spec.Name}}' "$id")"
-    echo -n "$s"
+    printf '%s' "$s"
 }
 
 # podman_secret_create_from_file()
@@ -121,14 +120,13 @@ podman_secret_create_from_file() {
     # shellcheck disable=SC2068
     for f in ${src_files[@]}; do
         secret_name="$(basename "$f")"
-        # secret_name="$(format_podman_secret_name "$f_name")"
 
         if podman_secret_exists "$secret_name"; then
             warn "podman secret $secret_name already exists. Delete this secret if you intend to update it."
             return
         fi
 
-        labels=(
+        local -a labels=(
             "--label=generated-by-file=$(basename "$0")"
             "--label=generated-by-sourced-file=${BASH_SOURCE[0]}"
             "--label=generated-by-function=${FUNCNAME[0]}()"
@@ -152,20 +150,6 @@ podman_secret_create_from_file() {
     done
 }
 
-# format_podman_secret_name()
-#
-# Replace characters that are not valid environment variable identifiers
-# So that mounting a secret as type=env works
-#
-# args:
-#   * $1) n - string; podman secret name to format.
-format_podman_secret_name() {
-    local n="${1//-/_}"
-    n="${n//./_}"
-
-    echo -n "$n"
-}
-
 # gen_secret_mount_opts()
 #
 # Converts an array of podman secret IDs into `--secret=` mount option strings
@@ -183,22 +167,15 @@ format_podman_secret_name() {
 #         is mounted (e.g. $__BUTANE_WORKDIR/files/secrets).
 gen_secret_mount_opts() {
     # shellcheck disable=SC2034
-    local -n out="${1?$(fatal "$ERROR_ARG_REQUIRED")}"
-    # TODO move optional arg $2 to last or implement getopts
-    local -n ids="${2:-__empty_array}"
+    local -n out="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
+    local -n ids="${2?$(fatal "$ERROR_ARG_REQUIRED: \$2")}"
     local -r target_dir="${3?$(fatal "$ERROR_ARG_REQUIRED: \$3")}"
 
-    [ -v ids ] || fatal "\$2 secrets=\"${ids[*]}\" secrets array must contain elements."
-
-    local -a arr
-    # Due to complex formatting of the --secret options, it's simplest to append to secrets one secret at a time.
-    # This way I can use prefix and append to the extra string using the secret name.
     # shellcheck disable=SC2068
     for s in ${ids[@]}; do
-        arr=("$(podman_secret_name_from_id "$s")")
-        append_array_with_text out \
-                                arr \
-                                "--secret=${arr[0]},type=mount,target=$target_dir/"
+        local name
+        name="$(podman_secret_name_from_id "$s")"
+        out+=("--secret=$name,type=mount,target=$target_dir/$name")
     done
 }
 
@@ -224,7 +201,8 @@ podman_secret_gen_file_secretsdata() {
     local -a secrets
     mapfile secrets <<< "$input"
     # shellcheck disable=SC2068
-    podman_secret_showsecret ${secrets[@]} | jq -r 'map({(.ID): .SecretData}) | add'
+    podman secret inspect --showsecret ${secrets[@]} \
+        | jq -r 'map({(.ID): .SecretData}) | add'
 }
 
 if [ "${__lib_logging_sourced:-}" != "true" ]; then
