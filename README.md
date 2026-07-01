@@ -88,7 +88,7 @@ This will:
 ### 3. Serve ignition over HTTP
 
 ```bash
-make ignition-serve-http-prod
+make ignition-serve-httpd-prod
 ```
 
 Serves the ignition config on port 8080 via a containerised httpd. Point the FCOS installer at `http://<build-host>:8080/ignition.json` during PXE or ISO boot.
@@ -114,10 +114,14 @@ make -C deploy/installer installer-iso-customize        # embeds ignition into t
 | `ignition-gen-staging` | Generate staging ignition |
 | `ignition-gen-rpi4-0` | Generate RPi4 agent ignition |
 | `ignition-gen-base` | Generate base ignition (no overlay) |
-| `ignition-serve-http-prod` | Serve prod ignition on port 8080 |
-| `ignition-serve-http-staging` | Serve staging ignition on port 8080 |
-| `ignition-serve-http-rpi4-0` | Serve RPi4 ignition on port 8080 |
-| `ignition-serve-http-base` | Serve base ignition on port 8080 |
+| `ignition-serve-httpd-prod` | Serve prod ignition on port 8080 via httpd |
+| `ignition-serve-nginx-prod` | Serve prod ignition on ports 8080/8081 via nginx (TLS) |
+| `ignition-serve-httpd-staging` | Serve staging ignition via httpd |
+| `ignition-serve-nginx-staging` | Serve staging ignition via nginx |
+| `ignition-serve-httpd-rpi4-0` | Serve RPi4 ignition via httpd |
+| `ignition-serve-nginx-rpi4-0` | Serve RPi4 ignition via nginx |
+| `ignition-serve-httpd-base` | Serve base ignition via httpd |
+| `ignition-serve-nginx-base` | Serve base ignition via nginx |
 
 #### Kubernetes Manifests
 

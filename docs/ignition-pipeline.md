@@ -29,7 +29,7 @@ All tools (`butane`, `yq`) run containerised via podman — no host-side install
 %%{init: {'theme': 'dark'}}%%
 flowchart TD
     SECRETSENV[("fa:fa-key secrets.env\nSECRET_FILES · SECRET_IDS\nLUKS keyfiles · SSH pubkeys")]
-    MAINBU[/"fa:fa-file-code main.bu\nFCOS Butane v1.5.0\n.ignition.config.merge[].inline"/]
+    MAINBU[/"fa:fa-file-code main.bu\nFCOS Butane v1.7.0\n.ignition.config.merge[].inline"/]
     TOKENS[("fa:fa-key podman secrets\nk3s-token · k3s-agent-token")]
 
     subgraph STEP1["Step 1 — Create podman secrets from key files"]
@@ -63,7 +63,7 @@ flowchart TD
     end
 
     subgraph SERVE["Optional — Serve over HTTP"]
-        HTTPD["fa:fa-wifi containerised httpd\nport 8080 · hack/bin/httpd-serve.sh"]
+        HTTPD["fa:fa-wifi containerised httpd/nginx\nport 8080 · serve() in hack/lib/ignition/serve.sh"]
         NODE(["fa:fa-server FCOS node\nPXE / HTTP boot"])
     end
 
@@ -170,7 +170,7 @@ The merged Ignition JSON is validated with `butane --check --strict` to catch an
 
 ### Step 5 — Store as podman secret
 
-The final JSON is stored (with `--replace`) as a podman secret named `<overlay>-ignition`. The `make ignition-serve-http-<overlay>` targets read this secret and serve it over HTTP on port 8080.
+The final JSON is stored (with `--replace`) as a podman secret named `<overlay>-ignition`. The `make ignition-serve-httpd-<overlay>` and `make ignition-serve-nginx-<overlay>` targets read this secret and serve it via `serve()` in `hack/lib/ignition/serve.sh`.
 
 ---
 
@@ -214,7 +214,7 @@ deploy/butane/
         └── usr.bu
 ```
 
-Each `main.bu` is an FCOS Butane v1.5.0 file. The `inline` entries under `.ignition.config.merge` are file paths to other `.bu` files — the pipeline replaces each with its compiled Ignition JSON before producing the final merged config.
+Each `main.bu` is an FCOS Butane v1.7.0 file. The `inline` entries under `.ignition.config.merge` are file paths to other `.bu` files — the pipeline replaces each with its compiled Ignition JSON before producing the final merged config.
 
 ---
 

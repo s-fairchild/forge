@@ -43,7 +43,7 @@ flowchart TD
     DELIVERY{"Delivery\nmethod?"}
 
     subgraph HTTP_PATH["Network boot (HTTP)"]
-        HTTPD_CMD["fa:fa-terminal make ignition-serve-http-prod"]
+        HTTPD_CMD["fa:fa-terminal make ignition-serve-httpd-prod"]
         HTTPD["fa:fa-wifi containerised httpd\nport 8080"]
     end
 
@@ -159,7 +159,7 @@ Storage configuration details: [docs/storage-layout.md](storage-layout.md).
 ### Step 3a — Serve over HTTP (network boot)
 
 ```bash
-make ignition-serve-http-prod
+make ignition-serve-httpd-prod
 ```
 
 Serves the ignition config on port 8080. Boot the target machine and point the FCOS live environment at:

@@ -11,7 +11,7 @@ Infrastructure-as-code for a Fedora CoreOS (FCOS) k3s cluster. The two main conc
 
 All scripts must be run from the **repo root**. Both `butane` and `yq` run containerized via podman; there are no host-side dependencies for those tools beyond `make`, `podman`, and `jq`.
 
-After cloning, initialise submodules (bash-utils lives under `hack/vendor/bash-utils/`):
+After cloning, initialise submodules (`bash-utils` under `hack/vendor/bash-utils/` and `bashkit` under `hack/vendor/bashkit/`):
 ```bash
 git submodule update --init --recursive
 ```
@@ -27,8 +27,9 @@ make ignition-gen-prod          # prod overlay, reads deploy/butane/overlays/pro
 make ignition-gen-staging       # staging overlay
 make ignition-gen-base          # base overlay
 
-# Serve ignition over HTTP (port 8080) after generating
-make ignition-serve-http-prod
+# Serve ignition over HTTP/HTTPS (ports 8080/8081) after generating
+make ignition-serve-httpd-prod  # via httpd image
+make ignition-serve-nginx-prod  # via nginx image (TLS)
 
 # Generate kube manifests (runs kubectl kustomize --enable-helm)
 make kube-manifests-gen-prod    # also runs rpi4-0 as a dependency
@@ -62,7 +63,9 @@ Entry point: `hack/bin/ignition-gen-main.sh <main.bu> [secrets.env]`
 Key library files:
 - `hack/lib/ignition/ignition.sh` — core logic (`ignition_gen_config_merge_inlines`)
 - `hack/lib/ignition/butane.sh` — podman wrapper for containerized butane; defines `__BUTANE_WORKDIR="/data"`
+- `hack/lib/ignition/serve.sh` — `serve()` function driving httpd/nginx containers for ignition serving; sources `hack/lib/podman/`
 - `hack/lib/podman/podman-secret.sh` — secret create/inspect/mount helpers
+- `hack/lib/podman/podman-run.sh` — `podman_run_opt_*` helpers for building `--secret` and `--volume` flags
 - `hack/lib/logging.sh` — loads the bash-utils logging stack (`hack/vendor/bash-utils/util/`)
 - `hack/lib/vendor-bash-utils-logging.sh` — declares error message constants (`ERROR_ARG_REQUIRED`, `ERROR_FILE_NOT_FOUND`, etc.)
 
@@ -82,7 +85,7 @@ deploy/butane/
     rpi4-0/           # Raspberry Pi 4 agent node
 ```
 
-Each `main.bu` is an FCOS butane v1.5.0 file. Its `inline` entries are paths to other `.bu` files; the pipeline replaces each path with its compiled ignition JSON before producing the final merged config.
+Each `main.bu` is an FCOS butane v1.7.0 file. Its `inline` entries are paths to other `.bu` files; the pipeline replaces each path with its compiled ignition JSON before producing the final merged config.
 
 Prod storage layout:
 - `root` — boot disk partition 4 (50 GiB), LUKS via TPM2 clevis, btrfs at `/`
@@ -97,6 +100,8 @@ Entry point: `hack/bin/k3s-tokens-generate.sh`
 Library: `hack/lib/k3s/k3s-gen-token.sh`
 
 Tokens are **pre-generated before any node boots** and embedded into ignition configs so all server nodes share the same `K3S_TOKEN`. Generating on first boot would require out-of-band coordination between nodes.
+
+`k3s-tokens-generate.sh` creates podman secrets `k3s-token` and `k3s-agent-token`, then produces a `secretsdata.json` blob stored as a podman secret under the name passed as `$1` (e.g. `prod-secretsdata.json`). This JSON is the format consumed by the podman file secret driver and can be deployed to `/var/lib/containers/storage/secrets/filedriver/` on a remote host via ignition.
 
 `k3s_gen_token()` tries `openssl rand -hex 32` (primary), falls back to `tr` then `sha256sum`. All three produce 64 lowercase hex characters with no trailing newline.
 
@@ -121,23 +126,29 @@ pkg/
   workloads/          # jellyfin, motion, mariadb-cluster, pihole, v4l2rtspserver
   charts/             # vendored Helm chart sources
   containers/         # Containerfiles for custom images (ffmpeg, motion, libcamera, envsubst…)
+  schemas/            # JSON value schemas for Helm chart validation
 ```
 
 Each operator/workload follows the standard kustomize pattern: `base/kustomization.yaml` with overlay directories (`overlays/prod/`, `overlays/staging/`, etc.). Many use `--enable-helm` via `kubectl kustomize` with inline `HelmChart` or `HelmRelease` resources.
 
 `hack/bin/kube-manifests-gen.sh` finds all `<overlay>` directories under `pkg/` using `find`, runs `kubectl kustomize --enable-helm` on each, and writes `<app-name>.yaml` to the target manifests path (e.g. `deploy/butane/overlays/prod/files/usr/local/lib/rancher/k3s/server/manifests/custom/`). These generated YAML files are then embedded into the ignition config by butane.
 
-Apps can be excluded from manifest generation via the `disabled_pkgs` ERE pattern in `hack/env/kube-manifests-gen.env`. To disable an app, add its name to that file and include it in `disabled_pkgs`. Currently disabled: `pihole`, `coredns-custom`, `cloudnative-pg`, `cloudnative-pg-cluster`.
+Apps can be excluded from manifest generation via the `disabled_pkgs` ERE pattern in `hack/env/kube-manifests-gen.env`. To enable a disabled app, comment out its `declare -r skip_<name>` line and remove it from `disabled_pkgs`. Currently disabled: `pihole`, `coredns-custom`, `cloudnative-pg`, `cloudnative-pg-cluster`, `jellyfin`, `motion`, `v4l2rtspserver`, `mariadb-operator`, `mariadb-operator-crds`, `mariadb-cluster`, `local-storage-custom`, `traefik-custom`.
 
 ## Ignition Serving
 
-After generation, `hack/bin/httpd-serve.sh <podman-secret-or-volume>` serves the ignition file over HTTP on port 8080 using a containerized `registry.access.redhat.com/hi/httpd` image. This is used to PXE/HTTP-boot FCOS nodes.
+`hack/lib/ignition/serve.sh` defines a `serve()` function that launches a containerized httpd or nginx server. The Makefile sources this file and calls `serve` with:
+- `-s <secret>` — podman secret name to mount into the serve root (repeatable; secrets matching `ssl*` are mounted under `/run/secrets/` with restricted permissions)
+- `-i httpd|nginx` — server image (`registry.access.redhat.com/hi/<image>:latest`)
+- `-d <dropin-config>` — dropin config file to bind-mount into `conf.d/` (defaults to `hack/etc/httpd/ignition-secure.conf` or its nginx equivalent)
 
-`hack/bin/ignition-gen-serving-certs.sh` generates a self-signed nginx TLS key and certificate (stored as podman secrets `nginx-ssl-private-key` and `nginx-ssl-certificate`) for use when serving ignition over HTTPS.
+`hack/bin/ignition-gen-serving-certs.sh` generates a self-signed TLS key and certificate (stored as podman secrets) for use when serving ignition over HTTPS.
 
-## Installer
+## Other Directories
 
-`deploy/butane/overlays/prod/coreos-installer/install.bu` compiles to `install.ign`, which is embedded into the FCOS ISO via `coreos-installer iso customize`. The base installer ignition is gzip-compressed and sha512-verified before the prod layer references it (hash stored in `install.ign.sha512`).
+- `deploy/installer/` — has its own `Makefile`; downloads FCOS ISOs, compiles `install.bu` → `install.ign`, and embeds ignition into the ISO via `coreos-installer iso customize`
+- `deploy/ansible/` — post-boot node configuration for edge nodes
+- `pkg/containers/` — has its own `Makefile`; builds and pushes custom images (`ffmpeg`, `motion`, `libcamera`, `rpicam-apps`, `envsubst`, `btrfs-progs`) to `docker.io/steve51516`
 
 ## Overlays and Environments
 
