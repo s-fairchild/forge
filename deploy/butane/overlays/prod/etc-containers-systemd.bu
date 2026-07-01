@@ -8,7 +8,7 @@
 # k3s@agent-0 container drop-in.
 ---
 variant: fcos
-version: 1.5.0
+version: 1.7.0
 storage:
   links:
   - path: /etc/containers/systemd/local-path@appdata.volume

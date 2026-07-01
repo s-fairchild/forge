@@ -13,7 +13,7 @@
 # Prod configs layer production-specific storage, networking, and k3s configuration on top.
 ---
 variant: fcos
-version: 1.5.0
+version: 1.7.0
 ignition:
   config:
     merge:
