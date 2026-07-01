@@ -95,15 +95,15 @@ ignition-serve-gen-certs-prod:
 
 ignition-serve-httpd-staging: ignition-gen-staging
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${HTTPD_IMAGE_NAME} staging-main-ign
+	serve $${HTTPD_IMAGE_NAME} staging-main-ign
 
 ignition-serve-nginx-staging: ignition-gen-staging
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${NGINX_IMAGE_NAME} staging-main-ign
+	serve $${NGINX_IMAGE_NAME} staging-main-ign
 
 ignition-serve-httpd-rpi4-0: ignition-gen-rpi4
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${HTTPD_IMAGE_NAME} rpi4-main-ign
+	serve $${HTTPD_IMAGE_NAME} rpi4-main-ign
 
 ignition-serve-nginx-rpi4-0: ignition-gen-rpi4
 	. $(LIB_IGNITION_SERVE)
