@@ -1,14 +1,9 @@
 .ONESHELL:
 SHELL = /bin/bash
 .SHELLFLAGS := -o nounset -o errexit -o pipefail -o noclobber -o hashall -c
+-include hack/env/vendor.env
 
-kustomize_base_path := pkg
-manifests_relative_path := files/usr/local/lib/rancher/k3s/server/manifests/custom
 deploy_butane_path := deploy/butane
-manifests_custom_base := ${deploy_butane_path}/base/${manifests_relative_path}
-manifests_custom_staging := ${deploy_butane_path}/overlays/staging/${manifests_relative_path}
-manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
-manifests_custom_rpi4_0 := ${deploy_butane_path}/overlays/rpi4/${manifests_relative_path}
 
 clean:
 	if compgen -G ${manifests_custom_base}/*.yaml > /dev/null; then
@@ -27,25 +22,32 @@ clean:
 		rm -v ${manifests_custom_rpi4_0}/*.yaml
 	fi
 
+kustomize_base_path := pkg
+manifests_relative_path := files/usr/local/lib/rancher/k3s/server/manifests/custom
+manifests_custom_base := ${deploy_butane_path}/base/${manifests_relative_path}
+manifests_custom_staging := ${deploy_butane_path}/overlays/staging/${manifests_relative_path}
+manifests_custom_rpi4_0 := ${deploy_butane_path}/overlays/rpi4/${manifests_relative_path}
+manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
+
 kube-manifests-gen-base:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_base} \
-													base
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_base} \
+		base
 
 kube-manifests-gen-staging:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_staging} \
-													staging
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_staging} \
+		staging
 
 kube-manifests-gen-rpi4-0:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_rpi4_0} \
-													rpi4-0
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_rpi4_0} \
+		rpi4-0
 
 kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_prod} \
-													prod
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_prod} \
+		prod
 
 kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
@@ -54,26 +56,22 @@ k3s-tokens-generate-prod:
 
 deploy_butane_path := deploy/butane
 ignition-gen-staging: kube-manifests-gen-staging k3s-tokens-generate
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/staging/main.bu
+	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/staging/main.bu
 
 ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0 k3s-tokens-generate
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/rpi4-0/main.bu
+	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/rpi4-0/main.bu
 
 # ignition-gen-base: kube-manifests-gen-base
 ignition-gen-base:
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/base/main.bu
+	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/base/main.bu
 
 ignition-gen-prod: kube-manifests-gen-all k3s-tokens-generate-prod
-	XTRACE=$${XTRACE:-} VERBOSE=$${VERBOSE:-} \
 	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/prod/main.bu \
 								${deploy_butane_path}/overlays/prod/secrets.env
-
-LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
 
 ignition-serve-gen-certs-base:
 	hack/bin/ignition-gen-serving-certs.sh base
 
-# TODO save duplicated extensions as a global Makefile variable
 ignition-serve-gen-certs-staging:
 	hack/bin/ignition-gen-serving-certs.sh staging \
 		-a "DNS:r10.expresso.lan" \
@@ -92,6 +90,8 @@ ignition-serve-gen-certs-prod:
 		-a "DNS:r10.expresso.lan" \
 		-a "DNS:*.r10.expresso.lan" \
 		-a "IP:10.50.0.202"
+
+LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
 
 ignition-serve-httpd-staging: ignition-gen-staging
 	. $(LIB_IGNITION_SERVE)
@@ -118,6 +118,7 @@ ignition-serve-nginx-base: ignition-gen-base
 	serve $${NGINX_IMAGE_NAME} base-ignition
 
 ignition-serve-httpd-prod: ignition-gen-prod ignition-serve-gen-certs-prod
+	. $(LIB_IGNITION_SERVE)
 	serve -s prod-ignition \
 		-s prod-ssl-key \
 		-s prod-ssl-cert \

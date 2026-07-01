@@ -99,16 +99,16 @@ is_enabled() {
     return 0
 }
 
-if [ "${__lib_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_logging="hack/lib/logging.sh"
-    [ -f "$__lib_logging" ] || { printf '%s\n' "Cannot source: $__lib_logging; file not found" >&2; exit 5; }
+if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
+    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
+    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 5; }
     # shellcheck source=../lib/logging.sh
-    . "$__lib_logging"
+    . "$__bash_utils_base_config_logging"
 fi
 
 if [ "${__env_gen_kub_manifests_sourced:-}" != "true" ]; then
     declare -r __env_gen_kub_manifests="hack/env/kube-manifests-gen.env"
-    [ -f "$__env_gen_kub_manifests" ] || fatal --status=5 "Cannot source: ${__env_gen_kub_manifests}; file not found."
+    [ -f "$__env_gen_kub_manifests" ] || fatal --status=5 "failed to find file: ${__env_gen_kub_manifests}; file not found."
     # shellcheck source=../env/kube-manifests-gen.env
     . "$__env_gen_kub_manifests"
 fi

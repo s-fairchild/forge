@@ -20,8 +20,10 @@ declare -r __BUTANE_FILES_DIR="files"
 butane() {
     debug "Starting ${FUNCNAME[0]}()"
 
+    local -r image="quay.io/coreos/butane:release"
+
     local -r mount_src_dir="${BUTANE_VOLUME_MOUNT:-$PWD}"
-    podman_run_options=(
+    local -a podman_run_options=(
         "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "-i"
         "--rm"
@@ -41,7 +43,6 @@ butane() {
         done
     fi
 
-    local -r image="quay.io/coreos/butane:release"
     debug "$(declare -p image)"
     debug "$(declare -p podman_run_options)"
     debug "butane options:\n$*"
@@ -84,9 +85,9 @@ butane_check() {
     info "Config size: $(wc -c <<< "$input") bytes"
 }
 
-if [ "${__lib_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_logging="hack/lib/logging.sh"
-    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
-    # shellcheck source=../logging.sh
-    . "$__lib_logging"
+if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
+    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
+    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
+    # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh
+    . "$__bash_utils_base_config_logging"
 fi

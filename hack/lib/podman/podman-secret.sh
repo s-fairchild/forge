@@ -4,7 +4,7 @@
 
 declare -r __lib_podman_secret_sourced="true"
 
-declare -r __empty_array=()
+declare -ar __empty_array=()
 
 # podman_secret_exists()
 #
@@ -205,11 +205,23 @@ podman_secret_gen_file_secretsdata() {
         | jq -r 'map({(.ID): .SecretData}) | add'
 }
 
-if [ "${__lib_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_logging="hack/lib/logging.sh"
-    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
-    # shellcheck source=../logging.sh
-    . "$__lib_logging"
+# # podman_secret_filter_by_label()
+# podman_secret_filter_by_label() {
+    # local -r label="${1?$(error \$1 $ERROR_)}"
+    # # TODO troubleshoot adding podman secrets. Currently it's attempting to pull the secret name as if it is an image.
+    # secret_id="$$(podman secret \
+        # inspect \
+        # $$(podman secret ls -q) \
+        # | jq -r '.[] \
+        # | select(.Spec.Labels["deployment"] == "installer") \
+        # | .Spec.ID')"
+# }
+
+if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
+    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
+    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
+    # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh
+    . "$__bash_utils_base_config_logging"
 fi
 
 if [ "${__hack_lib_arrays_sourced:-}" != "true" ]; then
