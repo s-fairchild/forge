@@ -119,21 +119,16 @@ ignition-serve-nginx-base: ignition-gen-base
 
 ignition-serve-httpd-prod: ignition-gen-prod ignition-serve-gen-certs-prod
 	. $(LIB_IGNITION_SERVE)
-	serve -s prod-ignition \
-		-s prod-ssl-key \
-		-s prod-ssl-cert \
-		-d $${HTTPD_DROPINS_CONFIG_DEFAULT} \
-		-i $${HTTPD_IMAGE_NAME}
+	serve -i $${HTTPD_IMAGE_NAME} \
+		-s "prod-ignition,target=$${__httpd_serve_root}/config.ign,mode=0444" \
+		-s "ssl-key,mode=0400,uid=65532,gid=65532" \
+		-s "ssl-cert,mode=0400,uid=65532,gid=65532"
 
-# TODO uncomment once completed with testing
-# ignition-serve-nginx-prod: ignition-gen-prod ignition-serve-gen-certs-prod
-ignition-serve-nginx-prod:
+ignition-serve-nginx-prod: ignition-gen-prod ignition-serve-gen-certs-prod
 	. $(LIB_IGNITION_SERVE)
-
-	# TODO create a function that returns the podman secret id based on label filter deployment=prod
-	serve -s prod-ignition \
-		-s ssl-key \
-		-s ssl-cert \
-		-d $${PWD}/hack/etc/nginx/ignition-secure.conf \
-		-d $${PWD}/hack/etc/nginx/default.conf \
-		-i $${NGINX_IMAGE_NAME}
+	serve -i $${NGINX_IMAGE_NAME} \
+		-d hack/etc/nginx/ignition-secure.conf \
+		-d hack/etc/nginx/default.conf \
+		-s "prod-ignition,target=$${__nginx_serve_root}/config.ign,mode=0444" \
+		-s "ssl-key,mode=0400,uid=65532,gid=65532" \
+		-s "ssl-cert,mode=0400,uid=65532,gid=65532"

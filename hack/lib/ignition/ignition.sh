@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# declare -r __ignition_sourced="true"
 declare -r __ignition_sourced="true"
 
 # ignition_gen()

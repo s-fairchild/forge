@@ -39,46 +39,56 @@ declare -Ar SERVER_IMAGES=(
     ["nginx"]="registry.access.redhat.com/hi/$NGINX_IMAGE_NAME:latest"
 )
 
+# serve()
+#
+# Launches a containerized httpd or nginx server for serving ignition configs.
+#
+# Options:
+#   * -s <spec>   - podman secret spec passed verbatim to `podman run --secret`
+#                   (e.g. "prod-ignition,target=/usr/share/httpd/html/config.ign,mode=0444").
+#                   Repeatable; at least one is required.
+#   * -d <file>   - dropin config bind-mounted into the server's conf.d. Repeatable.
+#                   Defaults to the image's *_DROPINS_CONFIG_DEFAULT when omitted.
+#   * -e <prefix> - host env var wildcard prefix to pass through (e.g. "HTTPD_").
+#                   Repeatable. The image's default prefix is always included.
+#   * -i <image>  - server image key; one of the SERVER_IMAGES keys. Required.
+#   * $@)         - trailing args are passed to the container.
 serve() {
     debug "Starting ${FUNCNAME[0]}()"
     debug "$*"
 
-    local -a secrets=() dropins=() env_suffixes=()
-    local opt image=""
+    local -a secrets=() dropins=() env_prefixes=()
+    local opt image="" OPTIND=1
     while getopts ':s:d:e:i:' opt; do
-        debug "-${opt} $OPTARG"
         case "$opt" in
-            s)
-                secrets+=("$OPTARG")
-                ;;
-            d)
-                dropins+=("$OPTARG")
-                ;;
-            e)
-                env_suffixes+=("$OPTARG")
-                ;;
-            i)
-                local image_regex
-                image_regex="$(IFS='|'; printf '%s' "${!SERVER_IMAGES[*]}")"
-                [[ "$OPTARG" =~ $image_regex ]] || fatal "-$opt ${OPTARG} is not a configured server image. Valid images: ${!SERVER_IMAGES[*]}"
-                image="$OPTARG"
-                ;;
-            :)
-                error "-${OPTARG} $ERROR_OPTION_REQUIRED"
-                return 1
-                ;;
-            ?)
-                error "-${OPTARG} $ERROR_OPTION_UNKNOWN"
-                return 1
-                ;;
+            s) secrets+=("$OPTARG") ;;
+            d) dropins+=("$OPTARG") ;;
+            e) env_prefixes+=("$OPTARG") ;;
+            i) image="$OPTARG" ;;
+            :) fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
+            ?) fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
         esac
     done
     shift $((OPTIND - 1))
 
-    debug "$(declare -p secrets)"
-    debug "$(declare -p dropins)"
-    debug "$(declare -p env_suffixes)"
     (( ${#secrets[@]} )) || fatal "at least one -s secret must be provided."
+    [ -n "$image" ] || fatal "-i image $ERROR_ARG_REQUIRED"
+    [ -v 'SERVER_IMAGES[$image]' ] \
+        || fatal "-i $image is not a configured server image. Valid images: ${!SERVER_IMAGES[*]}"
+
+    local dropins_target env_default_prefix
+    case "$image" in
+        "$HTTPD_IMAGE_NAME")
+            dropins_target="$__httpd_dropins_target"
+            env_default_prefix="$HTTPD_ENV_PREFIX_WILDCARD"
+            (( ${#dropins[@]} )) || dropins=("$HTTPD_DROPINS_CONFIG_DEFAULT")
+            ;;
+        "$NGINX_IMAGE_NAME")
+            dropins_target="$__nginx_dropins_target"
+            env_default_prefix="$NGINX_ENV_PREFIX_WILDCARD"
+            (( ${#dropins[@]} )) || dropins=("$NGINX_DROPINS_CONFIG_DEFAULT")
+            ;;
+    esac
 
     local -a podman_run_options=(
         "--rm"
@@ -89,74 +99,22 @@ serve() {
         "--publish=0.0.0.0:8081:8081"
     )
 
-    local env_default_suffix dropins_target serve_root
-    case "$image" in
-        "$HTTPD_IMAGE_NAME")
-            image="${SERVER_IMAGES["$HTTPD_IMAGE_NAME"]}"
-            env_default_suffix="$HTTPD_ENV_PREFIX_WILDCARD"
-            dropins_target="$__httpd_dropins_target"
-            serve_root="$__httpd_serve_root"
-            if (( ! ${#dropins[@]} )); then
-                warn "No dropin configs provided. Using default: $HTTPD_DROPINS_CONFIG_DEFAULT"
-                dropins+=("$HTTPD_DROPINS_CONFIG_DEFAULT")
-            fi
-            ;;
-        "$NGINX_IMAGE_NAME")
-            image="${SERVER_IMAGES["$NGINX_IMAGE_NAME"]}"
-            env_default_suffix="$NGINX_ENV_PREFIX_WILDCARD"
-            dropins_target="$__nginx_dropins_target"
-            serve_root="$__nginx_serve_root"
-            if (( ! ${#dropins[@]} )); then
-                warn "No dropin configs provided. Using default: $NGINX_DROPINS_CONFIG_DEFAULT"
-                dropins+=("$NGINX_DROPINS_CONFIG_DEFAULT")
-            fi
-            ;;
-        *)
-            fatal "image=\"$image\" not found in ${!SERVER_IMAGES[*]}"
-            ;;
-    esac
-    debug "$(declare -p image)"
-
-    # shellcheck disable=SC2068
-    for d in ${dropins[@]}; do
-        podman_run_options+=("$(podman_run_opt_mount_bind_gen "$d" "$dropins_target/$(basename "$d")")")
-        debug "Appended dropin mount: $d"
+    local item
+    for item in "${dropins[@]}"; do
+        podman_run_options+=("--volume=./$item:$dropins_target/$(basename "$item"):ro,z")
     done
 
-    local -r ssl_regex=ssl
-    # shellcheck disable=SC2068
-    for s in ${secrets[@]}; do
-        local -a secret_opts=()
-        if [[ "$s" =~ $ssl_regex ]] && podman secret ls --filter="name=$ssl_regex*" -q &> /dev/null; then
-            secret_opts+=("-t" "/run/secrets/$s" "-m" "0400" "-u" "65532" "-g" "65532")
-        else
-            secret_opts+=("-t" "$serve_root/$s" "-m" "0444")
-        fi
-        debug "$(declare -p secret_opts)"
-        podman_run_options+=("$(podman_run_opt_secret_mount_gen "$s" "${secret_opts[@]}")")
-        debug "Appended secret mount: $s"
+    for item in "${secrets[@]}"; do
+        podman_run_options+=("--secret=$item")
     done
 
-    # shellcheck disable=SC2068
-    for e in ${env_suffixes[@]} "$env_default_suffix"; do
-        podman_run_options+=("$(podman_run_env_wildcard_option_gen "$e")")
-        debug "Appended env wildcard: $e"
+    for item in "${env_prefixes[@]}" "$env_default_prefix"; do
+        # Strip a trailing '*' so an already-globbed prefix does not become '**'.
+        podman_run_options+=("--env=${item%\*}*")
     done
 
-    # shellcheck disable=SC2068
-    podman_run ${podman_run_options[@]} \
-        "$image" \
-        "$@"
-}
-
-serve_nginx() {
-    debug "Starting ${FUNCNAME[0]}()"
-    serve -i "$NGINX_IMAGE_NAME" "$@"
-}
-
-serve_httpd() {
-    debug "Starting ${FUNCNAME[0]}()"
-    serve -i "$HTTPD_IMAGE_NAME" "$@"
+    debug "$(declare -p podman_run_options)"
+    podman_run "${podman_run_options[@]}" "${SERVER_IMAGES[$image]}" "$@"
 }
 
 if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
