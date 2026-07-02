@@ -3,10 +3,7 @@
 set -o nounset \
     -o errexit
 
-DEBUG="${DEBUG:-"false"}"
-if [ "$DEBUG" == "true" ]; then
-    set -x
-fi
+[ "${DEBUG:=0}" -eq 1 ] && set -x
 
 # main()
 #
@@ -17,51 +14,43 @@ fi
 #   * 2) manifests - string; destination directory for generated YAML files.
 #   * 3) overlay   - string; overlay name to match (e.g. "prod", "staging").
 main() {
-    local -r base_dir="$1"
-    local -r manifests="$2"
-    local -r overlay="$3"
+    debug "Starting ${FUNCNAME[0]}()"
+    local -r base="${1?$(fatal "\$1 $error_arg_required")}"
+    local -r out="${2?$(fatal "\$2 $error_arg_required")}"
+    local -r overlay="${3?$(fatal "\$3 $error_arg_required")}"
+    debug "$(declare -p base)"
+    debug "$(declare -p out)"
+    debug "$(declare -p overlay)"
 
-    mkdir -p "$base_dir" || fatal "unable to create $base_dir"
-    mkdir -p "$manifests" || fatal "unable to create $manifests"
+    mkdir -p "$base" || fatal "$ERROR_FAILED_TO_CREATE_DIR: $base"
+    mkdir -p "$out" || fatal "$ERROR_FAILED_TO_CREATE_DIR: $out"
 
-    generate_kube_manifests "$base_dir" \
-                            "$manifests" \
-                            "$overlay"
+    if ! generate_kube_manifests "$base" \
+                                 "$out" \
+                                 "$overlay"; then
+        fatal "failed to generate kube manifests."
+    fi
 }
 
-# generate_kube_manifests()
+# is_enabled()
 #
-# Finds all directories named $overlay under $base, runs
-# `kubectl kustomize --enable-helm` on each, and writes the output to
-# $dest/<app-name>.yaml.  Apps listed in $disabled_pkgs are skipped.
+# Returns 0 if $app is NOT matched by the $disabled regex, non-zero if it is.
+# Used to skip apps listed in $apps_enabled.
 #
 # args:
-#   * 1) base    - string; root path to search.
-#   * 2) dest    - string; destination directory for generated YAML files.
-#   * 3) overlay - string; directory name to match (e.g. "prod").
-generate_kube_manifests() {
-    local -r base="$1"
-    local -r dest="$2"
-    local -r overlay="$3"
+#   * 1) app          - string; application name to test.
+#   * 2) apps_enabled - string; ERE pattern of disabled app names (e.g. "(pihole|coredns-custom)").
+is_enabled() {
+    debug "Starting ${FUNCNAME[0]}()"
+    local -r app="${1?$(fatal "\$1 $error_arg_required")}"
+    local -n enabled="${2?$(fatal "\$2 $error_arg_required")}"
+    debug "$(declare -p app)"
+    debug "$(declare -p enabled)"
 
-    mapfile -t kustomize <<< "$(find "$base" -type d -name "$overlay")"
-
-    # shellcheck disable=SC2068
-    for k in ${kustomize[@]}; do
-        app_name="$(get_app_name "$k")"
-        app_manifest="$app_name.yaml"
-
-        if is_enabled "$app_name" "$disabled_pkgs"; then
-            kustomize_out="$dest/$app_manifest"
-
-            info "Generating $app_manifest from $k"
-            if kubectl kustomize \
-                    --enable-helm=true \
-                    "$k" > "$kustomize_out"; then
-                info "Successfully created manifest file: $kustomize_out"
-            fi
-        fi
-    done
+    local enabled_regex
+    enabled_regex="$(IFS='|'; printf '%s' "${enabled[*]}")"
+    debug "$(declare -p enabled_regex)"
+    [[ $app =~ ${enabled_regex} ]] || return 1
 }
 
 # get_app_name()
@@ -73,42 +62,71 @@ generate_kube_manifests() {
 # args:
 #   * 1) path - string; overlay directory path as returned by find.
 get_app_name() {
-    app="$(dirname "$1")"
-    app="$(dirname "$app")"
-    app="$(basename "$app")"
+    local -r path="${1?$(fatal "\$1 $ERROR_ARG_REQUIRED")}"
+    debug "Starting ${FUNCNAME[0]}()"
 
-    echo "$app"
+    basename "$(dirname "$(dirname "$path")")"
 }
 
-# is_enabled()
+# generate_kube_manifests()
 #
-# Returns 0 if $app is NOT matched by the $disabled regex, non-zero if it is.
-# Used to skip apps listed in $disabled_pkgs.
+# Finds all directories named $overlay under $base, runs
+# `kubectl kustomize --enable-helm` on each, and writes the output to
+# $dest/<app-name>.yaml.  Apps listed in $apps_enabled are skipped.
 #
 # args:
-#   * 1) app      - string; application name to test.
-#   * 2) disabled - string; ERE pattern of disabled app names (e.g. "(pihole|coredns-custom)").
-is_enabled() {
-    local -r app="$1"
-    local -r disabled="$2"
-    if [[ $app =~ ${disabled[*]} ]]; then
-        info "$app is disabled."
+#   * 1) base    - string; root path to search.
+#   * 2) dest    - string; destination directory for generated YAML files.
+#   * 3) overlay - string; directory name to match (e.g. "prod").
+generate_kube_manifests() {
+    debug "Starting ${FUNCNAME[0]}()"
+    local -r pkgs="${1?$(fatal \$1 "$ERROR_ARG_REQUIRED")}"
+    local -r dest="${2?$(fatal \$2 "$ERROR_ARG_REQUIRED")}"
+    local -r overlay="${3?$(fatal \$3 "$ERROR_ARG_REQUIRED")}"
+    debug "$(declare -p base)"
+    debug "$(declare -p dest)"
+    debug "$(declare -p overlay)"
+
+    local -a MAPFILE=()
+    mapfile -d '' -t < <(find "$pkgs" \
+                              -type d \
+                              -name "$overlay")
+    debug "$(declare -p MAPFILE)"
+    if [ ! -v MAPFILE ]; then
+        error "No overlays were found in $pkgs."
         return 1
     fi
 
-    return 0
+    local out app
+    # shellcheck disable=SC2068
+    for k in ${MAPFILE[@]}; do
+        app="$(get_app_name "$k")"
+        debug "$(declare -p app)"
+
+        if is_enabled "$app" apps_enabled; then
+            out="${dest}/${app}${__manifest_file_extension}"
+            debug "$(declare -p out)"
+
+            info "kustomize build $k"
+            if ! kustomize build "$k" > "$out"; then
+                error "kustomize build failed: $k"
+                break 2
+            fi
+            info "$SYMBOL_SUCCEEDED Created: $out"
+        fi
+    done
 }
 
 if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
     declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 5; }
+    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
     # shellcheck source=../vendor/bash-utils/lib/base-config-logging.sh
     . "$__bash_utils_base_config_logging"
 fi
 
 if [ "${__env_gen_kub_manifests_sourced:-}" != "true" ]; then
     declare -r __env_gen_kub_manifests="hack/env/kube-manifests-gen.env"
-    [ -f "$__env_gen_kub_manifests" ] || fatal --status=5 "failed to find file: ${__env_gen_kub_manifests}; file not found."
+    [ -f "$__env_gen_kub_manifests" ] || fatal " $ERROR_FILE_NOT_FOUND: ${__env_gen_kub_manifests}"
     # shellcheck source=../env/kube-manifests-gen.env
     . "$__env_gen_kub_manifests"
 fi

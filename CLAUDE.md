@@ -133,7 +133,7 @@ Each operator/workload follows the standard kustomize pattern: `base/kustomizati
 
 `hack/bin/kube-manifests-gen.sh` finds all `<overlay>` directories under `pkg/` using `find`, runs `kubectl kustomize --enable-helm` on each, and writes `<app-name>.yaml` to the target manifests path (e.g. `deploy/butane/overlays/prod/files/usr/local/lib/rancher/k3s/server/manifests/custom/`). These generated YAML files are then embedded into the ignition config by butane.
 
-Apps can be excluded from manifest generation via the `disabled_pkgs` ERE pattern in `hack/env/kube-manifests-gen.env`. To enable a disabled app, comment out its `declare -r skip_<name>` line and remove it from `disabled_pkgs`. Currently disabled: `pihole`, `coredns-custom`, `cloudnative-pg`, `cloudnative-pg-cluster`, `jellyfin`, `motion`, `v4l2rtspserver`, `mariadb-operator`, `mariadb-operator-crds`, `mariadb-cluster`, `local-storage-custom`, `traefik-custom`.
+Apps can be excluded from manifest generation via the `apps_enabled` ERE pattern in `hack/env/kube-manifests-gen.env`. To enable a disabled app, comment out its `declare -r skip_<name>` line and remove it from `apps_enabled`. Currently disabled: `pihole`, `coredns-custom`, `cloudnative-pg`, `cloudnative-pg-cluster`, `jellyfin`, `motion`, `v4l2rtspserver`, `mariadb-operator`, `mariadb-operator-crds`, `mariadb-cluster`, `local-storage-custom`, `traefik-custom`.
 
 ## Ignition Serving
 

@@ -1,7 +1,6 @@
 .ONESHELL:
 SHELL = /bin/bash
 .SHELLFLAGS := -o nounset -o errexit -o pipefail -o noclobber -o hashall -c
--include hack/env/vendor.env
 
 deploy_butane_path := deploy/butane
 
@@ -29,22 +28,24 @@ manifests_custom_staging := ${deploy_butane_path}/overlays/staging/${manifests_r
 manifests_custom_rpi4_0 := ${deploy_butane_path}/overlays/rpi4/${manifests_relative_path}
 manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
 
+VENDOR_LIB := hack/env/vendor.env
 kube-manifests-gen-base:
+	. $(VENDOR_LIB)
+
 	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 		${manifests_custom_base} \
 		base
 
 kube-manifests-gen-staging:
+	. $(VENDOR_LIB)
+
 	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 		${manifests_custom_staging} \
 		staging
 
-kube-manifests-gen-rpi4-0:
-	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-		${manifests_custom_rpi4_0} \
-		rpi4-0
+kube-manifests-gen-prod:
+	. $(VENDOR_LIB)
 
-kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
 	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
 		${manifests_custom_prod} \
 		prod
@@ -58,7 +59,7 @@ deploy_butane_path := deploy/butane
 ignition-gen-staging: kube-manifests-gen-staging k3s-tokens-generate
 	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/staging/main.bu
 
-ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0 k3s-tokens-generate
+ignition-gen-rpi4-0: k3s-tokens-generate
 	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/rpi4-0/main.bu
 
 # ignition-gen-base: kube-manifests-gen-base
