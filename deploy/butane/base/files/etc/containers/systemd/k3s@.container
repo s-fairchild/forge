@@ -2,8 +2,10 @@
 Documentation=https://docs.k3s.io/ https://github.com/k3s-io/k3s/blob/main/README.md
 
 [Service]
-Restart=always
+Restart=on-failure
 RestartSec=30
+StartLimitIntervalSec=600
+StartLimitBurst=5
 ExecStartPre=modprobe iptable_filter
 ExecStartPre=modprobe iptable_nat
 ExecStartPre=/usr/bin/podman secret exists k3s-token
