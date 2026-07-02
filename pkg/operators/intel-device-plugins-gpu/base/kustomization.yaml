@@ -1,6 +1,11 @@
+# References:
+#  * https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+#  * https://kubernetes.io/docs/tasks/manage-gpus/scheduling-gpus/
+#  * https://intel.github.io/intel-device-plugins-for-kubernetes/cmd/gpu_plugin/README.html
 ---
 resources:
   - helmcharts/device-plugins-gpu.yaml
+  - namespace.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
