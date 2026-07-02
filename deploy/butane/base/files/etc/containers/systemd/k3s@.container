@@ -17,6 +17,11 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%p-%i
 
 [Container]
 StopTimeout=120
+HealthCmd=wget -qO- http://localhost:10248/healthz
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=60s
 ContainerName=${NAME}
 HostName=${NAME}
 Label="app=k3s"
