@@ -27,7 +27,7 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%N
 # https://docs.k3s.io/cli/server#cluster-options
 Environment="K3S_NODE_NAME=${NAME}"
 Environment="K3S_TOKEN_FILE=/run/secrets/k3s-token"
-PodmanArgs=--oom-score-adj=1000 --privileged
+PodmanArgs=--oom-score-adj=-500 --privileged
 Volume=/etc/machine-id:/etc/machine-id:ro
 Volume=${NAME}-kubelet:/var/lib/kubelet:Z,rslave
 Volume=${NAME}-pod-logs:/var/log/pods:Z,rslave
