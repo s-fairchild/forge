@@ -43,9 +43,6 @@ Volume=${NAME}-data:/var/lib/rancher/k3s:Z,rslave
 Volume=${NAME}-rancher:/etc/rancher,rslave
 Volume=local-path@default.volume:/mnt/local-path/default:z,rshared
 Volume=/usr/local/lib/rancher/k3s/server/manifests/custom:/var/lib/rancher/k3s/server/manifests/custom:z
-# https://docs.k3s.io/installation/configuration?_highlight=config&_highlight=file#configuration-file
-Volume=/usr/local/etc/k3s/%N.yaml:/etc/rancher/k3s/config.yaml,Z,ro
-Volume=/usr/local/etc/k3s/config.yaml.d/%N.yaml:/etc/rancher/k3s/config.yaml.d/%N.yaml,Z,ro
 
 [Install]
 WantedBy=default.target
