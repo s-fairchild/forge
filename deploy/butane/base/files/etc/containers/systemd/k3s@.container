@@ -21,7 +21,6 @@ Label="app=k3s"
 DNSSearch=expresso.lan
 Timezone=UTC
 Pull=never
-ShmSize=5g
 LogDriver=journald
 Image=k3s@v1.36.1-k3s1.image
 EnvironmentFile=-/usr/local/etc/sysconfig/%N
