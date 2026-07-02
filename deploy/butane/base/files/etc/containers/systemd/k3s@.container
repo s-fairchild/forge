@@ -6,6 +6,7 @@ Restart=on-failure
 RestartSec=30
 StartLimitIntervalSec=600
 StartLimitBurst=5
+TimeoutStopSec=150
 ExecStartPre=modprobe iptable_filter
 ExecStartPre=modprobe iptable_nat
 ExecStartPre=/usr/bin/podman secret exists k3s-token
@@ -15,6 +16,7 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%p
 EnvironmentFile=-/usr/local/etc/sysconfig/%p-%i
 
 [Container]
+StopTimeout=120
 ContainerName=${NAME}
 HostName=${NAME}
 Label="app=k3s"
