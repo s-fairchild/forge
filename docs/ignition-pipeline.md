@@ -58,8 +58,8 @@ flowchart TD
     end
 
     subgraph STEP5["Step 5 — Store result"]
-        STORE["fa:fa-terminal podman secret create --replace\nprod-ignition"]
-        RESULT[("fa:fa-key podman secret\nprod-ignition\nFinal Ignition JSON")]
+        STORE["fa:fa-terminal podman secret create --replace\nname: -n flag or parent dir of main.bu"]
+        RESULT[("fa:fa-key podman secret\nlabels: env=overlay · format=ignition\nFinal Ignition JSON")]
     end
 
     subgraph SERVE["Optional — Serve over HTTP"]
@@ -122,10 +122,17 @@ flowchart TD
 ## Entry Point
 
 ```
-hack/bin/ignition-gen-main.sh <main.bu> [secrets.env]
+hack/bin/ignition-gen-main.sh -b <main.bu> [-n <secret_name>] [-l <label>]... [-e <secrets.env>]...
 ```
 
-Invoked by `make ignition-gen-<overlay>`. The prod overlay also passes `deploy/butane/overlays/prod/secrets.env`.
+| Flag | Description |
+|------|-------------|
+| `-b <main.bu>` | Path to the root Butane config. Required. |
+| `-n <name>` | Podman secret name for the output ignition JSON. Defaults to the parent directory name of `main.bu`. |
+| `-l <key=value>` | Additional label to attach to created secrets. Repeatable. |
+| `-e <file>` | Env file to source before generation (declares `SECRET_FILES` and/or `SECRET_IDS`). Repeatable. |
+
+Invoked by `make ignition-gen-<overlay>`. The prod overlay passes `-e deploy/butane/overlays/prod/secrets.env`.
 
 ---
 
@@ -170,7 +177,7 @@ The merged Ignition JSON is validated with `butane --check --strict` to catch an
 
 ### Step 5 — Store as podman secret
 
-The final JSON is stored (with `--replace`) as a podman secret named `<overlay>-ignition`. The `make ignition-serve-httpd-<overlay>` and `make ignition-serve-nginx-<overlay>` targets read this secret and serve it via `serve()` in `hack/lib/ignition/serve.sh`.
+The final JSON is stored (with `--replace`) as a named podman secret. The secret name defaults to the parent directory name of `main.bu` (e.g. `prod` for `overlays/prod/main.bu`) but can be overridden with the `-n` flag. Labels `env=<overlay>` and `format=ignition` are always applied. The `make ignition-serve-httpd-<overlay>` and `make ignition-serve-nginx-<overlay>` targets mount this secret into the server container via `serve()` in `hack/lib/ignition/serve.sh`.
 
 ---
 
@@ -223,9 +230,9 @@ Each `main.bu` is an FCOS Butane v1.7.0 file. The `inline` entries under `.ignit
 The installer ignition is compiled separately for embedding into the FCOS ISO. Run from the `deploy/installer/` directory:
 
 ```bash
-make -C deploy/installer installer-ignition-gen-base   # → install.ign podman secret + SHA-512
-make -C deploy/installer installer-ignition-gen-prod   # compiles prod installer ignition
-make -C deploy/installer installer-iso-customize        # embeds ignition into the downloaded ISO
+make -C deploy/installer installer-ignition-gen-base   # → ignition-final-base podman secret
+make -C deploy/installer installer-ignition-gen-prod   # → ignition-final-prod podman secret
+make -C deploy/installer installer-iso-customize-prod  # embeds ignition into the downloaded ISO
 ```
 
 The base ignition is stored as a podman secret along with its SHA-512 hash. The prod layer compiles `deploy/butane/overlays/prod/installer/install.bu` via the standard `ignition-gen-main.sh` pipeline.
@@ -252,7 +259,7 @@ flowchart TD
         PROD_IGN[("fa:fa-key podman secret\nprod-installer-ignition")]
     end
 
-    subgraph ISO_GEN["installer-iso-customize"]
+    subgraph ISO_GEN["installer-iso-customize-prod"]
         CUSTOMIZE["fa:fa-terminal coreos-installer iso customize\nembeds ignition into ISO"]
         CUSTOM_ISO[("fa:fa-compact-disc custom.iso\nFCOS ISO with embedded ignition")]
     end
@@ -296,8 +303,9 @@ flowchart TD
 |------|---------|
 | `hack/lib/ignition/ignition.sh` | Core pipeline logic (`ignition_gen_config_merge_inlines`) |
 | `hack/lib/ignition/butane.sh` | Podman wrapper for containerized butane; defines `__BUTANE_WORKDIR="/data"` |
-| `hack/lib/ignition/serve.sh` | HTTP serving via nginx / httpd containers |
-| `hack/lib/podman/podman-secret.sh` | Secret create/inspect/mount helpers |
+| `hack/lib/ignition/serve.sh` | `serve()` function for launching httpd/nginx ignition containers |
+| `hack/lib/ignition/installer.sh` | `coreos-installer()` wrapper for ISO customization |
+| `hack/lib/podman/podman-secret.sh` | Secret create/inspect/label helpers |
+| `hack/lib/podman/podman-run.sh` | `podman_run()` thin wrapper |
 | `hack/lib/checksum/checksum.sh` | SHA-512 hash generation and verification |
-| `hack/lib/logging.sh` | Logging stack (loads `hack/vendor/bash-utils/util/`) |
-| `hack/lib/vendor-bash-utils-logging.sh` | Error message constants (`ERROR_ARG_REQUIRED`, etc.) |
+| `hack/vendor/bash-utils/lib/base-config-logging.sh` | Logging stack and error message constants (`ERROR_ARG_REQUIRED`, `ERROR_FILE_NOT_FOUND`, etc.) |

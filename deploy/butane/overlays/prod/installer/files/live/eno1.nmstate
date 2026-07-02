@@ -1,0 +1,79 @@
+routes:
+  config:
+  - destination: 0.0.0.0/0
+    next-hop-interface: eno1
+    next-hop-address: 10.50.0.1
+    metric: 100
+    table-id: 254
+  - destination: 10.16.0.0/16
+    next-hop-interface: eno1
+    next-hop-address: 10.50.0.11
+    metric: 100
+    table-id: 254
+interfaces:
+- name: eno1
+  profile-name: Production
+  type: ethernet
+  driver: e1000e
+  state: up
+  identifier: name
+  mac-address: D8:BB:C1:09:C6:4C
+  permanent-mac-address: D8:BB:C1:09:C6:4C
+  pci-address: 0000:00:1f.6
+  mtu: 1500
+  wait-ip: ipv4
+  ipv4:
+    enabled: true
+    dhcp: false
+    address:
+    - ip: 10.50.0.2
+      prefix-length: 24
+      mptcp-flags:
+      - subflow
+    forwarding: true
+  ipv6:
+    enabled: false
+    dhcp: false
+    autoconf: false
+  mptcp:
+    address-flags:
+    - subflow
+  accept-all-mac-addresses: false
+  lldp:
+    enabled: false
+  ethtool:
+    pause:
+      rx: false
+      tx: false
+      autoneg: true
+    feature:
+      rx-all: false
+      rx-checksum: true
+      rx-fcs: false
+      rx-gro: true
+      rx-gro-list: false
+      rx-hashing: true
+      rx-udp-gro-forwarding: false
+      rx-vlan-hw-parse: true
+      tx-checksum-ip-generic: true
+      tx-generic-segmentation: true
+      tx-nocache-copy: false
+      tx-tcp-mangleid-segmentation: false
+      tx-tcp-segmentation: true
+      tx-tcp6-segmentation: true
+      tx-vlan-hw-insert: true
+    coalesce:
+      rx-usecs: 3
+    ring:
+      rx: 256
+      rx-max: 4096
+      tx: 256
+      tx-max: 4096
+  alt-names:
+  - name: enp0s31f6
+  - name: enxd8bbc109c64c
+  ethernet:
+    auto-negotiation: true
+    speed: 1000
+    duplex: full
+

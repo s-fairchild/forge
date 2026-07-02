@@ -6,46 +6,77 @@ declare -r __hack_lib_ignition_butane_sourced="true"
 declare -r __BUTANE_WORKDIR="/data"
 declare -r __BUTANE_FILES_DIR="files"
 
+usage_butane() {
+    cat <<USAGE >&2
+Usage: butane [-s secret]... [butane_arg...]
+
+Runs butane in a container with image quay.io/coreos/butane:release.
+
+Options:
+    -s secret  podman secret spec passed verbatim to \`podman run --secret\`
+               (e.g. "mykey,type=mount,target=/data/files/secrets/mykey").
+               May be specified multiple times.
+
+Remaining arguments are passed through to the butane container.
+
+Environment:
+    PODMAN_LOG_LEVEL     podman run log level. (default: warn)
+    BUTANE_VOLUME_MOUNT  host directory to mount as the container workdir. (default: \$PWD)
+USAGE
+}
+
 # butane()
 #
-# Runs ignition in a container with image quay.io/coreos/butane:release
+# Runs butane in a container with image quay.io/coreos/butane:release.
+#
+# Options:
+#   * -s <spec> - podman secret spec passed verbatim to `podman run --secret`
+#                 (e.g. "mykey,type=mount,target=/data/files/secrets/mykey").
+#                 Repeatable.
+#   * $@        - remaining args are passed to the butane container.
 #
 # Environment:
-#   * PODMAN_LOG_LEVEL - string; Set to change the default podman run log level.
-#   * BUTANE_VOLUME_MOUNT - string; full directory path or volume name to be mounted as the working directory.
-#   * BUTANE_SECRET_MOUNTS - nameref; array of podman secret mount options. Appended to podman_run_options.
-#
-# args:
-#   * $@) all arguments are passed to the container
+#   * PODMAN_LOG_LEVEL   - string; podman run log level (default: warn).
+#   * BUTANE_VOLUME_MOUNT - string; host directory to mount as the container workdir.
 butane() {
     debug "Starting ${FUNCNAME[0]}()"
 
-    local -r image="quay.io/coreos/butane:release"
+    local -a podman_run_options=()
+    local opt OPTIND=1
+    while getopts ':s:' opt; do
+        case "$opt" in
+            s)
+                debug "Adding --secret=$OPTARG"
+                podman_run_options+=("--secret=$OPTARG")
+                ;;
+            :)
+                usage_butane
+                fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"
+                ;;
+            ?)
+                usage_butane
+                fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"
+                ;;
+        esac
+    done
+    shift $((OPTIND - 1))
 
-    local -r mount_src_dir="${BUTANE_VOLUME_MOUNT:-$PWD}"
+    [ -n "${PODMAN_LOG_LEVEL:-}" ] && podman_run_options+=("--log-level=$PODMAN_LOG_LEVEL")
+
     local -a podman_run_options=(
-        "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "-i"
         "--rm"
         "--env='BU_*'"
         "--security-opt=label=disable"
-        "--mount=type=bind,src=${mount_src_dir},target=$__BUTANE_WORKDIR,bind-propagation=rslave,no-dereference,ro=true"
+        "--mount=type=bind,src=${BUTANE_VOLUME_MOUNT:-$PWD},target=$__BUTANE_WORKDIR,bind-propagation=rslave,no-dereference,ro=true"
         "--workdir=$__BUTANE_WORKDIR"
     )
-    debug "$(declare -p mount_src_dir)"
+
     debug "$(declare -p __BUTANE_WORKDIR)"
-
-    if [ -v BUTANE_SECRET_MOUNTS ]; then
-        debug "$(declare -p BUTANE_SECRET_MOUNTS)"
-        # shellcheck disable=SC2068
-        for i in ${BUTANE_SECRET_MOUNTS[@]}; do
-            podman_run_options+=("$i")
-        done
-    fi
-
-    debug "$(declare -p image)"
     debug "$(declare -p podman_run_options)"
-    debug "butane options:\n$*"
+    debug "butane options: $*"
+    local -r image="quay.io/coreos/butane:release"
+    debug "$(declare -p image)"
 
     # shellcheck disable=SC2068
     podman run \
@@ -77,7 +108,7 @@ butane_check() {
     [ -n "$files_dir" ] && butane_opts+=("--files-dir=$files_dir")
 
     # shellcheck disable=SC2068
-    if ! butane ${butane_opts[@]} <<< "$input"; then
+    if ! butane -- ${butane_opts[@]} <<< "$input"; then
         fatal "ignition check failed."
     fi
 

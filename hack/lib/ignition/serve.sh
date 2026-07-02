@@ -39,6 +39,28 @@ declare -Ar SERVER_IMAGES=(
     ["nginx"]="registry.access.redhat.com/hi/$NGINX_IMAGE_NAME:latest"
 )
 
+usage_serve() {
+    cat <<USAGE >&2
+Usage: serve -i image -s secret... [-d dropin_file]... [-e env_prefix]... [arg...]
+
+Launches a containerized httpd or nginx server for serving ignition configs.
+
+Options:
+    -i image        Server image key; one of: ${!SERVER_IMAGES[*]}. (required)
+    -s secret       podman secret spec passed verbatim to \`podman run --secret\`
+                    (e.g. "prod-ignition,target=/usr/share/httpd/html/config.ign,mode=0444").
+                    May be specified multiple times; at least one is required.
+    -d dropin_file  Dropin config bind-mounted into the server's conf.d.
+                    May be specified multiple times.
+                    (default: the image's *_DROPINS_CONFIG_DEFAULT)
+    -e env_prefix   Host env var wildcard prefix to pass through (e.g. "HTTPD_").
+                    May be specified multiple times. The image's default prefix is
+                    always included.
+
+Remaining arguments are passed through to the server container.
+USAGE
+}
+
 # serve()
 #
 # Launches a containerized httpd or nginx server for serving ignition configs.
@@ -65,14 +87,14 @@ serve() {
             d) dropins+=("$OPTARG") ;;
             e) env_prefixes+=("$OPTARG") ;;
             i) image="$OPTARG" ;;
-            :) fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
-            ?) fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
+            :) usage_serve; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
+            ?) usage_serve; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
         esac
     done
     shift $((OPTIND - 1))
 
-    (( ${#secrets[@]} )) || fatal "at least one -s secret must be provided."
-    [ -n "$image" ] || fatal "-i image $ERROR_ARG_REQUIRED"
+    (( ${#secrets[@]} )) || { usage_serve; fatal "at least one -s secret must be provided."; }
+    [ -n "$image" ] || { usage_serve; fatal "-i image $ERROR_ARG_REQUIRED"; }
     [ -v 'SERVER_IMAGES[$image]' ] \
         || fatal "-i $image is not a configured server image. Valid images: ${!SERVER_IMAGES[*]}"
 

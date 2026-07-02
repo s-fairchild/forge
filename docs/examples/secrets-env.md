@@ -94,8 +94,8 @@ declare -ar SECRET_IDS=(
 After running `make ignition-gen-prod`, check that the expected secrets exist and carry the correct labels:
 
 ```bash
-# List all secrets labelled for the prod config layer
-podman secret ls --filter label=config=prod
+# List all secrets labelled for the prod overlay
+podman secret ls --filter label=env=prod
 
 # Show the raw content of a specific secret (for debugging only)
 podman secret inspect --showsecret -f '{{.SecretData}}' var.keyfile.gz | xxd | head

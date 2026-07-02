@@ -50,7 +50,7 @@ flowchart TD
     subgraph ISO_PATH["Offline / airgap (ISO)"]
         ISO_DL["fa:fa-compact-disc make -C deploy/installer\ninstaller-download-baremetal"]
         ISO_IGN["fa:fa-terminal make -C deploy/installer\ninstaller-ignition-gen-prod"]
-        ISO_CUST["fa:fa-terminal make -C deploy/installer\ninstaller-iso-customize"]
+        ISO_CUST["fa:fa-terminal make -C deploy/installer\ninstaller-iso-customize-prod"]
         ISO_OUT[("fa:fa-compact-disc custom.iso\nFCOS ISO with embedded ignition")]
     end
 
@@ -216,35 +216,27 @@ make -C deploy/installer installer-download-baremetal
 
 Downloads the latest stable FCOS live ISO to `deploy/installer/images/`.
 
-### Step 2 — Validate butane configs (optional)
-
-```bash
-make -C deploy/installer installer-butane-check-prod
-```
-
-Runs `butane --check --strict` on the installer butane configs before compilation.
-
-### Step 3 — Compile installer ignition
+### Step 2 — Compile installer ignition
 
 ```bash
 make -C deploy/installer installer-ignition-gen-prod
 ```
 
-Compiles `deploy/butane/overlays/prod/installer/install.bu` through the standard `ignition-gen-main.sh` pipeline and stores the result as a podman secret.
+Compiles `deploy/butane/overlays/prod/installer/install.bu` through the standard `ignition-gen-main.sh` pipeline and stores the result as the podman secret `ignition-final-prod`.
 
-### Step 4 — Customize the ISO
+### Step 3 — Customize the ISO
 
 ```bash
-make -C deploy/installer installer-iso-customize
+make -C deploy/installer installer-iso-customize-prod
 ```
 
-Embeds the ignition config into the downloaded ISO via `coreos-installer iso customize`, producing `*_custom.iso`.
+Embeds the ignition config into the downloaded ISO via the containerized `coreos-installer iso customize`, producing `*_custom.iso` in `deploy/butane/overlays/prod/installer/images/`.
 
-### Step 5 — Flash to USB
+### Step 4 — Flash to USB
 
 ```bash
 # Replace /dev/sdX with the correct device
-sudo dd if=deploy/installer/images/*_custom.iso of=/dev/sdX status=progress && sudo sync
+sudo dd if=deploy/butane/overlays/prod/installer/images/*_custom.iso of=/dev/sdX status=progress && sudo sync
 ```
 
 Boot the target machine from the USB drive. Installation runs unattended.

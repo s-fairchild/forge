@@ -15,6 +15,22 @@ openssl_gen_private_key() {
         -genkey
 }
 
+usage_openssl_gen_self_signed_certificate() {
+    cat <<USAGE >&2
+Usage: openssl_gen_self_signed_certificate [-d days] [-s subject] [-a san_value]... < private_key
+
+Generates a self-signed certificate for the ECC private key read from stdin.
+
+Options:
+    -d days      Certificate expiration, in days. (default: 1825)
+    -s subject   Certificate subject string.
+                 (default: "/C=US/ST=New York/L=New York City/O=Local Ignition Server/CN=ignition.local")
+    -a san_value Subject Alternative Name value to append (e.g. "DNS:example.local").
+                 May be specified multiple times.
+                 (default SAN values: "DNS:ignition.local", "DNS:*.ignition.local", "IP:127.0.0.1")
+USAGE
+}
+
 # openssl_gen_self_signed_certificate()
 #
 openssl_gen_self_signed_certificate() {
@@ -42,10 +58,12 @@ openssl_gen_self_signed_certificate() {
                 debug "$(declare -p san_values)"
                 ;;
             :)
+                usage_openssl_gen_self_signed_certificate
                 error "$ERROR_ARG_REQUIRED: -${OPTARG} requires an argument"
                 return 1
                 ;;
             ?)
+                usage_openssl_gen_self_signed_certificate
                 error "$ERROR_OPTION_UNKNOWN: -${OPTARG}"
                 return 1
                 ;;

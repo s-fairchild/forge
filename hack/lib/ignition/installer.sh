@@ -7,46 +7,99 @@
 declare -r __hack_lib_ignition_installer_sourced="true"
 declare -r __INSTALLER_WORKDIR="/data"
 
+usage_coreos-installer() {
+    cat <<USAGE >&2
+Usage: coreos-installer [-s secret]... [-m mount]... [installer_arg...]
+
+Runs coreos-installer in a container with image quay.io/coreos/coreos-installer:release.
+
+Options:
+    -s secret  podman secret spec passed verbatim to \`podman run --secret\`
+               (e.g. "mykey,type=mount,target=/data/mykey"). May be specified multiple times.
+    -m mount   podman volume mount spec passed verbatim to \`podman run --mount\`.
+               May be specified multiple times.
+
+Remaining arguments are passed through to the coreos-installer container.
+
+Environment:
+    PODMAN_LOG_LEVEL       podman run log level. (default: warn)
+    INSTALLER_VOLUME_MOUNT host directory to mount as the container workdir. (default: \$PWD)
+USAGE
+}
+
+# coreos-installer()
+#
+# Runs coreos-installer in a container with image quay.io/coreos/coreos-installer:release.
+#
+# Options:
+#   * -s <spec> - podman secret spec passed verbatim to `podman run --secret`
+#                 (e.g. "mykey,type=mount,target=/data/mykey"). Repeatable.
+#   * $@        - remaining args are passed to the coreos-installer container.
+#
+# Environment:
+#   * PODMAN_LOG_LEVEL      - string; podman run log level (default: warn).
+#   * INSTALLER_VOLUME_MOUNT - string; host directory to mount as the container workdir.
 coreos-installer() {
     debug "Starting ${FUNCNAME[0]}()"
 
-    local -r image="quay.io/coreos/coreos-installer:release"
+    local -a secrets=() mounts=()
+    local opt OPTIND=1
+    while getopts ':s:m:' opt; do
+        case "$opt" in
+            s)
+                secrets+=("$OPTARG")
+                ;;
+            m)
+                mounts+=("$OPTARG")
+                ;;
+            :)
+                usage_coreos-installer
+                fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"
+                ;;
+            ?)
+                usage_coreos-installer
+                fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"
+                ;;
+        esac
+    done
+    shift $((OPTIND - 1))
 
-    local -r mount_src_dir="${INSTALLER_VOLUME_MOUNT:-$PWD}"
+    [ -n "${PODMAN_LOG_LEVEL:-}" ] && podman_run_options+=("--log-level=${PODMAN_LOG_LEVEL:-warn}")
+    local -r image="quay.io/coreos/coreos-installer:release"
     local -a podman_run_options=(
-        "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "-i"
         "--rm"
         "--env='BU_*'"
         "--security-opt=label=disable"
-        "--mount=type=bind,src=${mount_src_dir},target=$__INSTALLER_WORKDIR,bind-propagation=rslave,no-dereference,ro=false"
-        "--workdir=$__INSTALLER_WORKDIR"
+        "--volume=${PWD}:${__INSTALLER_WORKDIR}"
+        "--workdir=${__INSTALLER_WORKDIR}"
     )
-    debug "$(declare -p mount_src_dir)"
+
+    local s
+    for s in "${secrets[@]}"; do
+        podman_run_options+=("--secret=$s")
+    done
+
+    local m
+    for m in "${mounts[@]}"; do
+        podman_run_options+=("--mount=$m")
+    done
+
     debug "$(declare -p __INSTALLER_WORKDIR)"
-
-    if [ -v INSTALLER_SECRET_MOUNTS ]; then
-        debug "$(declare -p INSTALLER_SECRET_MOUNTS)"
-        # shellcheck disable=SC2068
-        for i in ${INSTALLER_SECRET_MOUNTS[@]}; do
-            podman_run_options+=("$i")
-        done
-    fi
-
     debug "$(declare -p image)"
     debug "$(declare -p podman_run_options)"
-    debug "coreos-installer options:\n$*"
+    debug "coreos-installer options: $*"
 
     # shellcheck disable=SC2068
     podman run \
         ${podman_run_options[@]} \
         "$image" \
-        "$@"
+        $@
 }
 
 export -f coreos-installer
 
-if [ "${__lib_vendor_bash_utils_logging_sourced:-}" != "true" ]; then
+if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
     declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
     [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
     # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh

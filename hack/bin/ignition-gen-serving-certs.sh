@@ -36,23 +36,23 @@ main() {
         fatal "failed to generate and save podman secret $n"
     }
 
-    secret_labels_extra+=(
-        "deployment=$deployment"
-        "type=ssl"
-        "ssl=key"
-    )
-
-    debug "$(declare -p secret_labels_extra)"
     info "Generating ssl private key... saving to podman secret: $key_name"
     openssl_gen_private_key \
-        | podman_secret_create_replace_from_stdin "$key_name" secret_labels_extra \
+        | podman_secret_create_replace_from_stdin \
+            -l "deployment=$deployment" \
+            -l "type=ssl" \
+            -l "ssl=key" \
+            "$key_name" \
         || _fatal_log "$key_name"
 
-    secret_labels_extra[${#secret_labels_extra[@]}-1]="ssl=cert"
     info "Generating self signed certificate... saving to podman secret: $cert_name"
     podman_secret_showsecret "$key_name" \
         | openssl_gen_self_signed_certificate "$@" \
-        | podman_secret_create_replace_from_stdin "$cert_name" secret_labels_extra \
+        | podman_secret_create_replace_from_stdin \
+            -l "deployment=$deployment" \
+            -l "type=ssl" \
+            -l "ssl=cert" \
+            "$cert_name" \
         || _fatal_log "$cert_name"
 }
 

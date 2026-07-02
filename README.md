@@ -46,7 +46,7 @@ git submodule update --init --recursive
 │   ├── installer/       # Installer Makefile, downloaded FCOS ISOs, customised ISO variants
 │   └── ansible/         # Post-boot node configuration for edge nodes
 ├── hack/
-│   ├── bin/             # Executable scripts (ignition gen, token gen, httpd serve…)
+│   ├── bin/             # Executable scripts (ignition gen, token gen, manifest gen…)
 │   ├── lib/             # Sourced shell libraries
 │   └── env/             # Environment files for build tooling
 ├── pkg/
@@ -97,7 +97,7 @@ Serves the ignition config on port 8080 via a containerised httpd. Point the FCO
 
 ```bash
 make -C deploy/installer installer-ignition-gen-prod   # compiles install.bu → install.ign
-make -C deploy/installer installer-iso-customize        # embeds ignition into the downloaded FCOS ISO
+make -C deploy/installer installer-iso-customize-prod  # embeds ignition into the downloaded FCOS ISO
 ```
 
 ---
@@ -168,12 +168,10 @@ Optional env var overrides (set before the target): `LIBCAMERA_VERSION_GIT_TAG_O
 |--------|-------------|
 | `installer-download-baremetal` | Download latest stable FCOS ISO to `deploy/installer/images/` |
 | `installer-download-libvirt` | Download latest FCOS qcow2 image for libvirt |
-| `installer-butane-check-base` | Validate base installer butane config |
-| `installer-butane-check-prod` | Validate prod installer butane config |
-| `installer-ignition-gen-base` | Compile base installer ignition → podman secret + SHA-512 |
-| `installer-ignition-gen-prod` | Compile prod installer ignition |
+| `installer-ignition-gen-base` | Compile base installer ignition → podman secret |
+| `installer-ignition-gen-prod` | Compile prod installer ignition → podman secret |
 | `installer-ignition-gen-all` | Compile all installer ignition configs |
-| `installer-iso-customize` | Embed ignition into downloaded ISO via coreos-installer |
+| `installer-iso-customize-prod` | Embed prod ignition into downloaded ISO via coreos-installer |
 
 ---
 

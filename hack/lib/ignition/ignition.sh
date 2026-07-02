@@ -2,6 +2,8 @@
 
 declare -r __ignition_sourced="true"
 
+[[ "$(declare -p __empty_array 2>/dev/null)" == "declare -a"* ]] || declare -ar __empty_array=()
+
 # ignition_gen()
 #
 # Compiles a single butane (.bu) file to ignition JSON by running
@@ -11,43 +13,37 @@ declare -r __ignition_sourced="true"
 # resolve correctly.  Output is written to stdout.
 #
 # args:
-#   * 1) butane_file - string; relative path to a .bu file (e.g. deploy/butane/base/root.bu).
+#   * 1) butane_file   - string; relative path to a .bu file (e.g. deploy/butane/base/root.bu).
 #         The file's parent directory is mounted into the container; only files at the
 #         same depth or below are reachable by butane's --files-dir resolution.
-#   * 2) secret_ids  - nameref (optional); array of podman secret IDs to mount into the
-#         butane container at $__BUTANE_WORKDIR/files/secrets/ before compilation.
+#   * 2) secret_names  - nameref (optional); array of podman secret names to mount into the
+#         butane container at $__BUTANE_WORKDIR/files/secrets/<name>.
 ignition_gen() {
     debug "Starting ${FUNCNAME[0]}()"
     local -r input="${1?$(fatal "\$1 input $ERROR_ARG_REQUIRED")}"
     # shellcheck disable=SC2034
-    local -n secret_mount_ids="${2:-__empty_array}"
+    local -n _secret_names_ref="${2:-__empty_array}"
 
     local -r files_dir="files"
-
-    # shellcheck disable=SC2034
-    local -a BUTANE_SECRET_MOUNTS=()
-    if [ -v secret_mount_ids ]; then
-        debug "Generating butane container secret mount options."
-        gen_secret_mount_opts BUTANE_SECRET_MOUNTS \
-                            secret_mount_ids \
-                            "$__BUTANE_WORKDIR/$files_dir/secrets"
+    if [ -v _secret_names_ref ]; then
+        local s
+        for s in "${_secret_names_ref[@]}"; do
+            butane_secret_opts+=("-s" "$s,type=mount,target=$__BUTANE_WORKDIR/$files_dir/secrets/$s")
+        done
     fi
 
-    local butane_opts=(
+    local -a butane_opts=(
         "--strict"
-        # Pretty output prevents grossly long lines
-        # "--pretty"
-        # TODO test out removing --raw and generating machineconfigs
-        "--raw"
+        "--files-dir=$files_dir"
     )
-
-    # Only search for local files at the same depth as the butane file path
-    # This simplifies creating the local file references in each butane config file.
-    butane_opts+=("--files-dir=$files_dir")
 
     info "Generating ignition from file: $input"
     # shellcheck disable=SC2068
-    butane ${butane_opts[@]} "$(basename "$input")" || fatal "ignition generation failed: $input"
+    butane ${butane_secret_opts[@]} \
+        -- \
+        ${butane_opts[@]} \
+        "$(basename "$input")" \
+        || fatal "ignition generation failed for $input"
 }
 
 # ignition_merge_read_inline_path()
@@ -100,23 +96,25 @@ ignition_merge_read_inline_path() {
 #
 # args:
 #   * 1) butane_file_path      - string; relative path to a .bu file.
-#   * 2) secret_ids            - nameref name (optional, may be empty); array of podman
-#         secret IDs passed through to ignition_gen() for mounting secrets inside the
-#         butane container.
-#   * 3) ignition_json_out     - nameref; receives the compiled ignition JSON string.
-#   * 4) verification_hash_out - nameref; receives the "sha512-<hex>" formatted hash of
+#   * 2) ignition_json_out     - nameref; receives the compiled ignition JSON string.
+#   * 3) verification_hash_out - nameref; receives the "sha512-<hex>" formatted hash of
 #         ignition_json_out.
+#   * 4) secret_names          - nameref name (optional, may be empty); array of podman
+#         secret names passed through to ignition_gen() for mounting secrets inside the
+#         butane container.
 ignition_merge_compile_entry() {
     local -r butane_file_path="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
-    local -r secret_ids_name="${2:-}"
-    local -n ignition_json_out="${3?$(fatal "$ERROR_ARG_REQUIRED: \$3")}"
-    local -n verification_hash_out="${4?$(fatal "$ERROR_ARG_REQUIRED: \$4")}"
+    local -n ignition_json_out="${2?$(fatal "$ERROR_ARG_REQUIRED: \$3")}"
+    local -n verification_hash_out="${3?$(fatal "$ERROR_ARG_REQUIRED: \$4")}"
+    # This is assigned as a string to pass the nameref from the above scope without creating another nameref.
+    # Preventing circular namerefs.
+    local -r secrets="${4:-'empty_array'}"
 
     # All referenced files must be in/under the same directory as the butane file.
     local -r BUTANE_VOLUME_MOUNT="./$(dirname "$butane_file_path")"
 
     debug "Generating ignition: $butane_file_path"
-    if ! ignition_json_out="$(ignition_gen "$butane_file_path" "$secret_ids_name")"; then
+    if ! ignition_json_out="$(ignition_gen "$butane_file_path" "$secrets")"; then
         fatal "failed to generate ignition config from: $butane_file_path"
     fi
 
@@ -182,18 +180,18 @@ ignition_merge_write_entry() {
 # returning it.
 #
 # args:
-#   * 1) butane_path - string; path to the top-level butane config (e.g. main.bu).
+#   * 1) butane_path  - string; path to the top-level butane config (e.g. main.bu).
 #         Must contain an .ignition.config.merge[] array whose entries each have an
 #         "inline" field holding a relative path to a subordinate .bu file.
-#   * 2) out         - nameref; receives the final merged ignition JSON string on success.
-#   * 3) secret_ids  - nameref (optional); array of podman secret IDs passed through to
+#   * 2) out          - nameref; receives the final merged ignition JSON string on success.
+#   * 3) secret_names - nameref (optional); array of podman secret names passed through to
 #         ignition_merge_compile_entry() (and from there to ignition_gen()) for mounting
 #         secrets inside the butane container.
 ignition_gen_config_merge_inlines() {
     debug "Starting ${FUNCNAME[0]}()"
     local -r butane_path="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
     local -n out="${2?$(fatal "$ERROR_ARG_REQUIRED: \$2")}"
-    local -r secret_ids_name="${3:-}"
+    local -r secrets="${3:-}"
 
     # Parse the top-level butane YAML to compact JSON, stripping all comments.
     local config_json
@@ -224,21 +222,34 @@ ignition_gen_config_merge_inlines() {
         fi
         debug "butane_file_path=$butane_file_path"
 
-        ignition_merge_compile_entry "$butane_file_path" "$secret_ids_name" ignition_json verification_hash
+        ignition_merge_compile_entry "$butane_file_path" \
+                                    ignition_json \
+                                    verification_hash \
+                                    secrets
 
-        if ! config_json="$(ignition_merge_write_entry "$config_json" "$merge_jq_path" "$idx" "$_jq_bounds_check" "$ignition_json" "$verification_hash")"; then
+        if ! config_json="$(ignition_merge_write_entry "$config_json" \
+                                                    "$merge_jq_path" \
+                                                    "$idx" \
+                                                    "$_jq_bounds_check" \
+                                                    "$ignition_json" \
+                                                    "$verification_hash")"; then
             fatal "failed to update inline entry at merge index $idx"
         fi
     done
 
     info "Checking final config integrity..."
     local BUTANE_VOLUME_MOUNT
-    # shellcheck disable=SC1073
     BUTANE_VOLUME_MOUNT="./$(dirname "$butane_path")"
-    butane_check "$__BUTANE_WORKDIR/$__BUTANE_FILES_DIR" <<< "$config_json" || fatal
+
+    local ignition_out
+    if ! ignition_out="$(butane -- --strict "--files-dir=$__BUTANE_FILES_DIR" <<< "$config_json")"; then
+        fatal "failed to compile merged butane config to ignition JSON"
+    fi
+    info "Config ok"
+    info "Config size: $(wc -c <<< "$ignition_out") bytes"
 
     # shellcheck disable=SC2034
-    out="$config_json"
+    out="$ignition_out"
 }
 
 if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
