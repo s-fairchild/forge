@@ -2,30 +2,28 @@
 
 declare -r __lib_podman_sourced="true"
 
-if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
-    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
-    # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh
-    . "$__bash_utils_base_config_logging"
-fi
+declare -F fatal > /dev/null 2>&1 || fatal() { printf '%s\n' "${1:-}" >&2; exit 1; }
 
 if [ "${__lib_podman_run_sourced:-}" != "true" ]; then
-    declare -r __lib_podman_run="hack/lib/podman/podman-run.sh"
-    [ -f "$__lib_podman_run" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_run"
+    declare __lib_podman_run="hack/lib/podman/podman-run.sh"
+    [ -f "$__lib_podman_run" ] || fatal "file not found: $__lib_podman_run"
     # shellcheck source=podman-run.sh
     . "$__lib_podman_run"
-fi
-
-if [ "${__lib_podman_volume_sourced:-}" != "true" ]; then
-    declare -r __lib_podman_volume="hack/lib/podman/podman-volume.sh"
-    [ -f "$__lib_podman_volume" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_volume"
-    # shellcheck source=podman-volume.sh
-    . "$__lib_podman_volume"
+    unset __lib_podman_run
 fi
 
 if [ "${__lib_podman_secret_sourced:-}" != "true" ]; then
-    declare -r __lib_podman_secret="hack/lib/podman/podman-secret.sh"
-    [ -f "$__lib_podman_secret" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_secret"
+    declare __lib_podman_secret="hack/lib/podman/podman-secret.sh"
+    [ -f "$__lib_podman_secret" ] || fatal "file not found: $__lib_podman_secret"
     # shellcheck source=podman-secret.sh
     . "$__lib_podman_secret"
+    unset __lib_podman_secret
+fi
+
+if [ "${__lib_podman_volume_sourced:-}" != "true" ]; then
+    declare __lib_podman_volume="hack/lib/podman/podman-volume.sh"
+    [ -f "$__lib_podman_volume" ] || fatal "file not found: $__lib_podman_volume"
+    # shellcheck source=podman-volume.sh
+    . "$__lib_podman_volume"
+    unset __lib_podman_volume
 fi

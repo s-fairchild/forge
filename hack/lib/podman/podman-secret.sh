@@ -5,6 +5,8 @@
 declare -r __lib_podman_secret_sourced="true"
 
 declare -ar __empty_array=()
+declare -r __PODMAN_SECRETS_METADATA_FILENAME="secrets/secrets.json"
+declare -r __PODMAN_SECRETS_FILEDRIVER_FILENAME="secrets/filedriver/secretsdata.json"
 
 # podman_secret_exists()
 #
