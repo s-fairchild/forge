@@ -52,8 +52,11 @@ kube-manifests-gen-prod:
 
 kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
+k3s-tokens-generate-staging:
+	hack/bin/k3s-tokens-generate.sh -l environment=staging -p staging
+
 k3s-tokens-generate-prod:
-	hack/bin/k3s-tokens-generate.sh prod-secretsdata.json
+	hack/bin/k3s-tokens-generate.sh -l environment=prod -p prod
 
 deploy_butane_path := deploy/butane
 ignition-gen-staging: kube-manifests-gen-staging k3s-tokens-generate
