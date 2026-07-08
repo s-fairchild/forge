@@ -11,7 +11,7 @@ Infrastructure-as-code for a Fedora CoreOS (FCOS) k3s cluster. The two main conc
 
 All scripts must be run from the **repo root**. Both `butane` and `yq` run containerized via podman; there are no host-side dependencies for those tools beyond `make`, `podman`, and `jq`.
 
-After cloning, initialise submodules (`bash-utils` under `hack/vendor/bash-utils/` and `bashkit` under `hack/vendor/bashkit/`):
+After cloning, initialize submodules (`bash-utils` under `hack/vendor/bash-utils/` and `bashkit` under `hack/vendor/bashkit/`):
 ```bash
 git submodule update --init --recursive
 ```
@@ -27,9 +27,8 @@ make ignition-gen-prod          # prod overlay, reads deploy/butane/overlays/pro
 make ignition-gen-staging       # staging overlay
 make ignition-gen-base          # base overlay
 
-# Serve ignition over HTTP/HTTPS (ports 8080/8081) after generating
-make ignition-serve-httpd-prod  # via httpd image
-make ignition-serve-nginx-prod  # via nginx image (TLS)
+# Serve ignition over HTTPS after generating (requires prior cert gen target)
+make ignition-serve-prod        # via nginx (TLS)
 
 # Generate kube manifests (runs kubectl kustomize --enable-helm)
 make kube-manifests-gen-prod    # also runs rpi4-0 as a dependency
@@ -52,18 +51,16 @@ cp deploy/butane/base/secrets-example.env deploy/butane/overlays/prod/secrets.en
 
 ## Ignition Generation Pipeline
 
-Entry point: `hack/bin/ignition-gen-main.sh <main.bu> [secrets.env]`
+Entry point: `hack/bin/ignition-gen-main.sh -b butane_main -s secret_suffix [-l label]... [-h]`
 
-1. Sources `secrets.env` (if provided), which defines `SECRET_FILES` — an array of file paths for LUKS keyfiles and SSH public keys stored outside the repo (e.g. `$HOME/Documents/.luks_keys/*.keyfile.gz`). Optionally also defines `SECRET_IDS` for pre-existing podman secret IDs to mount.
-2. Creates each file in `SECRET_FILES` as a named podman secret (`--ignore` skips existing).
-3. Calls `ignition_gen_config_merge_inlines` which parses `main.bu` via containerized `yq` (`docker.io/mikefarah/yq:4.53.2`), then iterates every `.ignition.config.merge[].inline` path. For each referenced `.bu` file it runs containerized `butane` (`quay.io/coreos/butane:release`) with `--strict --raw --files-dir=files`, mounting the `.bu` file's directory as `/data` and secret files at `/data/files/secrets/`.
-4. Validates the merged JSON via `butane --check --strict`.
-5. Stores the final ignition JSON as a podman secret named `<overlay>-ignition` (e.g. `prod-ignition`) using `--replace`.
+1. Calls `ignition_gen_config_merge_inlines` which parses `main.bu` via containerized `yq` (`docker.io/mikefarah/yq:4.53.2`), then iterates every `.ignition.config.merge[].inline` path. For each referenced `.bu` file it runs containerized `butane` (`quay.io/coreos/butane:release`) with `--strict --files-dir=files`, mounting the `.bu` file's directory as `/data`.
+2. Validates the merged JSON via `butane --check --strict`.
+3. Stores the final ignition JSON as a podman secret named `ignition-<suffix>` (e.g. `ignition-prod`) using `--replace`.
 
 Key library files:
 - `hack/lib/ignition/ignition.sh` — core logic (`ignition_gen_config_merge_inlines`)
 - `hack/lib/ignition/butane.sh` — podman wrapper for containerized butane; defines `__BUTANE_WORKDIR="/data"`
-- `hack/lib/ignition/serve.sh` — `serve()` function driving httpd/nginx containers for ignition serving; sources `hack/lib/podman/`
+- `hack/lib/ignition/serve.sh` — `serve()` function driving nginx containers for ignition serving over HTTPS; sources `hack/lib/podman/`
 - `hack/lib/podman/podman-secret.sh` — secret create/inspect/mount helpers
 - `hack/lib/podman/podman-run.sh` — `podman_run_opt_*` helpers for building `--secret` and `--volume` flags
 - `hack/lib/logging.sh` — loads the bash-utils logging stack (`hack/vendor/bash-utils/util/`)
@@ -101,7 +98,7 @@ Library: `hack/lib/k3s/k3s-gen-token.sh`
 
 Tokens are **pre-generated before any node boots** and embedded into ignition configs so all server nodes share the same `K3S_TOKEN`. Generating on first boot would require out-of-band coordination between nodes.
 
-`k3s-tokens-generate.sh` creates podman secrets `k3s-token` and `k3s-agent-token`, then produces a `secretsdata.json` blob stored as a podman secret under the name passed as `$1` (e.g. `prod-secretsdata.json`). This JSON is the format consumed by the podman file secret driver and can be deployed to `/var/lib/containers/storage/secrets/filedriver/` on a remote host via ignition.
+`k3s-tokens-generate.sh -p prefix [-l label]... [-h]` creates podman secrets `k3s-token` and `k3s-token-agent`, then produces `<prefix>-secrets.json` and `<prefix>-secretsdata.json` stored as podman secrets. These JSON files are consumed by the podman file secret driver and can be deployed to `/var/lib/containers/storage/secrets/filedriver/` on a remote host via ignition.
 
 `k3s_gen_token()` tries `openssl rand -hex 32` (primary), falls back to `tr` then `sha256sum`. All three produce 64 lowercase hex characters with no trailing newline.
 
@@ -110,7 +107,7 @@ Tokens are **pre-generated before any node boots** and embedded into ignition co
 To inspect stored token values:
 ```bash
 # Get JSON in podman file-driver secretsdata.json format
-podman secret inspect --showsecret k3s-token k3s-agent-token \
+podman secret inspect --showsecret k3s-token k3s-token-agent \
   | jq 'map({(.ID): .SecretData}) | add'
 ```
 
@@ -137,12 +134,15 @@ Apps can be excluded from manifest generation via the `apps_enabled` ERE pattern
 
 ## Ignition Serving
 
-`hack/lib/ignition/serve.sh` defines a `serve()` function that launches a containerized httpd or nginx server. The Makefile sources this file and calls `serve` with:
-- `-s <secret>` — podman secret name to mount into the serve root (repeatable; secrets matching `ssl*` are mounted under `/run/secrets/` with restricted permissions)
-- `-i httpd|nginx` — server image (`registry.access.redhat.com/hi/<image>:latest`)
-- `-d <dropin-config>` — dropin config file to bind-mount into `conf.d/` (defaults to `hack/etc/httpd/ignition-secure.conf` or its nginx equivalent)
+`hack/lib/ignition/serve.sh` defines a `serve()` function that launches a containerized nginx server (`registry.access.redhat.com/hi/nginx:latest`). The Makefile sources this file and calls `serve` with:
+- `-i <ignition_secret>` — name of the podman secret containing the ignition JSON to serve (required)
+- `-c <ssl_cert>` — podman secret name for the TLS certificate (required)
+- `-k <ssl_key>` — podman secret name for the TLS private key (required)
+- `-s <secret>` — additional podman secret spec passed to `podman run --secret` (repeatable)
+- `-d <dropin_file>` — dropin config bind-mounted into `/etc/nginx/conf.d/` (defaults to `hack/etc/nginx/default.conf` and `hack/etc/nginx/ignition-secure.conf`)
+- `-e <env_prefix>` — host env var wildcard prefix to pass through (e.g. `NGINX_`)
 
-`hack/bin/ignition-gen-serving-certs.sh` generates a self-signed TLS key and certificate (stored as podman secrets) for use when serving ignition over HTTPS.
+The `ignition-serve-gen-certs-<overlay>` Makefile targets generate self-signed TLS key and certificate (stored as podman secrets) before serving. These are prerequisites for `ignition-serve-<overlay>`.
 
 ## Other Directories
 

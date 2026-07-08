@@ -6,7 +6,7 @@ declare -r __hack_lib_k3s_gen_token_sourced="true"
 #
 # Generates a 64-character lowercase hex token using `openssl rand -hex 32`.
 k3s_gen_token_openssl() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}()"
     openssl rand -hex 32
 }
 
@@ -16,7 +16,7 @@ k3s_gen_token_openssl() {
 # fallback when openssl is unavailable.  head triggers SIGPIPE to tr; the
 # resulting non-zero exit is suppressed.
 k3s_gen_token_tr() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}()"
     # head triggers SIGPIPE to tr; suppress the resulting non-zero exit
     tr -dc 'a-f0-9' </dev/urandom | head -c 64 || true
 }
@@ -26,7 +26,7 @@ k3s_gen_token_tr() {
 # Generates a 64-character lowercase hex token using sha256sum as a secondary
 # fallback when neither openssl nor tr is available.
 k3s_gen_token_shasum() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}()"
     # sha256sum produces 64 hex chars with no trailing spaces
     head -c 32 /dev/urandom | sha256sum | cut -d ' ' -f 1
 }
