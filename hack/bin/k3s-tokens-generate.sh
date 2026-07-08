@@ -12,11 +12,17 @@ set -o nounset \
 #
 # Prints usage information to stderr.
 usage() {
-    printf '%s\n' "Usage: ${0##*/} -p prefix [-l label]..." >&2
-    printf '%s\n' "" >&2
-    printf '%s\n' "Options:" >&2
-    printf '%s\n' "  -p <prefix>   Required. Prefix for generated podman secret names (e.g. prod)." >&2
-    printf '%s\n' "  -l <label>    Append --label=<label> to podman secret create options. Repeatable." >&2
+    cat <<USAGE >&2
+Usage: ${0##*/} -p prefix [-l label]... [-h]
+
+Generate k3s cluster authentication tokens as podman secrets and produce
+secretsdata.json files for the podman file secret driver.
+
+Options:
+    -p prefix    Prefix for generated podman secret names (e.g. prod). (required)
+    -l label     Append --label=<label> to podman secret create. May be specified multiple times.
+    -h           Print this help message and exit.
+USAGE
 }
 
 # main()
@@ -46,8 +52,12 @@ main() {
 
     local -a podman_secret_create_options=("--replace")
     local prefix=""
-    while getopts ':l:p:' opt; do
+    while getopts ':l:p:h' opt; do
         case "$opt" in
+            h)
+                usage
+                exit 0
+                ;;
             l)
                 debug "appending ${OPTARG} to podman_secret_create_options"
                 podman_secret_create_options+=(--label="${OPTARG}")

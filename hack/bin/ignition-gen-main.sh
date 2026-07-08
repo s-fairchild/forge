@@ -11,7 +11,7 @@ set -o nounset \
 
 usage() {
     cat <<USAGE >&2
-Usage: ${0##*/} -b butane_main [-n ignition_secret_name] [-l label]... [-e secrets_env]...
+Usage: ${0##*/} -b butane_main [-n ignition_secret_name] [-l label]... [-e secrets_env]... [-h]
 
 Recursively compile a root butane config, merging its inline references,
 and store the resulting ignition JSON as a podman secret.
@@ -24,6 +24,7 @@ Options:
                               during generation. May be specified multiple times.
     -e secrets_env           Path to an env file to source before generation, declaring
                               SECRET_FILES and/or SECRET_IDS. May be specified multiple times.
+    -h                       Print this help message and exit.
 USAGE
 }
 
@@ -35,8 +36,12 @@ main() {
     local -a labels=() secret_envs=()
     local ignition_secret_name="" butane_main="" opt 
     local -i OPTIND=1
-    while getopts ':n:l:e:b:' opt; do
+    while getopts ':n:l:e:b:h' opt; do
         case "$opt" in
+            h)
+                usage
+                exit 0
+                ;;
             n)
                 [ -z "$ignition_secret_name" ] || fatal_duplicate_option "$OPTARG"
                 ignition_secret_name="${OPTARG}"
