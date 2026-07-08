@@ -9,7 +9,7 @@ stream: stable
 insecure: false
 
 # Embed an Ignition config from a URL
-ignition-url: http://10.50.0.202:8080/config.ign
+ignition-url: http://10.50.0.202:8080
 
 # Allow Ignition URL without HTTPS or hash
 insecure-ignition: true

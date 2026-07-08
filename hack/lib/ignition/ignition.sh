@@ -253,6 +253,7 @@ ignition_gen_config_merge_inlines() {
 }
 
 # get_secrets_from_env()
+# TODO move this into hack/lib/podman/podman-secret.sh
 get_secrets_from_env() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
@@ -265,7 +266,7 @@ get_secrets_from_env() {
     local -r warn_msg_suffix="is unset or unpopulated. No files were processed."
     if [ -v SECRET_FILES ]; then
         debug "$(declare -p SECRET_FILES)"
-        # TODO directly add the secret IDs returned here.
+        # TODO directly add the SECRET_IDS returned here.
         podman_secret_create_from_file -l "env=$config_env" SECRET_FILES
         local f
         # shellcheck disable=SC2068
@@ -305,7 +306,7 @@ source_env_files() {
         if [ -n "$e" ]; then
             [ -f "$e" ] || fatal "$ERROR_FILE_NOT_FOUND: $e"
             info "Sourcing $e"
-            # shellcheck source=../../deploy/butane/base/secrets-example.env
+            # shellcheck source=../../../deploy/butane/overlays/prod/secrets.env
             . "$e"
         fi
     done

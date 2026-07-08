@@ -7,6 +7,3 @@ console:
   - ttyS0,115200n8
   - tty0
   - tty1
-
-# Embed an Ignition config from a URL
-ignition-url: http://10.50.0.202:8080/prod-ignition

@@ -18,12 +18,10 @@ and store the resulting ignition JSON as a podman secret named ignition-<secret_
 
 Options:
     -b butane_main   Path to the root butane config to compile and merge. (required)
-    -p secret_suffix Suffix appended to "ignition-" to form the podman secret name
+    -s secret_suffix Suffix appended to "ignition-" to form the podman secret name
                      (e.g. -p prod stores the result as "ignition-prod"). (required)
     -l label         Additional "key=value" label to attach to secrets created
                      during generation. May be specified multiple times.
-    -e secrets_env   Path to an env file to source before generation, declaring
-                     SECRET_FILES and/or SECRET_IDS. May be specified multiple times.
     -h               Print this help message and exit.
 USAGE
 }
@@ -33,15 +31,14 @@ fatal_duplicate_option() { fatal "-${1?$(fatal "\$1 $ERROR_ARG_REQUIRED")} can o
 main() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    local -a labels=() secret_envs=()
+    local -a labels=()
     local secret_suffix butane_main opt 
     local -i OPTIND=1
-    while getopts ':s:l:e:b:h' opt; do
+    while getopts ':s:l:b:h' opt; do
         case "$opt" in
             s) secret_suffix="${OPTARG}"; local -r secret_suffix ;;
             # -l is inserted as an index before $OPTARG to preserve spacing when passed to podman_secret_create_replace_from_stdin
             l) labels+=("-${opt}" "$OPTARG"); ;;
-            e) secret_envs+=("$OPTARG"); ;;
             b) butane_main="${OPTARG}"; local -r butane_main; ;;
             h) usage; exit 0; ;;
             :) usage; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"; ;;
@@ -50,23 +47,22 @@ main() {
     done
     shift $((OPTIND - 1))
     [ -z "${butane_main:-}" ] && { usage; fatal "-b $ERROR_OPTION_REQUIRED"; }
-    [ -z "${secret_suffix:-}" ] && { usage; fatal "-p $ERROR_OPTION_REQUIRED"; }
-    debug "$(declare -p secret_suffix labels secret_envs butane_main)"
+    [ -z "${secret_suffix:-}" ] && { usage; fatal "-s $ERROR_OPTION_REQUIRED"; }
+    debug "$(declare -p secret_suffix labels butane_main)"
 
     # TODO move this into it's own script in hack/bin once functions are moved into hack/lib/podman/podman-secret.sh
-    source_env_files secret_envs
-    unset secret_envs
-    # shellcheck disable=SC2034
-    local -a secrets=()
-    get_secrets_from_env secrets
-    local -r secrets
-    debug "$(declare -p secrets)"
+    # source_env_files secret_envs
+    # unset secret_envs
+    # # shellcheck disable=SC2034
+    # local -a secrets=()
+    # get_secrets_from_env secrets
+    # local -r secrets
+    # debug "$(declare -p secrets)"
 
     # shellcheck disable=SC2034
     local ignition_main
     ignition_gen_config_merge_inlines "$butane_main" \
-                                    ignition_main \
-                                    secrets
+                                    ignition_main
 
     labels+=("-l" "format=ignition")
     # shellcheck disable=SC2068

@@ -65,9 +65,7 @@ ignition-gen-rpi4-0: k3s-tokens-generate
 	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/rpi4-0/main.bu -s rpi4-0
 
 ignition-gen-prod: kube-manifests-gen-all k3s-tokens-generate-prod
-	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/prod/main.bu \
-								-e ${deploy_butane_path}/overlays/prod/secrets.env \
-								-s prod
+	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/prod/main.bu -s prod
 
 ignition-serve-gen-certs-base:
 	hack/bin/ignition-gen-serving-certs.sh base \
@@ -95,29 +93,32 @@ ignition-serve-gen-certs-prod:
 
 LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
 
-ignition-serve-base: ignition-gen-base
+ignition-serve-base: ignition-gen-base ignition-serve-gen-certs-base k3s-tokens-generate-base
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-base \
 		  -k ssl-key-base \
 		  -i ignition-base
 
-ignition-serve-staging: ignition-gen-staging
+ignition-serve-staging: ignition-gen-staging ignition-serve-gen-certs-staging k3s-tokens-generate-staging
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-staging \
 		  -k ssl-key-staging \
 		  -i ignition-staging
 
-ignition-serve-rpi4-0: ignition-gen-rpi4-0
+# k3s tokens should not be generated for worker node ignition bootstraps
+ignition-serve-rpi4-0: ignition-gen-rpi4-0 ignition-serve-gen-certs-rpi4-0
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-rpi4-0 \
 		  -k ssl-cert-rpi4-0 \
 		  -i ignition-rpi4-0
 
-# ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod
+# ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod k3s-tokens-generate-prod
 ignition-serve-prod:
 	. $(LIB_IGNITION_SERVE)
-	serve -c ssl-cert-prod \
+	serve -s var.keyfile.gz \
+		  -s appdata.keyfile.gz \
+		  -s prod-secrets.json \
+		  -s prod-secretsdata.json \
+		  -c ssl-cert-prod \
 		  -k ssl-key-prod \
-		  -i prod-ignition
-
-		  # ignition-prod
+		  -i ignition-prod
