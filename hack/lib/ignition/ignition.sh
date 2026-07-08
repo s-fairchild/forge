@@ -252,6 +252,65 @@ ignition_gen_config_merge_inlines() {
     out="$ignition_out"
 }
 
+# get_secrets_from_env()
+get_secrets_from_env() {
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
+    local -n names="${1?$(fatal "\$1 $ERROR_ARG_REQUIRED")}"
+    local -r config_env="${2:-}"
+
+    [ -z "$config_env" ] && warn "config_env was not specified. label env= will be empty."
+    [[ ${!names@a} == *a* ]] || fatal "${!names} must be an indexed array."
+
+    local -r warn_msg_suffix="is unset or unpopulated. No files were processed."
+    if [ -v SECRET_FILES ]; then
+        debug "$(declare -p SECRET_FILES)"
+        # TODO directly add the secret IDs returned here.
+        podman_secret_create_from_file -l "env=$config_env" SECRET_FILES
+        local f
+        # shellcheck disable=SC2068
+        for f in ${SECRET_FILES[@]}; do
+            names+=("$(basename "$f")")
+        done
+    else
+        warn "SECRET_FILES $warn_msg_suffix"
+    fi
+
+    if [ -v SECRET_IDS ]; then
+        # shellcheck disable=SC2068
+        for id in ${SECRET_IDS[@]}; do
+            if podman secret exists "$id" > /dev/null 2>&1; then
+                info "Adding podman secret: $id"
+                names+=("$(podman secret inspect -f '{{.Spec.Name}}' "$id")")
+            else
+                error "podman secret \"$id\" does not exist. Skipping."
+            fi
+        done
+    else
+        warn "SECRET_IDS $warn_msg_suffix"
+    fi
+}
+
+# source_env_files()
+source_env_files() {
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
+    # shellcheck disable=SC2034
+    local -n files="${1?$(fatal "\$1 $ERROR_ARG_REQUIRED")}"
+
+    [[ ${!files@a} == *a* ]] || fatal "${!files} must be an indexed array."
+
+    # shellcheck disable=SC2068
+    for e in ${files[@]}; do
+        if [ -n "$e" ]; then
+            [ -f "$e" ] || fatal "$ERROR_FILE_NOT_FOUND: $e"
+            info "Sourcing $e"
+            # shellcheck source=../../deploy/butane/base/secrets-example.env
+            . "$e"
+        fi
+    done
+}
+
 if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
     declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
     [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
