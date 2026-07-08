@@ -22,7 +22,7 @@ podman_secret_exists() {
 
 usage_podman_secret_create_replace_from_stdin() {
     cat <<USAGE >&2
-Usage: podman_secret_create_replace_from_stdin [-l label]... secret_name < input
+Usage: podman_secret_create_replace_from_stdin [-l label]... [-h] secret_name < input
 
 Creates or replaces a podman secret from stdin using \`podman secret create --replace\`.
 Reads secret data from stdin; aborts if stdin is empty. Standard provenance labels
@@ -31,6 +31,7 @@ Reads secret data from stdin; aborts if stdin is empty. Standard provenance labe
 Options:
     -l label  Additional "key=value" label to apply to the secret.
               May be specified multiple times.
+    -h        Print this usage message and exit.
 USAGE
 }
 
@@ -51,8 +52,9 @@ podman_secret_create_replace_from_stdin() {
 
     local -a extra_labels=()
     local opt OPTIND=1
-    while getopts ':l:' opt; do
+    while getopts ':l:h' opt; do
         case "$opt" in
+            h) usage_podman_secret_create_replace_from_stdin; return 0 ;;
             l) extra_labels+=("$OPTARG") ;;
             :) usage_podman_secret_create_replace_from_stdin; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
             ?) usage_podman_secret_create_replace_from_stdin; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
@@ -111,7 +113,7 @@ podman_secret_showsecret() {
 
 usage_podman_secret_create_from_file() {
     cat <<USAGE >&2
-Usage: podman_secret_create_from_file [-l label]... src_files_nameref
+Usage: podman_secret_create_from_file [-l label]... [-h] src_files_nameref
 
 Creates a podman secret for each file path or glob in the src_files array. The secret
 name is the basename of the source file. Secrets that already exist are skipped with
@@ -121,10 +123,11 @@ caller-supplied extra labels are applied to each secret.
 Options:
     -l label  Additional "key=value" label to apply to each created secret.
               May be specified multiple times.
+    -h        Print this usage message and exit.
 
 Arguments:
     src_files_nameref  Name of an array variable holding file paths or glob patterns
-                        to create secrets from.
+                       to create secrets from.
 USAGE
 }
 
@@ -147,8 +150,9 @@ podman_secret_create_from_file() {
 
     local -a extra_labels=()
     local opt OPTIND=1
-    while getopts ':l:' opt; do
+    while getopts ':l:h' opt; do
         case "$opt" in
+            h) usage_podman_secret_create_from_file; return 0 ;;
             l) extra_labels+=("$OPTARG") ;;
             :) usage_podman_secret_create_from_file; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
             ?) usage_podman_secret_create_from_file; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;

@@ -8,7 +8,7 @@ declare -r __BUTANE_FILES_DIR="files"
 
 usage_butane() {
     cat <<USAGE >&2
-Usage: butane [-s secret]... [butane_arg...]
+Usage: butane [-s secret]... [-h] [butane_arg...]
 
 Runs butane in a container with image quay.io/coreos/butane:release.
 
@@ -16,6 +16,7 @@ Options:
     -s secret  podman secret spec passed verbatim to \`podman run --secret\`
                (e.g. "mykey,type=mount,target=/data/files/secrets/mykey").
                May be specified multiple times.
+    -h         Print this usage message and exit.
 
 Remaining arguments are passed through to the butane container.
 
@@ -43,8 +44,9 @@ butane() {
 
     local -a podman_run_options=()
     local opt OPTIND=1
-    while getopts ':s:' opt; do
+    while getopts ':s:h' opt; do
         case "$opt" in
+            h) usage_butane; exit 0 ;;
             s)
                 debug "Adding --secret=$OPTARG"
                 podman_run_options+=("--secret=$OPTARG")

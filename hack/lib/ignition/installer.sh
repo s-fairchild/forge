@@ -9,7 +9,7 @@ declare -r __INSTALLER_WORKDIR="/data"
 
 usage_coreos-installer() {
     cat <<USAGE >&2
-Usage: coreos-installer [-s secret]... [-m mount]... [installer_arg...]
+Usage: coreos-installer [-s secret]... [-m mount]... [-h] [installer_arg...]
 
 Runs coreos-installer in a container with image quay.io/coreos/coreos-installer:release.
 
@@ -18,6 +18,7 @@ Options:
                (e.g. "mykey,type=mount,target=/data/mykey"). May be specified multiple times.
     -m mount   podman volume mount spec passed verbatim to \`podman run --mount\`.
                May be specified multiple times.
+    -h         Print this usage message and exit.
 
 Remaining arguments are passed through to the coreos-installer container.
 
@@ -44,8 +45,9 @@ coreos-installer() {
 
     local -a secrets=() mounts=()
     local opt OPTIND=1
-    while getopts ':s:m:' opt; do
+    while getopts ':s:m:h' opt; do
         case "$opt" in
+            h) usage_coreos-installer; exit 0 ;;
             s)
                 secrets+=("$OPTARG")
                 ;;

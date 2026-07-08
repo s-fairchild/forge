@@ -30,23 +30,26 @@ declare -r __nginx_ssl_root="/run/secrets"
 
 usage_serve() {
     cat <<USAGE >&2
-Usage: serve -i image -s secret... [-h] [-d dropin_file]... [-e env_prefix]... [arg...]
+Usage: serve -i ignition_secret -c ssl_cert -k ssl_key [-s secret]... [-d dropin_file]... [-e env_prefix]... [-h] [arg...]
 
-Launches a containerized httpd or nginx server for serving ignition configs.
+Launches a containerised nginx server for serving ignition configs over HTTPS.
 
 Options:
-    -s secret       podman secret spec passed verbatim to \`podman run --secret\`
-                    (e.g. "prod-ignition,target=/usr/share/httpd/html/config.ign,mode=0444").
-                    May be specified multiple times; at least one is required.
-    -d dropin_file  Dropin config bind-mounted into the server's conf.d.
-                    May be specified multiple times.
-                    (default: the image's *_DROPINS_CONFIG_DEFAULT)
-    -e env_prefix   Host env var wildcard prefix to pass through (e.g. "HTTPD_").
-                    May be specified multiple times. The image's default prefix is
-                    always included.
-    -h              print this usage message.
+    -i ignition_secret  Name of the podman secret containing the ignition config to serve
+                        as config.ign. (required)
+    -c ssl_cert         Name of the podman secret containing the TLS certificate. (required)
+    -k ssl_key          Name of the podman secret containing the TLS private key. (required)
+    -s secret           Additional podman secret spec passed verbatim to \`podman run --secret\`
+                        (e.g. "mydata,target=/usr/share/nginx/html/secrets/mydata").
+                        May be specified multiple times.
+    -d dropin_file      Dropin config bind-mounted into /etc/nginx/conf.d/.
+                        May be specified multiple times.
+                        (default: hack/etc/nginx/default.conf and hack/etc/nginx/ignition-secure.conf)
+    -e env_prefix       Host env var wildcard prefix to pass through (e.g. "NGINX_").
+                        May be specified multiple times.
+    -h                  Print this usage message and exit.
 
-Remaining arguments are passed through to the server container.
+Remaining arguments are passed through to the nginx container.
 USAGE
 }
 

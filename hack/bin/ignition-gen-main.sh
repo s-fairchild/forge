@@ -11,20 +11,20 @@ set -o nounset \
 
 usage() {
     cat <<USAGE >&2
-Usage: ${0##*/} -b butane_main [-n secret_suffix] [-l label]... [-e secrets_env]... [-h]
+Usage: ${0##*/} -b butane_main -p secret_suffix [-l label]... [-e secrets_env]... [-h]
 
 Recursively compile a root butane config, merging its inline references,
-and store the resulting ignition JSON as a podman secret.
+and store the resulting ignition JSON as a podman secret named ignition-<secret_suffix>.
 
 Options:
-    -b butane_main           Path to the root butane config to compile and merge. (required)
-    -s secret_suffix         Prefix for name of the podman secret to store the generated ignition JSON
-                              under. (default: parent directory name of butane_main)
-    -l label                 Additional "key=value" label to attach to secrets created
-                              during generation. May be specified multiple times.
-    -e secrets_env           Path to an env file to source before generation, declaring
-                              SECRET_FILES and/or SECRET_IDS. May be specified multiple times.
-    -h                       Print this help message and exit.
+    -b butane_main   Path to the root butane config to compile and merge. (required)
+    -p secret_suffix Suffix appended to "ignition-" to form the podman secret name
+                     (e.g. -p prod stores the result as "ignition-prod"). (required)
+    -l label         Additional "key=value" label to attach to secrets created
+                     during generation. May be specified multiple times.
+    -e secrets_env   Path to an env file to source before generation, declaring
+                     SECRET_FILES and/or SECRET_IDS. May be specified multiple times.
+    -h               Print this help message and exit.
 USAGE
 }
 
@@ -34,51 +34,32 @@ main() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a labels=() secret_envs=()
-    local secret_suffix="" butane_main="" opt 
+    local secret_suffix butane_main opt 
     local -i OPTIND=1
     while getopts ':s:l:e:b:h' opt; do
         case "$opt" in
-            h)
-                usage
-                exit 0
-                ;;
-            s)
-                [ -z "$secret_suffix" ] || fatal_duplicate_option "$OPTARG"
-                secret_suffix="${OPTARG}"
-                ;;
-            l)
-                # -l is inserted as an index before $OPTARG to preserve spacing when passed to podman_secret_create_replace_from_stdin
-                labels+=("-${opt}" "$OPTARG")
-                ;;
-            e)
-                secret_envs+=("$OPTARG")
-                ;;
-            b)
-                [ -z "$butane_main" ] || fatal_duplicate_option "$OPTARG"
-                butane_main="${OPTARG}"
-                debug "$(declare -p butane_main)"
-                ;;
-            :)
-                usage
-                fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"
-                ;;
-            ?)
-                usage
-                fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"
-                ;;
+            s) secret_suffix="${OPTARG}"; local -r secret_suffix ;;
+            # -l is inserted as an index before $OPTARG to preserve spacing when passed to podman_secret_create_replace_from_stdin
+            l) labels+=("-${opt}" "$OPTARG"); ;;
+            e) secret_envs+=("$OPTARG"); ;;
+            b) butane_main="${OPTARG}"; local -r butane_main; ;;
+            h) usage; exit 0; ;;
+            :) usage; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"; ;;
+            ?) usage; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"; ;;
         esac
     done
     shift $((OPTIND - 1))
-    debug "$(declare -p secret_suffix labels secret_envs butane_main)"
     [ -z "${butane_main:-}" ] && { usage; fatal "-b $ERROR_OPTION_REQUIRED"; }
     [ -z "${secret_suffix:-}" ] && { usage; fatal "-p $ERROR_OPTION_REQUIRED"; }
+    debug "$(declare -p secret_suffix labels secret_envs butane_main)"
 
+    # TODO move this into it's own script in hack/bin once functions are moved into hack/lib/podman/podman-secret.sh
     source_env_files secret_envs
     unset secret_envs
-
     # shellcheck disable=SC2034
     local -a secrets=()
     get_secrets_from_env secrets
+    local -r secrets
     debug "$(declare -p secrets)"
 
     # shellcheck disable=SC2034
@@ -86,7 +67,6 @@ main() {
     ignition_gen_config_merge_inlines "$butane_main" \
                                     ignition_main \
                                     secrets
-    unset secrets butane_main
 
     labels+=("-l" "format=ignition")
     # shellcheck disable=SC2068

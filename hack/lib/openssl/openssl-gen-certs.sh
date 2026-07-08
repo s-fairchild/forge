@@ -18,7 +18,7 @@ openssl_gen_private_key() {
 
 usage_openssl_gen_self_signed_certificate() {
     cat <<USAGE >&2
-Usage: openssl_gen_self_signed_certificate [-d days] [-s subject] [-a san_value]... < private_key
+Usage: openssl_gen_self_signed_certificate [-d days] [-s subject] [-a san_value]... [-h] < private_key
 
 Generates a self-signed certificate for the ECC private key read from stdin.
 
@@ -29,6 +29,7 @@ Options:
     -a san_value Subject Alternative Name value to append (e.g. "DNS:example.local").
                  May be specified multiple times.
                  (default SAN values: "DNS:ignition.local", "DNS:*.ignition.local", "IP:127.0.0.1")
+    -h           Print this usage message and exit.
 USAGE
 }
 
@@ -42,8 +43,9 @@ openssl_gen_self_signed_certificate() {
     local -i days=1825
     local subj="/C=US/ST=New York/L=New York City/O=Local Ignition Server/CN=ignition.local"
     local -a san_values=("DNS:ignition.local" "DNS:*.ignition.local" "IP:127.0.0.1")
-    while getopts ':d:s:a:' opt; do
+    while getopts ':d:s:a:h' opt; do
         case "$opt" in
+            h) usage_openssl_gen_self_signed_certificate; return 0 ;;
             d)
                 debug "Updating Expiration Days"
                 days=$OPTARG

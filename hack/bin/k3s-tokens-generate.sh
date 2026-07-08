@@ -16,7 +16,8 @@ usage() {
 Usage: ${0##*/} -p prefix [-l label]... [-h]
 
 Generate k3s cluster authentication tokens as podman secrets and produce
-secretsdata.json files for the podman file secret driver.
+<prefix>-secrets.json and <prefix>-secretsdata.json for the podman file secret driver.
+Existing token secrets are left unchanged (--ignore); delete them manually to rotate.
 
 Options:
     -p prefix    Prefix for generated podman secret names (e.g. prod). (required)
@@ -50,7 +51,7 @@ USAGE
 main() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    local -a podman_secret_create_options=("--replace")
+    local -a podman_secret_create_options=("--ignore")
     local prefix=""
     while getopts ':l:p:h' opt; do
         case "$opt" in
