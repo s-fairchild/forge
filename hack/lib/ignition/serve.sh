@@ -21,9 +21,12 @@ declare -r __NGINX_IMAGE_NAME="nginx"
 declare -r __NGINX_IMAGE="registry.access.redhat.com/hi/${__NGINX_IMAGE_NAME}:latest"
 declare -r __NGINX_ENV_PREFIX_WILDCARD="${__NGINX_IMAGE_NAME^^}_*"
 
-declare -r __NGINX_DROPINS_CONFIG_DEFAULT="hack/etc/${__NGINX_IMAGE_NAME}/ignition-secure.conf"
-declare -r __nginx_dropins_target="/etc/${__NGINX_IMAGE_NAME}/conf.d"
-declare -r __nginx_serve_root="/usr/share/${__NGINX_IMAGE_NAME}/html"
+declare -r __NGINX_DROPIN_CONFIGS_SRC="hack/etc/nginx"
+declare -r __NGINX_DROPIN_CONFIG_DEFAULT_SRC="${__NGINX_DROPIN_CONFIGS_SRC}/default.conf"
+declare -r __NGINX_DROPIN_CONFIG_SECURE_SRC="${__NGINX_DROPIN_CONFIGS_SRC}/ignition-secure.conf"
+declare -r __nginx_dropin_target="/etc/nginx/conf.d"
+declare -r __nginx_serve_root="/usr/share/nginx/html"
+declare -r __nginx_ssl_root="/run/secrets"
 
 usage_serve() {
     cat <<USAGE >&2
@@ -64,40 +67,31 @@ USAGE
 serve() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
+
     local -a secrets=() dropins=() env_prefixes=()
-    local opt OPTIND=1
-    while getopts ':s:d:e:h' opt; do
+    local opt OPTIND=1 ignition ssl_key ssl_cert
+    while getopts ':i:s:d:e:h:c:k:' opt; do
         case "$opt" in
-            s)
-                debug "Appending ${OPTARG} to secrets array."
-                secrets+=("$OPTARG")
-                ;;
-            d)
-                debug "Appending ${OPTARG} to dropins array."
-                dropins+=("$OPTARG")
-                ;;
-            e)
-                debug "Appending ${OPTARG} to env_prefixes array."
-                env_prefixes+=("$OPTARG")
-                ;;
-            h)
-                usage
-                ;;
-            :)
-                usage_serve
-                fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}"
-                ;;
-            ?)
-                usage_serve
-                fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}"
-                ;;
+            i) ignition="${OPTARG}"; local -r ignition ;;
+            s) secrets+=("$OPTARG") ;;
+            d) dropins+=("$OPTARG") ;;
+            e) env_prefixes+=("$OPTARG") ;;
+            c) ssl_cert="${OPTARG}" ;;
+            k) ssl_key="${OPTARG}" ;;
+            h) usage_serve; exit 0 ;;
+            :) usage_serve; fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}" ;;
+            ?) usage_serve; fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}" ;;
         esac
     done
     shift $((OPTIND - 1))
-    debug "$(declare -p secrets dropins env_prefixes)"
+    [ -z "${ignition:-}" ] && { usage_serve; fatal "-b $ERROR_OPTION_REQUIRED"; }
+    [ -z "${ssl_cert:-}" ] && { usage_serve; fatal "-c $ERROR_OPTION_REQUIRED"; }
+    [ -z "${ssl_key:-}" ] && { usage_serve; fatal "-k $ERROR_OPTION_REQUIRED"; }
+    (( ${#secrets[@]} )) || { warn "No -s option(s) provided. No secrets will be mounted."; }
+    debug "$(declare -p ignition secrets dropins env_prefixes ssl_cert ssl_key)"
 
-    (( ${#secrets[@]} )) || { usage_serve; fatal "at least one -s secret must be provided."; }
-
+    local -r __ssl_cert_mount_path="${__nginx_ssl_root}/ssl-cert"
+    local -r __ssl_key_mount_path="${__nginx_ssl_root}/ssl-key"
     local -a podman_run_options=(
         "--rm"
         "-i"
@@ -106,30 +100,32 @@ serve() {
         "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "--publish=0.0.0.0:8080:8080"
         "--publish=0.0.0.0:8081:8081"
+        # Set ignition file to be served as index root
+        "--secret=${ignition},target=${__nginx_serve_root}/config.ign,mode=0444"
+        "--secret=${ssl_cert},target=${__ssl_cert_mount_path},mode=0400,uid=65532,gid=65532"
+        "--secret=${ssl_key},target=${__ssl_key_mount_path},mode=0400,uid=65532,gid=65532"
     )
 
-    local dropins_target item
-    dropins_target="$__nginx_dropins_target"
-
-    (( ${#dropins[@]} )) || dropins=("$__NGINX_DROPINS_CONFIG_DEFAULT")
+    local item
+    (( ${#dropins[@]} )) || dropins=("$__NGINX_DROPIN_CONFIG_DEFAULT_SRC" "$__NGINX_DROPIN_CONFIG_SECURE_SRC")
     for item in "${dropins[@]}"; do
-        podman_run_options+=("--volume=./$item:$dropins_target/$(basename "$item"):ro")
+        podman_run_options+=("--volume=./$item:$__nginx_dropin_target/$(basename "$item"):ro")
     done
 
     for item in "${secrets[@]}"; do
-        podman_run_options+=("--secret=$item")
+        podman_run_options+=("--secret=${item},target=${__nginx_serve_root}/secrets/${item}")
     done
 
     for item in "${env_prefixes[@]}"; do
         # Strip a trailing '*' so an already-globbed prefix does not become '**'.
         podman_run_options+=("--env=${item%\*}*")
     done
-
     debug "$(declare -p podman_run_options)"
+
     podman run \
            "${podman_run_options[@]}" \
            "$__NGINX_IMAGE" \
-           "$@"
+           "$@" || fatal
 }
 
 if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then

@@ -97,22 +97,27 @@ LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
 
 ignition-serve-base: ignition-gen-base
 	. $(LIB_IGNITION_SERVE)
-	serve $${NGINX_IMAGE_NAME} ignition-base
+	serve -c ssl-cert-base \
+		  -k ssl-key-base \
+		  -i ignition-base
 
 ignition-serve-staging: ignition-gen-staging
 	. $(LIB_IGNITION_SERVE)
-	serve $${NGINX_IMAGE_NAME} ignition-staging
+	serve -c ssl-cert-staging \
+		  -k ssl-key-staging \
+		  -i ignition-staging
 
 ignition-serve-rpi4-0: ignition-gen-rpi4-0
 	. $(LIB_IGNITION_SERVE)
-	serve $${NGINX_IMAGE_NAME} ignition-rpi4-0
+	serve -c ssl-cert-rpi4-0 \
+		  -k ssl-cert-rpi4-0 \
+		  -i ignition-rpi4-0
 
-ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod
+# ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod
+ignition-serve-prod:
 	. $(LIB_IGNITION_SERVE)
-	serve -i $${NGINX_IMAGE_NAME} \
-		  -d hack/etc/nginx/ignition-secure.conf \
-		  -s "prod-ignition,target=$${__nginx_serve_root}/config.ign,mode=0444" \
-		  -s "ssl-key-prod,mode=0400,uid=65532,gid=65532" \
-		  -s "ssl-cert-prod,mode=0400,uid=65532,gid=65532" \
-		  -- \
-		  ignition-prod
+	serve -c ssl-cert-prod \
+		  -k ssl-key-prod \
+		  -i prod-ignition
+
+		  # ignition-prod
