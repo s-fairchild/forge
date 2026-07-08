@@ -8,6 +8,17 @@ set -o nounset \
 
 [ "${XTRACE:-0}" -eq 1 ] && set -x
 
+# usage()
+#
+# Prints usage information to stderr.
+usage() {
+    printf '%s\n' "Usage: ${0##*/} -p prefix [-l label]..." >&2
+    printf '%s\n' "" >&2
+    printf '%s\n' "Options:" >&2
+    printf '%s\n' "  -p <prefix>   Required. Prefix for generated podman secret names (e.g. prod)." >&2
+    printf '%s\n' "  -l <label>    Append --label=<label> to podman secret create options. Repeatable." >&2
+}
+
 # main()
 #
 # Generates k3s cluster authentication tokens as podman secrets and produces
@@ -31,6 +42,8 @@ set -o nounset \
 # env:
 #   * XTRACE=1 - enable bash xtrace for this script.
 main() {
+    debug "Starting ${FUNCNAME[0]}($*)"
+
     local -a podman_secret_create_options=("--replace")
     local prefix=""
     while getopts ':l:p:' opt; do
@@ -43,16 +56,16 @@ main() {
                 prefix="${OPTARG}"
                 ;;
             :)
-                # usage
+                usage
                 fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}"
                 ;;
             ?)
-                # usage
+                usage
                 fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}"
                 ;;
         esac
     done
-    [ -z "${prefix:-}" ] && fatal "$ERROR_OPTION_REQUIRED: -p"
+    [ -z "${prefix:-}" ] && { usage; fatal "$ERROR_OPTION_REQUIRED: -p"; }
 
     local -r prefix podman_secret_create_options
     debug "$(declare -p prefix podman_secret_create_options)"

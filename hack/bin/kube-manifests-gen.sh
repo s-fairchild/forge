@@ -117,11 +117,12 @@ generate_kube_manifests() {
     done
 }
 
-if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
-    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
-    # shellcheck source=../vendor/bash-utils/lib/base-config-logging.sh
-    . "$__bash_utils_base_config_logging"
+if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
+    declare __hack_env_vendor="hack/env/vendor.env"
+    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
+    # shellcheck source=../env/vendor.env
+    . "$__hack_env_vendor"
+    unset __hack_env_vendor
 fi
 
 if [ "${__env_gen_kub_manifests_sourced:-}" != "true" ]; then
