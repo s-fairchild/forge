@@ -12,7 +12,8 @@ declare -r __PODMAN_CONTAINER_VOLUME_TARGET_GRAPHROOT_USER_PODMAN="/home/podman/
 
 # podman_container_run()
 podman_container() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
     podman_options=(
         "--user=${__PODMAN_CONTAINER_USER}"
         "--security-opt=label=disable"

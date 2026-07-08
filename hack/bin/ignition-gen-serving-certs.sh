@@ -7,14 +7,12 @@
 # Generates an nginx TLS private key and self-signed certificate, storing both
 # as named podman secrets for use by the ignition serving container.
 main() {
-    # shellcheck disable=SC2128
-    debug "${FUNCNAME}() starting"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r environment="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
-    debug "$(declare -p environment)"
     shift
 
     local -r key_name="ssl-key-${environment}" cert_name="ssl-cert-${environment}"
-    debug "$(declare -p key_name cert_name)"
+    debug "$(declare -p environment key_name cert_name)"
 
     _warn_log() {
         local -r n="${1?$(fatal "$ERROR_ARG_REQUIRED")}"
@@ -29,26 +27,32 @@ main() {
         return
     fi
 
-    _fatal_log() { fatal "failed to generate and save podman secret ${1:-}"; }
+    local -r fatal_msg_prefix="failed to generate and save podman secret"
+    local -a labels_common=(
+            "-l"
+            "environment=${environment}"
+            "-l"
+            "type=ssl"
+    )
 
     info "Generating ssl private key... saving to podman secret: $key_name"
+    # shellcheck disable=SC2068
     openssl_gen_private_key \
         | podman_secret_create_replace_from_stdin \
-            -l "environment=$environment" \
-            -l "type=ssl" \
+            ${labels_common[@]} \
             -l "ssl=key" \
             "$key_name" \
-        || _fatal_log "$key_name"
+        || fatal "${fatal_msg_prefix}: $key_name"
 
     info "Generating self signed certificate... saving to podman secret: $cert_name"
+    # shellcheck disable=SC2068
     podman_secret_showsecret "$key_name" \
         | openssl_gen_self_signed_certificate "$@" \
         | podman_secret_create_replace_from_stdin \
-            -l "environment=$environment" \
-            -l "type=ssl" \
+            ${labels_common[@]} \
             -l "ssl=cert" \
             "$cert_name" \
-        || _fatal_log "$cert_name"
+        || fatal "${fatal_msg_prefix}: $cert_name"
 }
 
 if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then

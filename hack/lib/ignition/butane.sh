@@ -39,7 +39,7 @@ USAGE
 #   * PODMAN_LOG_LEVEL   - string; podman run log level (default: warn).
 #   * BUTANE_VOLUME_MOUNT - string; host directory to mount as the container workdir.
 butane() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a podman_run_options=()
     local opt OPTIND=1
@@ -95,7 +95,7 @@ export -f butane
 # args:
 #   * stdin) ignition JSON string to validate.
 butane_check() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r files_dir="${1:-}"
     local -r input="$(cat)"
     [ -z "$input" ] && fatal "\$1 input $ERROR_STDIN_NULL"

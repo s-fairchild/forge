@@ -48,7 +48,7 @@ USAGE
 # env:
 #   * XTRACE=1 - enable bash xtrace for this script.
 main() {
-    debug "Starting ${FUNCNAME[0]}($*)"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a podman_secret_create_options=("--replace")
     local prefix=""

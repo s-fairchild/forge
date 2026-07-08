@@ -62,7 +62,7 @@ USAGE
 #   * -h          - print usage message.
 #   * $@)         - trailing args are passed to the container.
 serve() {
-    debug "Starting ${FUNCNAME[0]}($*)"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a secrets=() dropins=() env_prefixes=()
     local opt OPTIND=1

@@ -40,7 +40,7 @@ USAGE
 #   * PODMAN_LOG_LEVEL      - string; podman run log level (default: warn).
 #   * INSTALLER_VOLUME_MOUNT - string; host directory to mount as the container workdir.
 coreos-installer() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a secrets=() mounts=()
     local opt OPTIND=1

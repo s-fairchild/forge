@@ -19,7 +19,7 @@ declare -r __ignition_sourced="true"
 #   * 2) secret_names  - nameref (optional); array of podman secret names to mount into the
 #         butane container at $__BUTANE_WORKDIR/files/secrets/<name>.
 ignition_gen() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r input="${1?$(fatal "\$1 input $ERROR_ARG_REQUIRED")}"
     # shellcheck disable=SC2034
     local -n _secret_names_ref="${2:-__empty_array}"
@@ -188,7 +188,7 @@ ignition_merge_write_entry() {
 #         ignition_merge_compile_entry() (and from there to ignition_gen()) for mounting
 #         secrets inside the butane container.
 ignition_gen_config_merge_inlines() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r butane_path="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1")}"
     local -n out="${2?$(fatal "$ERROR_ARG_REQUIRED: \$2")}"
     local -r secrets="${3:-}"

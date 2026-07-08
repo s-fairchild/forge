@@ -14,7 +14,7 @@ set -o nounset \
 #   * 2) manifests - string; destination directory for generated YAML files.
 #   * 3) overlay   - string; overlay name to match (e.g. "prod", "staging").
 main() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r base="${1?$(fatal "\$1 $error_arg_required")}"
     local -r out="${2?$(fatal "\$2 $error_arg_required")}"
     local -r overlay="${3?$(fatal "\$3 $error_arg_required")}"
@@ -41,15 +41,13 @@ main() {
 #   * 1) app          - string; application name to test.
 #   * 2) apps_enabled - string; ERE pattern of disabled app names (e.g. "(pihole|coredns-custom)").
 is_enabled() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r app="${1?$(fatal "\$1 $error_arg_required")}"
     local -n enabled="${2?$(fatal "\$2 $error_arg_required")}"
-    debug "$(declare -p app)"
-    debug "$(declare -p enabled)"
 
     local enabled_regex
     enabled_regex="$(IFS='|'; printf '%s' "${enabled[*]}")"
-    debug "$(declare -p enabled_regex)"
+    debug "$(declare -p app enabled enabled_regex)"
     [[ $app =~ ${enabled_regex} ]] || return 1
 }
 
@@ -63,7 +61,7 @@ is_enabled() {
 #   * 1) path - string; overlay directory path as returned by find.
 get_app_name() {
     local -r path="${1?$(fatal "\$1 $ERROR_ARG_REQUIRED")}"
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     basename "$(dirname "$(dirname "$path")")"
 }
@@ -79,7 +77,7 @@ get_app_name() {
 #   * 2) dest    - string; destination directory for generated YAML files.
 #   * 3) overlay - string; directory name to match (e.g. "prod").
 generate_kube_manifests() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r pkgs="${1?$(fatal \$1 "$ERROR_ARG_REQUIRED")}"
     local -r dest="${2?$(fatal \$2 "$ERROR_ARG_REQUIRED")}"
     local -r overlay="${3?$(fatal \$3 "$ERROR_ARG_REQUIRED")}"

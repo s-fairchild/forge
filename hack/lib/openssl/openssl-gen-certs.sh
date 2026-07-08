@@ -9,7 +9,8 @@ declare -r __lib_gen_ssl_certs_sourced="true"
 # Generates an ECC private key with openssl and saves it as a podman secret.
 # Outputs the podman secret ID.
 openssl_gen_private_key() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
     openssl ecparam \
         -name prime256v1 \
         -genkey
@@ -34,7 +35,7 @@ USAGE
 # openssl_gen_self_signed_certificate()
 #
 openssl_gen_self_signed_certificate() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r input="$(cat)"
     [ -z "$input" ] && fatal "$__fatal_msg_stdin_null"
 

@@ -5,7 +5,7 @@
 declare -r __lib_podman_volume_sourced="true"
 
 podman_volume_exists() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r v="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1 - podman volume must be provided.")}"
 
     if ! podman volume exists "$v"; then
@@ -15,7 +15,7 @@ podman_volume_exists() {
 }
 
 podman_volume_create() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r v="$1"
 
     if podman volume exists "$v"; then

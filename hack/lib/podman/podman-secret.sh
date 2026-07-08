@@ -16,7 +16,7 @@ declare -r __PODMAN_SECRETS_FILEDRIVER_FILENAME="secrets/filedriver/secretsdata.
 # args:
 #   * 1) secret - string; podman secret name or ID to check.
 podman_secret_exists() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     podman secret exists "$1"
 }
 
@@ -47,7 +47,7 @@ USAGE
 # args:
 #   * 1) secret_name - string; name of the podman secret to create or replace.
 podman_secret_create_replace_from_stdin() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a extra_labels=()
     local opt OPTIND=1
@@ -97,7 +97,7 @@ podman_secret_create_replace_from_stdin() {
 # args:
 #   * 1) s - string; podman secret name to retrieve data from.
 podman_secret_showsecret() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r s="${1?$(fatal "\$1 is unset. podman secret name must be provided.")}"
 
     [ -z "$s" ] && fatal "\$1 cannot be empty string."
@@ -143,7 +143,7 @@ USAGE
 #   * 1) src_files - nameref name; array of file paths or glob patterns to create
 #         secrets from.  Each element is expanded and its basename becomes the secret name.
 podman_secret_create_from_file() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a extra_labels=()
     local opt OPTIND=1
@@ -208,7 +208,7 @@ podman_secret_create_from_file() {
 #
 # stdout) JSON object: { "<id>": "<secret_data>", ... }
 podman_secret_gen_file_secretsdata() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r input="$(cat)"
     [ -z "$input" ] && fatal "input $ERROR_STDIN_NULL"
 
@@ -232,7 +232,7 @@ podman_secret_gen_file_secretsdata() {
 #
 # stdout) Names of matching podman secrets, newline-separated.
 podman_secret_filter_by_label() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r label="${1?$(error \$1 "$ERROR_ARG_REQUIRED")}"
     local -r value="${2?$(error \$2 "$ERROR_ARG_REQUIRED")}"
     debug "$(declare -p label)"
