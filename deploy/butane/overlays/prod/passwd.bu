@@ -6,13 +6,13 @@
 # the butane container from SECRET_FILES during ignition generation.
 ---
 variant: fcos
-version: 1.5.0
+version: 1.7.0
 passwd:
   users:
   - name: root
-    ssh_authorized_keys_local:
-      - secrets/id_ed25519_rick-root.pub
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB8/mKNXUutto+uU+xjrU9w54dgYA4RCS0U3Ll8rn8NQ steven@r10.expresso.lan
 
   - name: core
-    ssh_authorized_keys_local:
-      - secrets/id_ed25519_rick-core.pub
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDbOdJb/EL63ctWuhXoFFaeJ2/X1u4UDIo9zU8gvz3A7 steven@r10.expresso.lan

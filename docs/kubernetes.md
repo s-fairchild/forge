@@ -69,7 +69,7 @@ flowchart TD
 
 ### Disabled Apps
 
-Some apps are excluded from manifest generation by the `disabled_pkgs` ERE regex in `hack/env/kube-manifests-gen.env`. To disable an app, add a `skip_<name>` variable and include it in `disabled_pkgs`.
+Some apps are excluded from manifest generation by the `apps_enabled` ERE regex in `hack/env/kube-manifests-gen.env`. To disable an app, add a `skip_<name>` variable and include it in `apps_enabled`.
 
 Currently disabled (not generated):
 

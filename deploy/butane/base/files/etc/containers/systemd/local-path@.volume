@@ -5,12 +5,7 @@ Description=Create podman volume %N
 Label="storageclass=%i"
 Label="storageprovider=%p"
 Label="app=k3s"
-<<<<<<< HEAD
-
-Type=btrfs
-=======
 Group=511
->>>>>>> installer-updates
 
 [Install]
 WantedBy=default.target

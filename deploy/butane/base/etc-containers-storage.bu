@@ -1,0 +1,9 @@
+---
+variant: fcos
+version: 1.7.0
+storage:
+  files:
+    - path: /etc/containers/storage.conf
+      overwrite: true
+      contents:
+        local: etc/containers/storage.conf

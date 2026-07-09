@@ -14,7 +14,7 @@
 # backing device for the `appdata` LUKS volume.
 ---
 variant: fcos
-version: 1.5.0
+version: 1.7.0
 storage:
   raid:
     - name: md-appdata

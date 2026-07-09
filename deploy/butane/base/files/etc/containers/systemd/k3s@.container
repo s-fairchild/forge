@@ -2,8 +2,11 @@
 Documentation=https://docs.k3s.io/ https://github.com/k3s-io/k3s/blob/main/README.md
 
 [Service]
-Restart=always
+Restart=on-failure
 RestartSec=30
+StartLimitIntervalSec=600
+StartLimitBurst=5
+TimeoutStopSec=150
 ExecStartPre=modprobe iptable_filter
 ExecStartPre=modprobe iptable_nat
 ExecStartPre=/usr/bin/podman secret exists k3s-token
@@ -13,13 +16,18 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%p
 EnvironmentFile=-/usr/local/etc/sysconfig/%p-%i
 
 [Container]
+StopTimeout=120
+HealthCmd=wget -qO- http://localhost:10248/healthz
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=60s
 ContainerName=${NAME}
 HostName=${NAME}
 Label="app=k3s"
 DNSSearch=expresso.lan
 Timezone=UTC
 Pull=never
-ShmSize=5g
 LogDriver=journald
 Image=k3s@v1.36.1-k3s1.image
 EnvironmentFile=-/usr/local/etc/sysconfig/%N
@@ -27,7 +35,7 @@ EnvironmentFile=-/usr/local/etc/sysconfig/%N
 # https://docs.k3s.io/cli/server#cluster-options
 Environment="K3S_NODE_NAME=${NAME}"
 Environment="K3S_TOKEN_FILE=/run/secrets/k3s-token"
-PodmanArgs=--oom-score-adj=1000 --privileged
+PodmanArgs=--oom-score-adj=-500 --privileged
 Volume=/etc/machine-id:/etc/machine-id:ro
 Volume=${NAME}-kubelet:/var/lib/kubelet:Z,rslave
 Volume=${NAME}-pod-logs:/var/log/pods:Z,rslave
@@ -35,9 +43,6 @@ Volume=${NAME}-data:/var/lib/rancher/k3s:Z,rslave
 Volume=${NAME}-rancher:/etc/rancher,rslave
 Volume=local-path@default.volume:/mnt/local-path/default:z,rshared
 Volume=/usr/local/lib/rancher/k3s/server/manifests/custom:/var/lib/rancher/k3s/server/manifests/custom:z
-# https://docs.k3s.io/installation/configuration?_highlight=config&_highlight=file#configuration-file
-Volume=/usr/local/etc/k3s/%N.yaml:/etc/rancher/k3s/config.yaml,Z,ro
-Volume=/usr/local/etc/k3s/config.yaml.d/%N.yaml:/etc/rancher/k3s/config.yaml.d/%N.yaml,Z,ro
 
 [Install]
 WantedBy=default.target

@@ -1,0 +1,8 @@
+---
+variant: fcos
+version: 1.7.0
+storage:
+  files:
+    - path: /etc/containers/storage.conf
+      append:
+        - local: etc/containers/storage.conf

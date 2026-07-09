@@ -20,7 +20,7 @@
 #   and before local-path@appdata-volume.service.
 ---
 variant: fcos
-version: 1.5.0
+version: 1.7.0
 systemd:
   units:
   - name: btrfs-subvol-appdata-init.service

@@ -2,13 +2,12 @@
 SHELL = /bin/bash
 .SHELLFLAGS := -o nounset -o errexit -o pipefail -o noclobber -o hashall -c
 
-kustomize_base_path := pkg
-manifests_relative_path := files/usr/local/lib/rancher/k3s/server/manifests/custom
 deploy_butane_path := deploy/butane
+manifests_relative_path := files/usr/local/lib/rancher/k3s/server/manifests/custom
 manifests_custom_base := ${deploy_butane_path}/base/${manifests_relative_path}
 manifests_custom_staging := ${deploy_butane_path}/overlays/staging/${manifests_relative_path}
-manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
 manifests_custom_rpi4_0 := ${deploy_butane_path}/overlays/rpi4/${manifests_relative_path}
+manifests_custom_prod := ${deploy_butane_path}/overlays/prod/${manifests_relative_path}
 
 clean:
 	if compgen -G ${manifests_custom_base}/*.yaml > /dev/null; then
@@ -27,53 +26,52 @@ clean:
 		rm -v ${manifests_custom_rpi4_0}/*.yaml
 	fi
 
+kustomize_base_path := pkg
 kube-manifests-gen-base:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_base} \
-													base
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_base} \
+		base
 
 kube-manifests-gen-staging:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_staging} \
-													staging
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_staging} \
+		staging
 
-kube-manifests-gen-rpi4-0:
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_rpi4_0} \
-													rpi4-0
-
-kube-manifests-gen-prod: kube-manifests-gen-rpi4-0
-	XTRACE=$${XTRACE:-} hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
-													${manifests_custom_prod} \
-													prod
+kube-manifests-gen-prod:
+	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+		${manifests_custom_prod} \
+		prod
 
 kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod
 
+k3s-tokens-generate-base:
+	hack/bin/k3s-tokens-generate.sh -l environment=base -p base
+
+k3s-tokens-generate-staging:
+	hack/bin/k3s-tokens-generate.sh -l environment=staging -p staging
+
 k3s-tokens-generate-prod:
-	hack/bin/k3s-tokens-generate.sh prod-secretsdata.json
+	hack/bin/k3s-tokens-generate.sh -l environment=prod -p prod
 
 deploy_butane_path := deploy/butane
-ignition-gen-staging: kube-manifests-gen-staging k3s-tokens-generate
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/staging/main.bu
 
-ignition-gen-rpi4-0: kube-manifests-gen-rpi4-0 k3s-tokens-generate
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/rpi4-0/main.bu
+ignition-gen-base: kube-manifests-gen-base
+	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/base/main.bu -s base
 
-# ignition-gen-base: kube-manifests-gen-base
-ignition-gen-base:
-	XTRACE=$${XTRACE:-} hack/bin/ignition-gen-main.sh ${deploy_butane_path}/base/main.bu
+ignition-gen-staging: kube-manifests-gen-staging
+	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/staging/main.bu -s staging
+
+ignition-gen-rpi4-0: k3s-tokens-generate
+	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/rpi4-0/main.bu -s rpi4-0
 
 ignition-gen-prod: kube-manifests-gen-all k3s-tokens-generate-prod
-	XTRACE=$${XTRACE:-} VERBOSE=$${VERBOSE:-} \
-	hack/bin/ignition-gen-main.sh ${deploy_butane_path}/overlays/prod/main.bu \
-								${deploy_butane_path}/overlays/prod/secrets.env
-
-LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
+	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/prod/main.bu -s prod
 
 ignition-serve-gen-certs-base:
-	hack/bin/ignition-gen-serving-certs.sh base
+	hack/bin/ignition-gen-serving-certs.sh base \
+		-a "DNS:localhost" \
+		-a "IP:127.0.0.1"
 
-# TODO save duplicated extensions as a global Makefile variable
 ignition-serve-gen-certs-staging:
 	hack/bin/ignition-gen-serving-certs.sh staging \
 		-a "DNS:r10.expresso.lan" \
@@ -93,46 +91,34 @@ ignition-serve-gen-certs-prod:
 		-a "DNS:*.r10.expresso.lan" \
 		-a "IP:10.50.0.202"
 
-ignition-serve-httpd-staging: ignition-gen-staging
+LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
+
+ignition-serve-base: ignition-gen-base ignition-serve-gen-certs-base k3s-tokens-generate-base
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${HTTPD_IMAGE_NAME} staging-main-ign
+	serve -c ssl-cert-base \
+		  -k ssl-key-base \
+		  -i ignition-base
 
-ignition-serve-nginx-staging: ignition-gen-staging
+ignition-serve-staging: ignition-gen-staging ignition-serve-gen-certs-staging k3s-tokens-generate-staging
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${NGINX_IMAGE_NAME} staging-main-ign
+	serve -c ssl-cert-staging \
+		  -k ssl-key-staging \
+		  -i ignition-staging
 
-ignition-serve-httpd-rpi4-0: ignition-gen-rpi4
+# k3s tokens should not be generated for worker node ignition bootstraps
+ignition-serve-rpi4-0: ignition-gen-rpi4-0 ignition-serve-gen-certs-rpi4-0
 	. $(LIB_IGNITION_SERVE)
-	hack/bin/httpd-serve.sh $${HTTPD_IMAGE_NAME} rpi4-main-ign
+	serve -c ssl-cert-rpi4-0 \
+		  -k ssl-cert-rpi4-0 \
+		  -i ignition-rpi4-0
 
-ignition-serve-nginx-rpi4-0: ignition-gen-rpi4
+# ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod k3s-tokens-generate-prod
+ignition-serve-prod:
 	. $(LIB_IGNITION_SERVE)
-	serve $${NGINX_IMAGE_NAME} rpi4-main-ign
-
-ignition-serve-httpd-base: ignition-gen-base
-	. $(LIB_IGNITION_SERVE)
-	serve $${HTTPD_IMAGE_NAME} base-ignition
-
-ignition-serve-nginx-base: ignition-gen-base
-	. $(LIB_IGNITION_SERVE)
-	serve $${NGINX_IMAGE_NAME} base-ignition
-
-ignition-serve-httpd-prod: ignition-gen-prod ignition-serve-gen-certs-prod
-	serve -s prod-ignition \
-		-s prod-ssl-key \
-		-s prod-ssl-cert \
-		-d $${HTTPD_DROPINS_CONFIG_DEFAULT} \
-		-i $${HTTPD_IMAGE_NAME}
-
-# TODO uncomment once completed with testing
-# ignition-serve-nginx-prod: ignition-gen-prod ignition-serve-gen-certs-prod
-ignition-serve-nginx-prod:
-	. $(LIB_IGNITION_SERVE)
-
-	# TODO create a function that returns the podman secret id based on label filter deployment=prod
-	serve -s prod-ignition \
-		-s ssl-key \
-		-s ssl-cert \
-		-d $${PWD}/hack/etc/nginx/ignition-secure.conf \
-		-d $${PWD}/hack/etc/nginx/default.conf \
-		-i $${NGINX_IMAGE_NAME}
+	serve -s var.keyfile.gz \
+		  -s appdata.keyfile.gz \
+		  -s prod-secrets.json \
+		  -s prod-secretsdata.json \
+		  -c ssl-cert-prod \
+		  -k ssl-key-prod \
+		  -i ignition-prod

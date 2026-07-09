@@ -11,6 +11,7 @@ set -o nounset \
 # derives the image name as its basename, and delegates to
 # podman_build_with_options() with any remaining caller-supplied options.
 main () {
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     # shellcheck disable=SC2034
     local -a options_podman_build=("$@")
 
@@ -31,11 +32,20 @@ main () {
     info "Complete."
 }
 
+if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
+    declare __hack_env_vendor="hack/env/vendor.env"
+    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
+    # shellcheck source=../env/vendor.env
+    . "$__hack_env_vendor"
+    unset __hack_env_vendor
+fi
+
 if [ "${__podman_build_multi_stage_sourced:-}" != "true" ]; then
-    declare -r __podman_build_multi_stage_path="hack/lib/podman/build/build_multi_stage.sh"
-    [ -f "$__podman_build_multi_stage_path" ] || { printf '%s\n' "$__podman_build_multi_stage_path file not found." >&2; exit 5; }
+    declare __podman_build_multi_stage_path="hack/lib/podman/build/build_multi_stage.sh"
+    [ -f "$__podman_build_multi_stage_path" ] || fatal "$__podman_build_multi_stage_path file not found."
     # shellcheck source=../lib/podman/build/build_multi_stage.sh
     . "$__podman_build_multi_stage_path"
+    unset __podman_build_multi_stage_path
 fi
 
 main "$@"

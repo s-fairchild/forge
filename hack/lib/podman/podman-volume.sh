@@ -5,7 +5,7 @@
 declare -r __lib_podman_volume_sourced="true"
 
 podman_volume_exists() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r v="${1?$(fatal "$ERROR_ARG_REQUIRED: \$1 - podman volume must be provided.")}"
 
     if ! podman volume exists "$v"; then
@@ -15,7 +15,7 @@ podman_volume_exists() {
 }
 
 podman_volume_create() {
-    debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r v="$1"
 
     if podman volume exists "$v"; then
@@ -35,9 +35,21 @@ podman_volume_create() {
     || fatal "Failed to create podman volume: $v"
 }
 
-if [ "${__lib_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_logging="hack/lib/logging.sh"
-    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
-    # shellcheck source=../logging.sh
-    . "$__lib_logging"
+# podman_volume_export_untar_stdout()
+podman_volume_export_untar_stdout() {
+    vol="${1?$(fatal "$ERROR_ARG_REQUIRED")}"
+    target="${2?$(fatal "$ERROR_ARG_REQUIRED")}"
+
+    podman volume \
+           export \
+           "$vol" \
+           | tar x "$target" -O
+}
+
+if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
+    declare __hack_env_vendor="hack/env/vendor.env"
+    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
+    # shellcheck source=../../env/vendor.env
+    . "$__hack_env_vendor"
+    unset __hack_env_vendor
 fi

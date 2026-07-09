@@ -8,6 +8,24 @@ set -o nounset \
 
 [ "${XTRACE:-0}" -eq 1 ] && set -x
 
+# usage()
+#
+# Prints usage information to stderr.
+usage() {
+    cat <<USAGE >&2
+Usage: ${0##*/} -p prefix [-l label]... [-h]
+
+Generate k3s cluster authentication tokens as podman secrets and produce
+<prefix>-secrets.json and <prefix>-secretsdata.json for the podman file secret driver.
+Existing token secrets are left unchanged (--ignore); delete them manually to rotate.
+
+Options:
+    -p prefix    Prefix for generated podman secret names (e.g. prod). (required)
+    -l label     Append --label=<label> to podman secret create. May be specified multiple times.
+    -h           Print this help message and exit.
+USAGE
+}
+
 # main()
 #
 # Generates k3s cluster authentication tokens as podman secrets and produces
@@ -31,60 +49,96 @@ set -o nounset \
 # env:
 #   * XTRACE=1 - enable bash xtrace for this script.
 main() {
-    local -r secretsdata_name="$1"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    local -r error_msg_secret_exists="already exists, Refusing to replace. Delete and re-run to update."
+    local -a podman_secret_create_options=("--ignore")
+    local prefix=""
+    while getopts ':l:p:h' opt; do
+        case "$opt" in
+            h)
+                usage
+                exit 0
+                ;;
+            l)
+                debug "appending ${OPTARG} to podman_secret_create_options"
+                podman_secret_create_options+=(--label="${OPTARG}")
+                ;;
+            p)
+                prefix="${OPTARG}"
+                ;;
+            :)
+                usage
+                fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}"
+                ;;
+            ?)
+                usage
+                fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}"
+                ;;
+        esac
+    done
+    [ -z "${prefix:-}" ] && { usage; fatal "$ERROR_OPTION_REQUIRED: -p"; }
 
-    local -A k3s_tokens=(
-        ["k3s-token"]=""
-        ["k3s-agent-token"]=""
+    local -r prefix podman_secret_create_options
+    debug "$(declare -p prefix podman_secret_create_options)"
+
+    k3s_tokens=(
+        k3s-token
+        k3s-token-agent
     )
 
-    local -r error_msg_secret_create="failed to create podman secret"
+    info "Creating/Replacing podman secrets within podman container."
     # shellcheck disable=SC2068
-    for s in ${!k3s_tokens[@]}; do
-        if ! podman_secret_exists "$s"; then
-            info "Generating token for: $s"
-
-            k3s_tokens["$s"]="$(generate_token)" || fatal "token generation failed."
-            podman_secret_create_replace_from_stdin "$s" <<< "${k3s_tokens["$s"]}" || fatal "$error_msg_secret_create: $s"
-
-            # secret is stored in podman secret driver format, remove from memory.
-            k3s_tokens[$s]=""
-        else
-            warn "podman secret $s $error_msg_secret_exists"
-        fi
+    for s in ${k3s_tokens[@]}; do
+        info "Creating podman secret $s within podman container."
+        podman_container secret \
+                         create \
+                         ${podman_secret_create_options[@]} \
+                         "$s" \
+                         - \
+                         < <(k3s_gen_token) || fatal
     done
 
-    if ! podman_secret_exists "$secretsdata_name"; then
-        info "Generating podman secret file driver secretsdata.json"
-        podman_secret_create_replace_from_stdin "$secretsdata_name" \
-            <<< "$(podman_secret_gen_file_secretsdata <<< "${!k3s_tokens[*]}")" \
-            || fatal "$error_msg_secret_create: $secretsdata_name"
-    else
-        warn "podman secret $secretsdata_name $error_msg_secret_exists"
-    fi
+    local -Ar podman_filedriver_files=(
+        ["${prefix}-secrets.json"]="$__PODMAN_SECRETS_METADATA_FILENAME"
+        ["${prefix}-secretsdata.json"]="$__PODMAN_SECRETS_FILEDRIVER_FILENAME"
+    )
+
+    info "Creating podman secrets on the host using filedriver json files within the podman container graphroot."
+    # shellcheck disable=SC2068
+    for s in ${!podman_filedriver_files[@]}; do
+        info "Creating/Replacing podman secret $s from volume=$__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN, file=${podman_filedriver_files[$s]}"
+
+        podman secret \
+            create \
+            ${podman_secret_create_options[@]} \
+            "$s" \
+            - < <(podman_volume_export_untar_stdout "$__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN" \
+                                                    "${podman_filedriver_files["$s"]}")
+    done
 }
 
-if [ "${__lib_logging_sourced:-}" != "true" ]; then
-    declare -r __lib_logging="hack/lib/logging.sh"
-    [ -f "$__lib_logging" ] || { printf '%s\n' "failed to find file: $__lib_logging" >&2; exit 1; }
-    # shellcheck source=../lib/logging.sh
-    . "$__lib_logging"
+if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
+    declare __hack_env_vendor="hack/env/vendor.env"
+    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
+    # shellcheck source=../env/vendor.env
+    . "$__hack_env_vendor"
+    unset __hack_env_vendor
 fi
 
 if [ "${__hack_lib_k3s_gen_token_sourced:-}" != "true" ]; then
-    declare -r __hack_lib_k3s_gen_token="hack/lib/k3s/k3s-gen-token.sh"
+    declare __hack_lib_k3s_gen_token="hack/lib/k3s/k3s-gen-token.sh"
     [ -f "$__hack_lib_k3s_gen_token" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_k3s_gen_token"
     # shellcheck source=../lib/k3s/k3s-gen-token.sh
     . "$__hack_lib_k3s_gen_token"
+    unset __hack_lib_k3s_gen_token
 fi
 
-if [ "${__lib_podman_secret_sourced:-}" != "true" ]; then
-    declare -r podman_secrets="hack/lib/podman/podman-secret.sh"
-    [ -f "$podman_secrets" ] || fatal "$ERROR_FILE_NOT_FOUND: $podman_secrets"
-    # shellcheck source=../lib/podman/podman-secret.sh
-    . "$podman_secrets"
+if [ "${__lib_podman_sourced:-}" != "true" ]; then
+    declare __lib_podman_podman="hack/lib/podman/podman.sh"
+    [ -f "$__lib_podman_podman" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_podman"
+    # shellcheck source=../lib/podman/podman.sh
+    . "$__lib_podman_podman"
+    unset __lib_podman_podman
 fi
 
 main "$@"
