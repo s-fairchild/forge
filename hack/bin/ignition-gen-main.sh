@@ -82,17 +82,19 @@ if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
 fi
 
 if [ "${__lib_podman_secret_sourced:-}" != "true" ]; then
-    declare -r podman_secrets="hack/lib/podman/podman-secret.sh"
+    declare podman_secrets="hack/lib/podman/podman-secret.sh"
     [ -f "$podman_secrets" ] || fatal "$ERROR_FILE_NOT_FOUND: $podman_secrets"
     # shellcheck source=../lib/podman/podman-secret.sh
     . "$podman_secrets"
+    unset podman_secrets
 fi
 
 if [ "${__ignition_sourced:-}" != "true" ]; then
-    declare -r ignition_lib="hack/lib/ignition/ignition.sh"
+    declare ignition_lib="hack/lib/ignition/ignition.sh"
     [ -f "$ignition_lib" ] || fatal "$ERROR_FILE_NOT_FOUND: $ignition_lib"
     # shellcheck source=../lib/ignition/ignition.sh
     . "$ignition_lib"
+    unset ignition_lib
 fi
 
 main "$@"
