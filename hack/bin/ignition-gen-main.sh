@@ -11,7 +11,7 @@ set -o nounset \
 
 usage() {
     cat <<USAGE >&2
-Usage: ${0##*/} -b butane_main -p secret_suffix [-l label]... [-e secrets_env]... [-h]
+Usage: ${0##*/} -b butane_main -s secret_suffix [-l label]... [-h]
 
 Recursively compile a root butane config, merging its inline references,
 and store the resulting ignition JSON as a podman secret named ignition-<secret_suffix>.
@@ -49,6 +49,8 @@ main() {
     [ -z "${butane_main:-}" ] && { usage; fatal "-b $ERROR_OPTION_REQUIRED"; }
     [ -z "${secret_suffix:-}" ] && { usage; fatal "-s $ERROR_OPTION_REQUIRED"; }
     debug "$(declare -p secret_suffix labels butane_main)"
+
+    [ -f "${butane_main}" ] || { usage; fatal "${ERROR_FILE_NOT_FOUND}: ${butane_main}"; }
 
     # TODO move this into it's own script in hack/bin once functions are moved into hack/lib/podman/podman-secret.sh
     # source_env_files secret_envs
