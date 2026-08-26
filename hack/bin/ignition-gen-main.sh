@@ -24,14 +24,14 @@ Options:
                      files/secrets/<secret_name>. May be specified multiple times.
     -l label         Additional "key=value" label to attach to secrets created
                      during generation. May be specified multiple times.
-    -v               Enable verbose/log_debug logging for this invocation, overriding VERBOSE/DEBUG.
+    -v               Enable verbose/DEBUG-level logging for this invocation, overriding VERBOSE/DEBUG.
     -q               Suppress console logging for this invocation, overriding QUIET.
     -h               Print this help message and exit.
 USAGE
 }
 
 main() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a labels=() secret_mounts=()
     local ignition_secret_postfix="" butane_file="" opt
@@ -39,7 +39,7 @@ main() {
     while getopts ':s:p:l:f:vqh' opt; do
         case "$opt" in
             p)
-                # [ -z "${ignition_secret_postfix:-}" ] || { usage; log_fatal "-${opt} ${ERROR_OPTION_ARG_DUP}"; }
+                # [ -z "${ignition_secret_postfix:-}" ] || { usage; fatal "-${opt} ${ERROR_OPTION_ARG_DUP}"; }
                 is_option_arg_dup "$opt" "$ignition_secret_postfix"
                 ignition_secret_postfix="${OPTARG}"
                 local -r ignition_secret_postfix
@@ -69,36 +69,36 @@ main() {
                 ;;
             :)
                 usage
-                log_fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"
+                fatal "-${OPTARG} $ERROR_OPTION_REQUIRED"
                 ;;
             ?)
                 usage
-                log_fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"
+                fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN"
                 ;;
         esac
     done
     shift $((OPTIND - 1))
     # CLI flags take precedence over VERBOSE/QUIET env vars for this invocation (see
     # hack/vendor/bash-logger-adapter/adapter.sh for the general CLI > env > default precedence rule).
-    bash_logger_adapter_apply_overrides "$cli_verbose" "$cli_quiet"
-    [ -z "${butane_file:-}" ] && { usage; log_fatal "-f $ERROR_OPTION_REQUIRED"; }
-    [ -z "${ignition_secret_postfix:-}" ] && { usage; log_fatal "-p $ERROR_OPTION_REQUIRED"; }
-    [ -f "${butane_file}" ] || { usage; log_fatal "${ERROR_FILE_NOT_FOUND}: ${butane_file}"; }
-    log_debug "$(declare -p ignition_secret_postfix labels butane_file)"
+    bash_logger_adapter_apply_overrides "$cli_verbose" "$cli_quiet" "$__bash_logger_adapter_env_log_level"
+    [ -z "${butane_file:-}" ] && { usage; fatal "-f $ERROR_OPTION_REQUIRED"; }
+    [ -z "${ignition_secret_postfix:-}" ] && { usage; fatal "-p $ERROR_OPTION_REQUIRED"; }
+    [ -f "${butane_file}" ] || { usage; fatal "${ERROR_FILE_NOT_FOUND}: ${butane_file}"; }
+    debug "$(declare -p ignition_secret_postfix labels butane_file)"
 
     # shellcheck disable=SC2034
     local ignition_main
     ignition_gen_config_merge_inlines "$butane_file" \
                                        ignition_main \
                                        secret_mounts \
-                                       || log_fatal "ignition_gen_config_merge_inlines failed."
+                                       || fatal "ignition_gen_config_merge_inlines failed."
 
     labels+=("-l" "format=ignition")
     # shellcheck disable=SC2068
     podman_secret_create_replace_from_stdin ${labels[@]} \
                                             "ignition-${ignition_secret_postfix}" \
                                             <<< "$ignition_main" \
-                                            || log_fatal "podman_secret_create_replace_from_stdin failed."
+                                            || fatal "podman_secret_create_replace_from_stdin failed."
 }
 
 if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
@@ -111,7 +111,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
@@ -127,7 +127,7 @@ fi
 
 if [ "${__ignition_sourced:-}" != "true" ]; then
     declare ignition_lib="hack/lib/ignition/ignition.sh"
-    [ -f "$ignition_lib" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $ignition_lib"
+    [ -f "$ignition_lib" ] || fatal "$ERROR_FILE_NOT_FOUND: $ignition_lib"
     # shellcheck source=../lib/ignition/ignition.sh
     . "$ignition_lib"
     unset ignition_lib

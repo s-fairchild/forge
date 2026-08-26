@@ -90,8 +90,7 @@ _bash_logger_adapter_call() {
     [[ $- == *e* ]] && errexit_was_set="1"
     set +e
 
-    # shellcheck disable=SC2068
-    $@
+    "$@"
 
     (( errexit_was_set )) && set -e
     return 0
@@ -125,16 +124,18 @@ _bash_logger_adapter_call() {
 bash_logger_adapter_apply_overrides() {
     log "$LOG_LEVEL_DEBUG" "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    require_operands 2 "$@" || return 1
+    # shellcheck disable=SC2068
+    require_operands 3 $@ || return 1
     local -ri cli_verbose="$1"
     local -ri cli_quiet="$2"
+    local -ri cli_log_level="$3"
 
     # --level must be listed before --verbose/--quiet: init_logger parses options sequentially
     # and later options win, so putting --level first lets --verbose's forced DEBUG level (and
     # --quiet's console-off behavior) take effect over the configured LOG_LEVEL, matching what a
     # caller means by passing -v/-q. (An earlier version of this file instead threw away --level
     # entirely whenever verbose was set, which was a latent bug, not a documented quirk.)
-    local -a init_opts=(--level "$__bash_logger_adapter_env_log_level")
+    local -a init_opts=(--level "$cli_log_level")
 
     # CLI flag > env var: a CLI -v/-q wins outright; otherwise fall back to the env-tier values
     # captured at source time (__bash_logger_adapter_env_*).
@@ -170,27 +171,15 @@ fatal() {
 
 error() { log "$LOG_LEVEL_ERROR" "$*"; }
 warn()  { log "$LOG_LEVEL_WARN" "$*"; }
-info()  { log "INFO" "$*"; }
+info()  { log "$LOG_LEVEL_INFO" "$*"; }
 debug() { log "$LOG_LEVEL_DEBUG" "$*"; }
-
-# declare -r LOG_LEVEL_DEBUG="DEBUG"
-# declare -r LOG_LEVEL_NOTICE="NOTICE"
-# declare -r LOG_LEVEL_WARN="WARN"
-# declare -r LOG_LEVEL_ERR="ERR"
-# declare -r LOG_LEVEL_ERROR="ERROR"
-# declare -r LOG_LEVEL_CRIT="CRIT"
-# declare -r LOG_LEVEL_CRITICAL="CRITICAL"
-# declare -r LOG_LEVEL_ALERT="ALERT"
-# declare -r LOG_LEVEL_EMERG="EMERG"
-# declare -r LOG_LEVEL_EMERGENCY="EMERGENCY"
-# declare -r LOG_LEVEL_FATAL="FATAL"
 
 declare -r LOG_LEVEL_WARNING="$LOG_LEVEL_WARN"
 declare -r LOG_LEVEL_ERR="$LOG_LEVEL_ERROR"
 declare -r LOG_LEVEL_CRIT="$LOG_LEVEL_CRITICAL"
 declare -r LOG_LEVEL_EMERG="$LOG_LEVEL_EMERGENCY"
 
-declare -r __bash_logger_adapter_level_keywords="${LOG_LEVEL_DEBUG}|${LOG_LEVEL_NOTICE}|INFO|${LOG_LEVEL_WARN}|${LOG_LEVEL_WARNING}|${LOG_LEVEL_ERR}|${LOG_LEVEL_ERROR}|${LOG_LEVEL_CRIT}|${LOG_LEVEL_CRITICAL}|${LOG_LEVEL_ALERT}|${LOG_LEVEL_EMERG}|${LOG_LEVEL_EMERGENCY}|${LOG_LEVEL_FATAL}"
+declare -r __bash_logger_adapter_level_keywords="${LOG_LEVEL_DEBUG}|${LOG_LEVEL_NOTICE}|INFO|${LOG_LEVEL_INFO}|${LOG_LEVEL_WARN}|${LOG_LEVEL_WARNING}|${LOG_LEVEL_ERR}|${LOG_LEVEL_ERROR}|${LOG_LEVEL_CRIT}|${LOG_LEVEL_CRITICAL}|${LOG_LEVEL_ALERT}|${LOG_LEVEL_EMERG}|${LOG_LEVEL_EMERGENCY}|${LOG_LEVEL_FATAL}"
 
 # log(level, message...)
 #
@@ -213,6 +202,9 @@ log() {
             ;;
         "$LOG_LEVEL_NOTICE")
             _bash_logger_adapter_call log_notice "$*"
+            ;;
+        "$LOG_LEVEL_INFO"|INFO)
+            _bash_logger_adapter_call log_info "$*"
             ;;
         "$LOG_LEVEL_WARN"|"$LOG_LEVEL_WARNING")
             _bash_logger_adapter_call log_warn "$*"
@@ -245,3 +237,5 @@ if [ "${__bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true"
 fi
 
 unset __bash_logger_adapter_local_path __bashkit_local_path
+
+bash_logger_adapter_apply_overrides "$__bash_logger_adapter_env_verbose" "$__bash_logger_adapter_env_quiet" "$__bash_logger_adapter_env_log_level" 

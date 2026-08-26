@@ -12,7 +12,7 @@ yq() {
     # 1>&2: this function's stdout is its return channel (the containerized yq's output),
     # captured via `$(...)` by every caller -- any console-level log write on stdout here would
     # corrupt it.
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
     local -r image="docker.io/mikefarah/yq:4.53.2"
     # local -Ix "${!YQ_*}"

@@ -37,19 +37,19 @@ Options:
     -m domain_name        libvirt domain (VM) name to launch.
     -s ignition_secret    Podman secret name holding the ignition JSON to boot with.
                            (default: ignition-staging)
-    -v                    Enable verbose/log_debug logging for this invocation, overriding VERBOSE/DEBUG.
+    -v                    Enable verbose/DEBUG-level logging for this invocation, overriding VERBOSE/DEBUG.
     -q                    Suppress console logging for this invocation, overriding QUIET.
     -h                    Print this help message and exit.
 USAGE
 }
 
 ensure_network() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     require_operands 2 "$@" || return 1
     local -r libvirt_dir="$1" network_name="$2"
 
     if virsh_net_is_defined "$network_name"; then
-        log_info "libvirt network '$network_name' already defined"
+        info "libvirt network '$network_name' already defined"
     else
         virsh net-define "${libvirt_dir}/network.xml"
     fi
@@ -58,12 +58,12 @@ ensure_network() {
 }
 
 ensure_pool() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     require_operands 2 "$@" || return 1
     local -r libvirt_dir="$1" pool_name="$2"
 
     if virsh_pool_is_defined "$pool_name"; then
-        log_info "libvirt pool '$pool_name' already defined"
+        info "libvirt pool '$pool_name' already defined"
     else
         local pool_xml
         pool_xml="$(<"${libvirt_dir}/pool.xml")"
@@ -74,7 +74,7 @@ ensure_pool() {
     # pool-build fails outright against an already-active pool (regardless of pool
     # type), so only build+start together on the first run.
     if virsh_pool_is_active "$pool_name"; then
-        log_info "libvirt pool '$pool_name' already active"
+        info "libvirt pool '$pool_name' already active"
     else
         virsh_pool_build "$pool_name"
         virsh_pool_start "$pool_name"
@@ -83,12 +83,12 @@ ensure_pool() {
 }
 
 ensure_volume() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     require_operands 3 "$@" || return 1
     local -r libvirt_dir="$1" pool_name="$2" volume_name="$3"
 
     if virsh_vol_is_present "$pool_name" "$volume_name"; then
-        log_info "volume '$volume_name' already present in pool '$pool_name'"
+        info "volume '$volume_name' already present in pool '$pool_name'"
     else
         local volume_xml
         volume_xml="$(<"${libvirt_dir}/volume.xml")"
@@ -99,12 +99,12 @@ ensure_volume() {
 }
 
 launch_domain() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     require_operands 3 "$@" || return 1
     local -r libvirt_dir="$1" domain_name="$2" ignition_secret="$3"
 
     if virsh_dom_is_active "$domain_name"; then
-        log_info "domain '$domain_name' is already running"
+        info "domain '$domain_name' is already running"
         return 0
     fi
 
@@ -134,7 +134,7 @@ launch_domain() {
 }
 
 main() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local ignition_secret="" libvirt_dir="" network="" pool="" volume="" domain=""
     local opt
@@ -168,19 +168,19 @@ main() {
             v) cli_verbose=1 ;;
             q) cli_quiet=1 ;;
             h) usage; exit 0 ;;
-            :) usage; log_fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
-            ?) usage; log_fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
+            :) usage; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
+            ?) usage; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
         esac
     done
     shift $((OPTIND - 1))
-    bash_logger_adapter_apply_overrides "$cli_verbose" "$cli_quiet"
+    bash_logger_adapter_apply_overrides "$cli_verbose" "$cli_quiet" "$__bash_logger_adapter_env_log_level"
 
     : "${ignition_secret:=ignition-staging}"
-    [ -n "$libvirt_dir" ] || { usage; log_fatal "-l $ERROR_OPTION_REQUIRED"; }
-    [ -n "$network" ]     || { usage; log_fatal "-n $ERROR_OPTION_REQUIRED"; }
-    [ -n "$pool" ]        || { usage; log_fatal "-p $ERROR_OPTION_REQUIRED"; }
-    [ -n "$volume" ]      || { usage; log_fatal "-d $ERROR_OPTION_REQUIRED"; }
-    [ -n "$domain" ]      || { usage; log_fatal "-m $ERROR_OPTION_REQUIRED"; }
+    [ -n "$libvirt_dir" ] || { usage; fatal "-l $ERROR_OPTION_REQUIRED"; }
+    [ -n "$network" ]     || { usage; fatal "-n $ERROR_OPTION_REQUIRED"; }
+    [ -n "$pool" ]        || { usage; fatal "-p $ERROR_OPTION_REQUIRED"; }
+    [ -n "$volume" ]      || { usage; fatal "-d $ERROR_OPTION_REQUIRED"; }
+    [ -n "$domain" ]      || { usage; fatal "-m $ERROR_OPTION_REQUIRED"; }
 
     ensure_network "$libvirt_dir" "$network"
     ensure_pool "$libvirt_dir" "$pool"
@@ -198,7 +198,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
@@ -214,7 +214,7 @@ fi
 
 if [ "${__vendor_bashkit_lib_virsh_network_sourced:-}" != "true" ]; then
     declare virsh_network="hack/vendor/bashkit/local/lib/bashkit/virsh/virsh-network.sh"
-    [ -f "$virsh_network" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $virsh_network"
+    [ -f "$virsh_network" ] || fatal "$ERROR_FILE_NOT_FOUND: $virsh_network"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/virsh/virsh-network.sh
     . "$virsh_network"
     unset virsh_network
@@ -222,7 +222,7 @@ fi
 
 if [ "${__vendor_bashkit_lib_virsh_pool_sourced:-}" != "true" ]; then
     declare virsh_pool="hack/vendor/bashkit/local/lib/bashkit/virsh/virsh-pool.sh"
-    [ -f "$virsh_pool" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $virsh_pool"
+    [ -f "$virsh_pool" ] || fatal "$ERROR_FILE_NOT_FOUND: $virsh_pool"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/virsh/virsh-pool.sh
     . "$virsh_pool"
     unset virsh_pool
@@ -230,7 +230,7 @@ fi
 
 if [ "${__vendor_bashkit_lib_virsh_domain_sourced:-}" != "true" ]; then
     declare virsh_domain="hack/vendor/bashkit/local/lib/bashkit/virsh/virsh-domain.sh"
-    [ -f "$virsh_domain" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $virsh_domain"
+    [ -f "$virsh_domain" ] || fatal "$ERROR_FILE_NOT_FOUND: $virsh_domain"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/virsh/virsh-domain.sh
     . "$virsh_domain"
     unset virsh_domain

@@ -14,21 +14,21 @@ set -o nounset \
 #   * 2) manifests - string; destination directory for generated YAML files.
 #   * 3) overlay   - string; overlay name to match (e.g. "prod", "staging").
 main() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-    local -r base="${1?$(log_fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-    local -r out="${2?$(log_fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
-    local -r overlay="${3?$(log_fatal "\$3 ${ERROR_OPERAND_REQUIRED}")}"
-    log_debug "$(declare -p base)"
-    log_debug "$(declare -p out)"
-    log_debug "$(declare -p overlay)"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    local -r base="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
+    local -r out="${2?$(fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
+    local -r overlay="${3?$(fatal "\$3 ${ERROR_OPERAND_REQUIRED}")}"
+    debug "$(declare -p base)"
+    debug "$(declare -p out)"
+    debug "$(declare -p overlay)"
 
-    mkdir -p "$base" || log_fatal "${ERROR_FAILED_TO_CREATE_DIR}: $base"
-    mkdir -p "$out" || log_fatal "${ERROR_FAILED_TO_CREATE_DIR}: $out"
+    mkdir -p "$base" || fatal "${ERROR_FAILED_TO_CREATE_DIR}: $base"
+    mkdir -p "$out" || fatal "${ERROR_FAILED_TO_CREATE_DIR}: $out"
 
     if ! generate_kube_manifests "$base" \
                                  "$out" \
                                  "$overlay"; then
-        log_fatal "failed to generate kube manifests."
+        fatal "failed to generate kube manifests."
     fi
 }
 
@@ -41,13 +41,13 @@ main() {
 #   * 1) app          - string; application name to test.
 #   * 2) apps_enabled - string; ERE pattern of disabled app names (e.g. "(pihole|coredns-custom)").
 is_enabled() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-    local -r app="${1?$(log_fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-    local -n enabled="${2?$(log_fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    local -r app="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
+    local -n enabled="${2?$(fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
 
     local enabled_regex
     enabled_regex="$(IFS='|'; printf '%s' "${enabled[*]}")"
-    log_debug "$(declare -p app enabled enabled_regex)"
+    debug "$(declare -p app enabled enabled_regex)"
     [[ $app =~ ${enabled_regex} ]] || return 1
 }
 
@@ -60,8 +60,8 @@ is_enabled() {
 # args:
 #   * 1) path - string; overlay directory path as returned by find.
 get_app_name() {
-    local -r path="${1?$(log_fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    local -r path="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     basename "$(dirname "$(dirname "$path")")"
 }
@@ -77,43 +77,43 @@ get_app_name() {
 #   * 2) dest    - string; destination directory for generated YAML files.
 #   * 3) overlay - string; directory name to match (e.g. "prod").
 generate_kube_manifests() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 3 "$@" || return 1
     local -r pkgs="$1"
     local -r dest="$2"
     local -r overlay="$3"
 
-    log_debug "$(declare -p base)"
-    log_debug "$(declare -p dest)"
-    log_debug "$(declare -p overlay)"
+    debug "$(declare -p base)"
+    debug "$(declare -p dest)"
+    debug "$(declare -p overlay)"
 
     local -a MAPFILE=()
     mapfile -d '' -t < <(find "$pkgs" \
                               -type d \
                               -name "$overlay")
     if [ ! -v MAPFILE ]; then
-        log_error "No overlays were found in $pkgs."
+        error "No overlays were found in $pkgs."
         return 1
     fi
-    log_debug "$(declare -p MAPFILE)"
+    debug "$(declare -p MAPFILE)"
 
     local out app
     # shellcheck disable=SC2068
     for k in ${MAPFILE[@]}; do
         app="$(get_app_name "$k")"
-        log_debug "$(declare -p app)"
+        debug "$(declare -p app)"
 
         if is_enabled "$app" apps_enabled; then
             out="${dest}/${app}${__manifest_file_extension}"
-            log_debug "$(declare -p out)"
+            debug "$(declare -p out)"
 
-            log_info "Building $k"
+            info "Building $k"
             if ! kustomize build "$k" > "$out"; then
-                log_error "kustomize build failed: $k"
+                error "kustomize build failed: $k"
                 break 2
             fi
-            log_info "Build succeeded: $out"
+            info "Build succeeded: $out"
         fi
     done
 }
@@ -128,7 +128,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log_fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
@@ -136,7 +136,7 @@ fi
 
 if [ "${__hack_etc_kube_manifests_gen_sourced:-}" != "true" ]; then
     declare __hack_etc_kube_manifests_gen="hack/etc/kube-manifests-gen.env"
-    [ -f "$__hack_etc_kube_manifests_gen" ] || log_fatal " ${ERROR_FILE_NOT_FOUND}: ${__hack_etc_kube_manifests_gen}"
+    [ -f "$__hack_etc_kube_manifests_gen" ] || fatal " ${ERROR_FILE_NOT_FOUND}: ${__hack_etc_kube_manifests_gen}"
     # shellcheck source=../etc/kube-manifests-gen.env
     . "$__hack_etc_kube_manifests_gen"
     unset __hack_etc_kube_manifests_gen

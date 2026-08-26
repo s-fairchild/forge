@@ -42,7 +42,7 @@ butane() {
     # 1>&2 on every log call in this function: stdout is butane()'s return channel (its callers,
     # e.g. ignition_gen(), pass it straight through as their own compiled-JSON output), so any
     # console-level log write on stdout here would corrupt that output.
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
 
     local -a podman_run_options=()
     local opt workdir_mount_src
@@ -55,7 +55,7 @@ butane() {
             m)
                 if [ -n "${workdir_mount_src:-}" ]; then
                     usage_butane
-                    log_error "-${opt} ${ERROR_OPTION_ARG_DUP}"
+                    error "-${opt} ${ERROR_OPTION_ARG_DUP}"
                     return 1
                 fi
                 workdir_mount_src="${OPTARG}"
@@ -67,12 +67,12 @@ butane() {
                 ;;
             :)
                 usage_butane
-                log_error "-${OPTARG} $ERROR_OPTION_REQUIRED"
+                error "-${OPTARG} $ERROR_OPTION_REQUIRED"
                 return 1
                 ;;
             ?)
                 usage_butane
-                log_error "-${OPTARG} $ERROR_OPTION_UNKNOWN"
+                error "-${OPTARG} $ERROR_OPTION_UNKNOWN"
                 return 1
                 ;;
         esac
@@ -81,7 +81,7 @@ butane() {
 
     [ -n "${PODMAN_LOG_LEVEL:-}" ] && podman_run_options+=("--log-level=$PODMAN_LOG_LEVEL")
     if [ -n "${workdir_mount_src:-}" ]; then
-        [ -d "${workdir_mount_src}" ] || { log_error "${ERROR_DIR_NOT_FOUND}: ${workdir_mount_src}"; return 1; }
+        [ -d "${workdir_mount_src}" ] || { error "${ERROR_DIR_NOT_FOUND}: ${workdir_mount_src}"; return 1; }
 
         podman_run_options+=(
             "--mount=type=bind,src=${workdir_mount_src},target=${__BUTANE_WORKDIR},bind-propagation=rslave,no-dereference,ro=true"
@@ -119,7 +119,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils

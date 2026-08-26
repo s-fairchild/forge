@@ -22,8 +22,8 @@ declare -r __empty_array_ref='__empty_array'
 ignition_gen() {
     # 1>&2: this function's stdout is its return channel (compiled ignition JSON) -- any
     # console-level log write on stdout here would corrupt it. See the note on the removed
-    # log_info call below.
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
+    # INFO-level log call below.
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
 
     require_operands 1 "$@" || return 1
     local -r butane_path="$1"
@@ -49,12 +49,12 @@ ignition_gen() {
         "$(basename "$butane_path")"
     )
 
-    # Not log_info: this function's stdout is its return channel (compiled ignition JSON,
+    # Not an INFO-level log: this function's stdout is its return channel (compiled ignition JSON,
     # captured via `$(...)` by ignition_merge_compile_entry()) -- any console-level log write
     # here would corrupt that output. The caller already logs this at DEBUG before calling in.
     # shellcheck disable=SC2068
     if ! butane ${butane_opts[@]}; then
-        log_error "ignition generation failed for $butane_path"
+        error "ignition generation failed for $butane_path"
         return 1
     fi
 }
@@ -78,7 +78,7 @@ ignition_gen() {
 #   * 4) jq_bounds_check - string; jq `def bounds_check(expr): ...;` snippet shared with
 #         ignition_merge_write_entry()'s jq call.
 ignition_merge_read_inline_path() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     # shellcheck disable=SC2068
     require_operands 4 $@ || return 1
@@ -120,7 +120,7 @@ ignition_merge_read_inline_path() {
 #         secret names passed through to ignition_gen() for mounting secrets inside the
 #         butane container.
 ignition_merge_compile_entry() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 3 "$@" || return 1
     local -r butane_file_path="$1"
@@ -130,16 +130,16 @@ ignition_merge_compile_entry() {
     # Preventing circular namerefs.
     local -r secrets="${4:-"$__empty_array_ref"}"
 
-    log_debug "Generating ignition: $butane_file_path"
+    debug "Generating ignition: $butane_file_path"
     if ! ignition_json_out="$(ignition_gen "$butane_file_path" "$secrets")"; then
-        log_error "failed to generate ignition config from: $butane_file_path"
+        error "failed to generate ignition config from: $butane_file_path"
         return 1
     fi
 
-    log_debug "Generating verification hash: $butane_file_path"
+    debug "Generating verification hash: $butane_file_path"
     # shellcheck disable=SC2034
     if ! verification_hash_out="$(sha512sum_gen <<< "$ignition_json_out" | checksum_format_verification_hash_sha512)"; then
-        log_error "failed to generate verification hash for: $butane_file_path"
+        error "failed to generate verification hash for: $butane_file_path"
         return 1
     fi
 }
@@ -160,7 +160,7 @@ ignition_merge_compile_entry() {
 #   * 5) ignition_json     - string; compiled ignition JSON to inline at this entry.
 #   * 6) verification_hash - string; "sha512-<hex>" formatted hash of ignition_json.
 ignition_merge_write_entry() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 6 "$@" || return 1
     local -r config_json="$1"
@@ -180,7 +180,7 @@ ignition_merge_write_entry() {
     verification_hash_jq_path="$(jq -c --argjson idx "$idx" '. += [$idx, "verification", "hash"]' \
                         <<< "$merge_jq_path")"
 
-    log_debug "Updating inline entry [$idx]: $inline_jq_path"
+    debug "Updating inline entry [$idx]: $inline_jq_path"
     jq -rc --argjson merge_jq_path             "$merge_jq_path" \
            --argjson idx                       "$idx" \
            --argjson inline_jq_path            "$inline_jq_path" \
@@ -210,7 +210,7 @@ ignition_merge_write_entry() {
 #         ignition_merge_compile_entry() (and from there to ignition_gen()) for mounting
 #         secrets inside the butane container.
 ignition_gen_config_merge_inlines() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 2 "$@" || return 1
     local -r butane_path="$1"
@@ -218,14 +218,14 @@ ignition_gen_config_merge_inlines() {
     local -r secrets="${3:-"$__empty_array_ref"}"
 
     if [ ! -f "${butane_path}" ]; then
-        log_error "${ERROR_FILE_NOT_FOUND}: ${butane_path}"
+        error "${ERROR_FILE_NOT_FOUND}: ${butane_path}"
         return 1
     fi
 
     # Parse the top-level butane YAML to compact JSON, stripping all comments.
     local config_json
     if ! config_json="$(yq -o json -I 0 '... comments="" | . | select(. != null)' "$butane_path")"; then
-        log_error "failed to load config json from: ${butane_path}"
+        error "failed to load config json from: ${butane_path}"
         return 1
     fi
 
@@ -236,10 +236,10 @@ ignition_gen_config_merge_inlines() {
     if ! entry_count="$(jq --argjson merge_jq_path "$merge_jq_path" \
                                 'getpath($merge_jq_path) | length' \
                                 <<< "$config_json")"; then
-        log_error "failed to get entry count."
+        error "failed to get entry count."
         return 1
     fi
-    log_debug "merge entry count: $entry_count"
+    debug "merge entry count: $entry_count"
 
     # jq function shared by every per-entry jq call below.
     # bounds_check(expr) guards against an out-of-range $idx before evaluating expr.
@@ -251,19 +251,19 @@ ignition_gen_config_merge_inlines() {
     local -i idx
     local butane_file_path ignition_json verification_hash
     for ((idx = 0; idx < entry_count; idx++)); do
-        log_debug "Processing merge entry [$idx]"
+        debug "Processing merge entry [$idx]"
 
         if ! butane_file_path="$(ignition_merge_read_inline_path "$config_json" "$merge_jq_path" "$idx" "$_jq_bounds_check")"; then
-            log_error "failed to read inline path at merge index $idx"
+            error "failed to read inline path at merge index $idx"
             return 1
         fi
-        log_debug "$(declare -p butane_file_path)"
+        debug "$(declare -p butane_file_path)"
 
         if ! ignition_merge_compile_entry "$butane_file_path" \
                                     ignition_json \
                                     verification_hash \
                                     "$secrets"; then
-            log_error "failed to compile ignition merge inline entry."
+            error "failed to compile ignition merge inline entry."
             return 1
         fi
 
@@ -273,23 +273,23 @@ ignition_gen_config_merge_inlines() {
                                                     "$_jq_bounds_check" \
                                                     "$ignition_json" \
                                                     "$verification_hash")"; then
-            log_error "failed to update inline entry at merge index $idx"
+            error "failed to update inline entry at merge index $idx"
             return 1
         fi
     done
 
-    log_info "Generating final main ignition config..."
+    info "Generating final main ignition config..."
     local ignition_out
     if ! ignition_out="$(butane -m "$(dirname "$butane_path")" \
                                 -- \
                                 --strict \
                                 "--files-dir=files" \
                                 <<< "$config_json")"; then
-        log_error "failed to compile merged butane config to ignition JSON"
+        error "failed to compile merged butane config to ignition JSON"
         return 1
     fi
-    log_info "Config ok"
-    log_info "Config size: $(wc -c <<< "$ignition_out") bytes"
+    info "Config ok"
+    info "Config size: $(wc -c <<< "$ignition_out") bytes"
 
     # shellcheck disable=SC2034
     out="$ignition_out"
@@ -298,15 +298,15 @@ ignition_gen_config_merge_inlines() {
 # get_secrets_from_env()
 # TODO move this into hack/lib/podman/podman-secret.sh
 get_secrets_from_env() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 1 "$@" || return 1
     local -n names="$1"
     local -r config_env="${2:-}"
 
-    [ -z "$config_env" ] && log_warn "config_env was not specified. label env= will be empty."
+    [ -z "$config_env" ] && warn "config_env was not specified. label env= will be empty."
     if [[ ${!names@a} == *a* ]]; then
-        log_error "${!names} must be an indexed array."
+        error "${!names} must be an indexed array."
         return 1
     fi
 
@@ -320,33 +320,33 @@ get_secrets_from_env() {
             names+=("$(basename "$f")")
         done
     else
-        log_warn "SECRET_FILES ${ERROR_VAR_UNSET} or ${ERROR_ARRAY_NO_INDEX}"
+        warn "SECRET_FILES ${ERROR_VAR_UNSET} or ${ERROR_ARRAY_NO_INDEX}"
     fi
 
     if [ -v SECRET_IDS ]; then
         # shellcheck disable=SC2068
         for id in ${SECRET_IDS[@]}; do
             if podman secret exists "$id" > /dev/null 2>&1; then
-                log_info "Adding podman secret: $id"
+                info "Adding podman secret: $id"
                 names+=("$(podman secret inspect -f '{{.Spec.Name}}' "$id")")
             else
-                log_error "podman secret \"$id\" does not exist. Skipping."
+                error "podman secret \"$id\" does not exist. Skipping."
             fi
         done
     else
-        log_warn "SECRET_FILES ${ERROR_VAR_UNSET} or ${ERROR_ARRAY_NO_INDEX}"
+        warn "SECRET_FILES ${ERROR_VAR_UNSET} or ${ERROR_ARRAY_NO_INDEX}"
     fi
 }
 
 # source_env_files()
 source_env_files() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 1 "$@" || return 1
     local -n files="$1"
 
     if [[ ${!files@a} == *a* ]]; then
-        log_error "${!files} must be an indexed array."
+        error "${!files} must be an indexed array."
         return 1
     fi
 
@@ -354,7 +354,7 @@ source_env_files() {
     for e in ${files[@]}; do
         if [ -n "$e" ]; then
             if [ -f "$e" ]; then
-                log_error "$ERROR_FILE_NOT_FOUND: $e"
+                error "$ERROR_FILE_NOT_FOUND: $e"
                 return 1
             fi
 
@@ -375,7 +375,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
@@ -383,21 +383,21 @@ fi
 
 if [ "${__hack_lib_ignition_butane_sourced:-}" != "true" ]; then
     declare -r __hack_lib_ignition_butane="hack/lib/ignition/butane.sh"
-    [ -f "$__hack_lib_ignition_butane" ] || log_fatal "${ERROR_FILE_NOT_FOUND}: $__hack_lib_ignition_butane"
+    [ -f "$__hack_lib_ignition_butane" ] || fatal "${ERROR_FILE_NOT_FOUND}: $__hack_lib_ignition_butane"
     # shellcheck source=butane.sh
     . "$__hack_lib_ignition_butane"
 fi
 
 if [ "${__hack_lib_yq_sourced:-}" != "true" ]; then
     declare -r __lib_yq="hack/lib/yq.sh"
-    [ -f "$__lib_yq" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $__lib_yq"
+    [ -f "$__lib_yq" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_yq"
     # shellcheck source=../yq.sh
     . "$__lib_yq"
 fi
 
 if [ "${__hack_lib_checksum_sha512sum_sourced:-}" != "true" ]; then
     declare -r __hack_lib_checksum="hack/lib/checksum/checksum.sh"
-    [ -f "$__hack_lib_checksum" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_checksum"
+    [ -f "$__hack_lib_checksum" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_checksum"
     # shellcheck source=../checksum/checksum.sh
     . "$__hack_lib_checksum"
 fi

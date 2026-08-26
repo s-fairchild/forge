@@ -8,10 +8,10 @@ sha512sum() {
 }
 
 sha512sum_gen_stdin() {
-    log_debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}()"
 
     if [ -t 0 ]; then
-        log_error "$ERROR_STDIN_NULL"
+        error "$ERROR_STDIN_NULL"
         return 1
     fi
 
@@ -19,10 +19,10 @@ sha512sum_gen_stdin() {
 }
 
 sha512sum_check_stdin() {
-    log_debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}()"
 
     if [ -t 0 ]; then
-        log_error "$ERROR_OPERAND_REQUIRED"
+        error "$ERROR_OPERAND_REQUIRED"
         return 1
     fi
 
@@ -31,21 +31,21 @@ sha512sum_check_stdin() {
         "--strict"
         --warn
     )
-    log_debug "$(declare -p sha512sum_check_options)"
+    debug "$(declare -p sha512sum_check_options)"
 
     # shellcheck disable=SC2068
     sha512sum ${sha512sum_check_options[@]} -
 }
 
 sha512sum_gen() {
-    log_debug "Starting ${FUNCNAME[0]}()"
+    debug "Starting ${FUNCNAME[0]}()"
 
     if (( $# )); then
         local -r input="$1"
     elif [ ! -t 0 ]; then
         local -r input="$(cat)"
     else
-        log_error "$ERROR_STDIN_NULL OR $ERROR_OPERAND_REQUIRED"
+        error "$ERROR_STDIN_NULL OR $ERROR_OPERAND_REQUIRED"
         return 1
     fi
     
@@ -53,14 +53,14 @@ sha512sum_gen() {
 }
 
 sha512sum_check() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     if (( $# )); then
         local -r input="$1"
     elif [ ! -t 0 ]; then
         local -r input="$(cat)"
     else
-        log_error "$ERROR_STDIN_NULL OR $ERROR_OPERAND_REQUIRED"
+        error "$ERROR_STDIN_NULL OR $ERROR_OPERAND_REQUIRED"
         return 1
     fi
 

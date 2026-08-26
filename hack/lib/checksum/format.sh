@@ -4,12 +4,12 @@
 declare -r __hack_lib_checksum_format_sourced="true"
 
 checksum_parse_hash() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-    local -r input="${1?$(log_error "$ERROR_OPERAND_REQUIRED")}"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    local -r input="${1?$(error "$ERROR_OPERAND_REQUIRED")}"
 
     local -r output="$(cut -d ' ' -f 1 <<< "$input")"
     if [ -z "$output" ]; then
-        log_error "failed to parse checksum value. $ERROR_STRING_EMPTY"
+        error "failed to parse checksum value. $ERROR_STRING_EMPTY"
         return 1
     fi
 
@@ -17,13 +17,13 @@ checksum_parse_hash() {
 }
 
 checksum_format_verification_hash_sha512() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     if [ ! -t 0 ]; then
         local -r input="$(cat)"
     elif (( $# )); then
         local -r input="$1"
     else
-        log_error "${ERROR_OPERAND_REQUIRED} OR ${ERROR_STDIN_NULL}"
+        error "${ERROR_OPERAND_REQUIRED} OR ${ERROR_STDIN_NULL}"
     fi
 
     printf "sha512-%s" "$(checksum_parse_hash "$input")"
@@ -39,7 +39,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils

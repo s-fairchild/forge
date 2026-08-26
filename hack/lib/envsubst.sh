@@ -6,7 +6,7 @@
 # args:
 #   * $@) all arguments are passed to the container
 envsubst() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
     local -r image="docker.io/steve51516/envsubst:latest"
 

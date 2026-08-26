@@ -6,7 +6,7 @@ declare -r __IGNITION_VALIDATE_FILES_DIR="files"
 
 # ignition-validate()
 ignition-validate() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a podman_run_options=()
     local -i OPTIND=1
@@ -27,12 +27,12 @@ ignition-validate() {
                 ;;
             :)
                 usage_ignition_validate
-                log_error "-${OPTARG} $ERROR_OPTION_REQUIRED"
+                error "-${OPTARG} $ERROR_OPTION_REQUIRED"
                 return 1
                 ;;
             ?)
                 usage_ignition_validate
-                log_error "-${OPTARG} $ERROR_OPTION_UNKNOWN"
+                error "-${OPTARG} $ERROR_OPTION_UNKNOWN"
                 return 1
                 ;;
         esac
@@ -77,7 +77,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils

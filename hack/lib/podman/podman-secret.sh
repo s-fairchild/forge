@@ -16,7 +16,7 @@ declare -r __PODMAN_SECRETS_FILEDRIVER_FILENAME="secrets/filedriver/secretsdata.
 # args:
 #   * 1) secret - string; podman secret name or ID to check.
 podman_secret_exists() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     podman secret exists "$1"
 }
 
@@ -48,7 +48,7 @@ USAGE
 # args:
 #   * 1) secret_name - string; name of the podman secret to create or replace.
 podman_secret_create_replace_from_stdin() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a extra_labels=()
     local opt OPTIND=1
@@ -56,16 +56,16 @@ podman_secret_create_replace_from_stdin() {
         case "$opt" in
             h) usage_podman_secret_create_replace_from_stdin; return 0 ;;
             l) extra_labels+=("$OPTARG") ;;
-            :) usage_podman_secret_create_replace_from_stdin; log_fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
-            ?) usage_podman_secret_create_replace_from_stdin; log_fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
+            :) usage_podman_secret_create_replace_from_stdin; fatal "-${OPTARG} $ERROR_OPTION_REQUIRED" ;;
+            ?) usage_podman_secret_create_replace_from_stdin; fatal "-${OPTARG} $ERROR_OPTION_UNKNOWN" ;;
         esac
     done
     shift $((OPTIND - 1))
 
-    local -r secret_name="${1?$(log_fatal "$ERROR_OPERAND_REQUIRED: \$1")}"
+    local -r secret_name="${1?$(fatal "$ERROR_OPERAND_REQUIRED: \$1")}"
 
     local -r input="$(cat)"
-    [ -z "$input" ] && log_fatal "input $ERROR_STDIN_NULL"
+    [ -z "$input" ] && fatal "input $ERROR_STDIN_NULL"
 
     local -a labels=(
         "--label=generated-by-file=$(basename "$0")"
@@ -77,7 +77,7 @@ podman_secret_create_replace_from_stdin() {
     for l in "${extra_labels[@]}"; do
         labels+=("--label=$l")
     done
-    log_debug "$(declare -p labels)"
+    debug "$(declare -p labels)"
 
     # shellcheck disable=SC2068
     printf '%s' "$input" \
@@ -87,7 +87,7 @@ podman_secret_create_replace_from_stdin() {
             ${labels[@]} \
             "$secret_name" \
             - \
-    || log_fatal "failed to create podman secret: $secret_name"
+    || fatal "failed to create podman secret: $secret_name"
 }
 
 # podman_secret_showsecret()
@@ -99,10 +99,10 @@ podman_secret_create_replace_from_stdin() {
 # args:
 #   * 1) s - string; podman secret name to retrieve data from.
 podman_secret_showsecret() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-    local -r s="${1?$(log_fatal "\$1 is unset. podman secret name must be provided.")}"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    local -r s="${1?$(fatal "\$1 is unset. podman secret name must be provided.")}"
 
-    [ -z "$s" ] && log_fatal "\$1 cannot be empty string."
+    [ -z "$s" ] && fatal "\$1 cannot be empty string."
 
     podman secret \
             inspect \
@@ -146,7 +146,7 @@ USAGE
 #   * 1) src_files - nameref name; array of file paths or glob patterns to create
 #         secrets from.  Each element is expanded and its basename becomes the secret name.
 podman_secret_create_from_file() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a extra_labels=()
     local opt OPTIND=1
@@ -161,12 +161,12 @@ podman_secret_create_from_file() {
                 ;;
             :)
                 usage_podman_secret_create_from_file
-                log_error "-${OPTARG} ${ERROR_OPTION_ARG_REQUIRED}"
+                error "-${OPTARG} ${ERROR_OPTION_ARG_REQUIRED}"
                 return 1
                 ;;
             ?)
                 usage_podman_secret_create_from_file
-                log_error "-${OPTARG} ${ERROR_OPTION_UNKNOWN}"
+                error "-${OPTARG} ${ERROR_OPTION_UNKNOWN}"
                 return 1
                 ;;
         esac
@@ -182,7 +182,7 @@ podman_secret_create_from_file() {
         secret_name="$(basename "$f")"
 
         if podman_secret_exists "$secret_name"; then
-            log_warn "podman secret $secret_name already exists. Delete this secret if you intend to update it."
+            warn "podman secret $secret_name already exists. Delete this secret if you intend to update it."
             continue
         fi
 
@@ -197,7 +197,7 @@ podman_secret_create_from_file() {
         for l in "${extra_labels[@]}"; do
             labels+=("--label=$l")
         done
-        log_debug "$(declare -p labels)"
+        debug "$(declare -p labels)"
 
         # shellcheck disable=SC2068
         podman secret \
@@ -206,7 +206,7 @@ podman_secret_create_from_file() {
                 ${labels[@]} \
                 "$secret_name" \
                 "$f" \
-        || log_fatal "failed to create podman secret: $f"
+        || fatal "failed to create podman secret: $f"
     done
 }
 
@@ -226,11 +226,11 @@ podman_secret_create_from_file() {
 #
 # stdout) JSON object: { "<id>": "<secret_data>", ... }
 podman_secret_gen_file_secretsdata() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -r input="$(cat)"
     if [ -t 0 ]; then
-        log_error "$ERROR_STDIN_NULL"
+        error "$ERROR_STDIN_NULL"
         return 1
     fi
 
@@ -254,32 +254,32 @@ podman_secret_gen_file_secretsdata() {
 #
 # stdout) Names of matching podman secrets, newline-separated.
 podman_secret_filter_by_label() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     require_operands 2 "$@" || return 1
     local -r label="$1"
     local -r value="$2"
-    log_debug "$(declare -p label)"
-    log_debug "$(declare -p value)"
+    debug "$(declare -p label)"
+    debug "$(declare -p value)"
 
     local -a secrets
     # shellcheck disable=SC2207
     secrets=($(podman secret ls -q))
-    log_debug "$(declare -p secrets)"
+    debug "$(declare -p secrets)"
 
     local names
     # shellcheck disable=SC2068
     if ! names="$(podman secret inspect ${secrets[@]} \
         | jq -r --arg label "$label" --arg value "$value" \
             '.[] | select(.Spec.Labels[$label] == $value) | .Spec.Name')"; then
-        log_error "failed to parse podman secret data with filter: .Spec.Labels[\"$label\"] == \"$value\""
+        error "failed to parse podman secret data with filter: .Spec.Labels[\"$label\"] == \"$value\""
         return 1
     elif [ -z "$names" ]; then
-        log_error "no podman secret found with filter: .Spec.Labels[\"$label\"] == \"$value\""
+        error "no podman secret found with filter: .Spec.Labels[\"$label\"] == \"$value\""
         return 1
     fi
 
-    log_debug "$(declare -p names)"
+    debug "$(declare -p names)"
     printf "%s" "$names"
 }
 
@@ -293,7 +293,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils

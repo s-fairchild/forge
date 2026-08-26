@@ -68,7 +68,7 @@ USAGE
 #   * -h          - print usage message.
 #   * $@)         - trailing args are passed to the container.
 serve() {
-    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a secrets=() dropins=() env_prefixes=()
     local opt OPTIND=1 ignition ssl_key ssl_cert
@@ -103,12 +103,12 @@ serve() {
                 return 0
                 ;;
             :)
-                log_error "-${OPTARG} ${ERROR_OPTION_REQUIRED}"
+                error "-${OPTARG} ${ERROR_OPTION_REQUIRED}"
                 usage_serve
                 return 1
                 ;;
             ?)
-                log_error "-${OPTARG} ${ERROR_OPTION_UNKNOWN}"
+                error "-${OPTARG} ${ERROR_OPTION_UNKNOWN}"
                 usage_serve
                 return 1
                 ;;
@@ -116,10 +116,10 @@ serve() {
     done
     shift $((OPTIND - 1))
 
-    [ -z "${ignition:-}" ] && { usage_serve; log_fatal "-b $ERROR_OPTION_REQUIRED"; }
-    [ -z "${ssl_cert:-}" ] && { usage_serve; log_fatal "-c $ERROR_OPTION_REQUIRED"; }
-    [ -z "${ssl_key:-}" ] && { usage_serve; log_fatal "-k $ERROR_OPTION_REQUIRED"; }
-    (( ${#secrets[@]} )) || { log_warn "No -s option(s) provided. No secrets will be mounted."; }
+    [ -z "${ignition:-}" ] && { usage_serve; fatal "-b $ERROR_OPTION_REQUIRED"; }
+    [ -z "${ssl_cert:-}" ] && { usage_serve; fatal "-c $ERROR_OPTION_REQUIRED"; }
+    [ -z "${ssl_key:-}" ] && { usage_serve; fatal "-k $ERROR_OPTION_REQUIRED"; }
+    (( ${#secrets[@]} )) || { warn "No -s option(s) provided. No secrets will be mounted."; }
     log_sensitive "$(declare -p ignition secrets dropins env_prefixes ssl_cert ssl_key)"
 
     local -r __ssl_cert_mount_path="${__nginx_ssl_root}/ssl-cert"
@@ -159,7 +159,7 @@ serve() {
            "$__NGINX_IMAGE" \
            "$@"; then
 
-        log_error "podman run command failed."
+        error "podman run command failed."
         return 1
     fi
 }
@@ -174,7 +174,7 @@ fi
 
 if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
     declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
     # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
     . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
     unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
