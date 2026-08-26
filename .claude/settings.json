@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash -n ~/src/github/s-fairchild/titan/hack/vendor/bashkit/lib/virsh/virsh-network.sh)",
+      "Bash(shellcheck --version)",
+      "Bash(cd ~/src/github/s-fairchild/titan *)",
+      "Read(~/.local/share/titan/**)",
+      "Bash(shellcheck hack/**)",
+      "Bash(git show *)"
+    ],
+    "additionalDirectories": [
+      "~/src/github/s-fairchild/titan/hack/vendor"
+    ]
+  }
+}

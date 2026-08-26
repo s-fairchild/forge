@@ -140,3 +140,13 @@ staging-vm-up: ignition-gen-staging
 staging-vm-down:
 	. $(LIBVIRT_ENV_RICK_STAGING)
 	virsh destroy "$${DOMAIN_NAME}"
+
+# hack/vendor/bash-logger is an independently-versioned submodule with its own lint tooling;
+# exclude it here and lint it via that submodule's own skill/toolchain instead.
+lint_hack_exclude_path := hack/vendor/bash-logger
+
+lint-hack:
+	find hack -name '*.sh' -not -path '${lint_hack_exclude_path}/*' -exec shellcheck {} +
+
+lint-hack-file:
+	shellcheck ${FILE}
