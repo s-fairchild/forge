@@ -21,6 +21,7 @@ ignition:
       ### Base configs ###
       ####################
       - inline: deploy/butane/base/btrfsmaintenance.bu
+      - inline: deploy/butane/base/etc-containers-secrets.bu
       - inline: deploy/butane/base/etc-containers-systemd.bu
       - inline: deploy/butane/base/etc-firewalld.bu
       - inline: deploy/butane/base/etc-general.bu
