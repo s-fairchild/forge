@@ -6,3 +6,8 @@
 node-label+:
   - "node-role.kubernetes.io/agent=true"
   - "metallb.io/addresspool=ingress"
+
+# TODO configure svclb operator to ignore this taint
+# This will prevent workloads from being scheduled on this node
+# node-taint:
+# - "enablelb=true:NoSchedule"
