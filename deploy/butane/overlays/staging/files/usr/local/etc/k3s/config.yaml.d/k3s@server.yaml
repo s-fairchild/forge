@@ -1,0 +1,13 @@
+# k3s@server.yaml
+#
+# https://docs.k3s.io/installation/configuration#configuration-file
+---
+tls-san+:
+  - "rick-staging.expresso.lan"
+  - "api.rick-staging.expresso.lan"
+
+disable:
+  - servicelb
+
+cluster-cidr: 10.142.0.0/16
+service-cidr: 10.143.0.0/16

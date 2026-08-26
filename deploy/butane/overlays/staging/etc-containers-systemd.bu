@@ -1,0 +1,7 @@
+---
+variant: fcos
+version: 1.7.0
+storage:
+  trees:
+    - path: /etc/containers/systemd
+      local: etc/containers/systemd

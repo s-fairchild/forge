@@ -1,0 +1,25 @@
+---
+variant: fcos
+version: 1.7.0
+ignition:
+  config:
+    merge:
+      ####################
+      ### Base configs ###
+      ####################
+      - inline: deploy/butane/base/storage/disks.bu
+      - inline: deploy/butane/base/storage/filesystems.bu
+      - inline: deploy/butane/base/btrfsmaintenance.bu
+      - inline: deploy/butane/base/etc-containers-secrets.bu
+      - inline: deploy/butane/base/etc-containers-storage.bu
+      - inline: deploy/butane/base/etc-containers-systemd.bu
+      - inline: deploy/butane/base/etc-firewalld.bu
+      - inline: deploy/butane/base/etc-general.bu
+      - inline: deploy/butane/base/etc-security-limits.bu
+      - inline: deploy/butane/base/etc-sysctl.bu
+      - inline: deploy/butane/base/passwd.bu
+      - inline: deploy/butane/base/usr-local.bu
+
+      - inline: deploy/butane/overlays/staging/etc-containers-secrets.bu
+      - inline: deploy/butane/overlays/staging/etc-containers-systemd.bu
+      - inline: deploy/butane/overlays/staging/passwd.bu

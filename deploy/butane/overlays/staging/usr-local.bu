@@ -1,0 +1,56 @@
+# deploy/butane/overlays/prod/usr.bu
+#
+# Deploys prod-specific k3s runtime configuration and pre-generated Kubernetes manifests
+# to /usr/local on the node.
+#
+# The /usr/local tree (files/usr/local/) contains:
+#   - etc/k3s/k3s@server.yaml  — server config: prod tls-san list including the kube-vip
+#                                 HA VIP (10.10.0.100), servicelb disabled.
+#   - etc/k3s/k3s@agent.yaml   — agent config: node-label app=compute.
+#   - etc/k3s/k3s@svclb.yaml   — svclb agent config: metallb address pool label.
+#
+# Symlinks are created from instance names (k3s@server-0.yaml, k3s@agent-0.yaml, etc.)
+# to the corresponding template YAMLs so that each quadlet container instance reads
+# the correct config via Volume=/usr/local/etc/k3s/%N:/etc/rancher/k3s/config.yaml.
+#
+# The manifests/custom tree contains pre-generated HelmChart and workload YAMLs that
+# k3s auto-deploys from /var/lib/rancher/k3s/server/manifests/custom/ on server start.
+---
+variant: fcos
+version: 1.7.0
+storage:
+  # /usr/local is overwritten to remove all existing files in deploy/butane/base/usr.bu
+  links:
+    - path: /usr/local/etc/k3s/k3s@agent-0.yaml
+      target: /usr/local/etc/k3s/k3s@agent.yaml
+
+    - path: /usr/local/etc/k3s/k3s@server-0.yaml
+      target: /usr/local/etc/k3s/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/k3s@server-1.yaml
+      target: /usr/local/etc/k3s/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/k3s@server-2.yaml
+      target: /usr/local/etc/k3s/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/k3s@svclb-0.yaml
+      target: /usr/local/etc/k3s/k3s@svclb.yaml
+
+    - path: /usr/local/etc/k3s/config.yaml.d/k3s@agent-0.yaml
+      target: /usr/local/etc/k3s/config.yaml.d/k3s@agent.yaml
+
+    - path: /usr/local/etc/k3s/config.yaml.d/k3s@server-0.yaml
+      target: /usr/local/etc/k3s/config.yaml.d/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/config.yaml.d/k3s@server-1.yaml
+      target: /usr/local/etc/k3s/config.yaml.d/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/config.yaml.d/k3s@server-2.yaml
+      target: /usr/local/etc/k3s/config.yaml.d/k3s@server.yaml
+
+    - path: /usr/local/etc/k3s/config.yaml.d/k3s@svclb-0.yaml
+      target: /usr/local/etc/k3s/config.yaml.d/k3s@svclb.yaml
+
+  trees:
+    - path: /usr/local
+      local: usr/local
