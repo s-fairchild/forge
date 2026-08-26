@@ -27,34 +27,12 @@
 # I believe only address works here.
 # Everything else must be set via environment variables.
 config:
-  address: 10.10.0.100
+  address: 10.100.0.100
 
 # https://kube-vip.io/docs/installation/flags/#environment-variables
 env:
-  address: 10.10.0.100
-  vip_interface: server0
-  vip_loglevel: -4
-  svc_enable: "false"
-  svc_election: "false"
-
-# Check https://kube-vip.io/docs/installation/flags/
-# env: []
-  # address: 10.10.0.254
-
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
-volumes:
-  - hostPath:
-      path: /etc/rancher/k3s/k3s.yaml
-      type: File
-    name: kubeconfig
-
-volumeMounts:
-  - mountPath: /etc/kubernetes/admin.conf
-    name: kubeconfig
+  address: 10.100.0.100
+  # TODO test enabling services in staging
+  # Determine if this is preferred over configuring metallb
+  # svc_enable: "false"
+  # svc_election: "false"

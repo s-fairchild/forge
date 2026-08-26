@@ -17,4 +17,4 @@ secretGenerator:
     namespace: kube-system
     behavior: create
     files:
-      - base-values.yaml=values/kube-vip-values.yaml
+      - 10-base-values.yaml=values/10-values.yaml

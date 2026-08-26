@@ -19,4 +19,4 @@ secretGenerator:
     namespace: kube-system
     behavior: merge
     files:
-      - prod-values.yaml=values/kube-vip-values.yaml
+      - 20-prod-values.yaml=values/20-values.yaml

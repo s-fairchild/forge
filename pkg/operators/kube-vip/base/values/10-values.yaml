@@ -29,6 +29,10 @@ env:
   egress_withnftables: "true"
   # TODO enable prometheus metrics server once prometheus has been configured
   prometheus_server: ""
+  vip_interface: server0
+  vip_loglevel: -4
+  svc_enable: "false"
+  svc_election: "false"
 
 envValueFrom:
   vip_nodename:
@@ -85,3 +89,21 @@ podMonitor:
   enabled: false
 
 priorityClassName: "system-cluster-critical"
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+volumes:
+  - hostPath:
+      path: /etc/rancher/k3s/k3s.yaml
+      type: File
+    name: kubeconfig
+
+volumeMounts:
+  - mountPath: /etc/kubernetes/admin.conf
+    name: kubeconfig
