@@ -22,6 +22,7 @@ ignition:
       ####################
       - inline: deploy/butane/base/btrfsmaintenance.bu
       - inline: deploy/butane/base/etc-containers-secrets.bu
+      - inline: deploy/butane/base/etc-containers-storage.bu
       - inline: deploy/butane/base/etc-containers-systemd.bu
       - inline: deploy/butane/base/etc-firewalld.bu
       - inline: deploy/butane/base/etc-general.bu
@@ -39,6 +40,7 @@ ignition:
       - inline: deploy/butane/overlays/prod/storage/luks.bu
 
       - inline: deploy/butane/overlays/prod/etc-containers-secrets.bu
+      - inline: deploy/butane/overlays/prod/etc-containers-storage.bu
       - inline: deploy/butane/overlays/prod/etc-containers-systemd.bu
       - inline: deploy/butane/overlays/prod/etc-modprobe.bu
       - inline: deploy/butane/overlays/prod/etc-sysconfig.bu
