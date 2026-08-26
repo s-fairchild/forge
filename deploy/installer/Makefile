@@ -1,18 +1,38 @@
 .ONESHELL:
 SHELL = /bin/bash
 .SHELLFLAGS := -o nounset -o errexit -o pipefail -o hashall -c
--include hack/env/vendor.env
 
-IMAGES := images
 DEPLOY_INSTALLER_DIR := deploy/installer
-IMAGES_DIR := $(DEPLOY_INSTALLER_DIR)/$(IMAGES)
+TITAN_LOCAL_SHARE_DIR := $(HOME)/.local/share/titan/installer
+IMAGES_DIR := $(TITAN_LOCAL_SHARE_DIR)/images
+STREAM := stable
 
 installer-download-baremetal:
-	coreos-installer download \
-		--stream stable \
+	mkdir -p $(IMAGES_CUSTOMIZED_BASE_DIR)
+	hack/vendor/bashkit/local/bin/coreos-installer \
+		-m type=bind,src=$(PWD)/$(DEPLOY_INSTALLER_DIR),target=$(PWD)/$(DEPLOY_INSTALLER_DIR) \
+		-- \
+		download \
+		--stream $(STREAM) \
 		--platform metal \
 		--format iso \
 		--directory $(IMAGES_CUSTOMIZED_BASE_DIR)
+
+installer-download-libvirt:
+
+	libvirt_images_dir=$(HOME)/.local/share/libvirt/images
+	mkdir -p $${libvirt_images_dir}
+	chcon -t svirt_home_t $${libvirt_images_dir}
+
+	hack/vendor/bashkit/local/bin/coreos-installer \
+		-m type=bind,src=$${libvirt_images_dir},target=$${libvirt_images_dir} \
+		-- \
+		download \
+		-s $(STREAM) \
+		-p qemu \
+		-f qcow2.xz \
+		-d \
+		-C $${libvirt_images_dir}
 
 BASE_NAME := base
 STAGING_NAME := staging
@@ -51,13 +71,13 @@ installer-ignition-gen-prod:
 installer-ignition-gen-all: installer-ignition-gen-base installer-ignition-gen-prod
 
 HACK_LIB_DIR := hack/lib
+INSTALLER_LIB := $(HACK_LIB_DIR)/ignition/installer.sh
 PODMAN_SECRET_LIB := $(HACK_LIB_DIR)/podman/podman-secret.sh
 PODMAN_SECRETS_MOUNT_DIR := var/run/secrets
 
-IMAGES_CUSTOMIZED := $(IMAGES)_customized
-IMAGES_CUSTOMIZED_BASE_DIR := $(INSTALLER_DIR_BASE)/$(IMAGES_CUSTOMIZED)
-IMAGES_CUSTOMIZED_STAGING_DIR := $(INSTALLER_DIR_STAGING)/$(IMAGES_CUSTOMIZED)
-IMAGES_CUSTOMIZED_PROD_DIR := $(INSTALLER_DIR_PROD)/$(IMAGES_CUSTOMIZED)
+IMAGES_CUSTOMIZED_BASE_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/base
+IMAGES_CUSTOMIZED_STAGING_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/staging
+IMAGES_CUSTOMIZED_PROD_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/prod
 
 FILES_LIVE_DIR := files/live
 FILES_BASE_LIVE_DIR := $(INSTALLER_DIR_BASE)/$(FILES_LIVE_DIR)
@@ -70,11 +90,13 @@ FILES_PROD_LIVE_DIR := $(INSTALLER_DIR_PROD)/$(FILES_LIVE_DIR)
 # iso_in="coreos-installer/iso/fedora-coreos-43.20251214.3.0-live-iso.x86_64.iso"
 # sudo dd if="$iso_in" of="$iso_out" status=progress && sudo sync
 installer-iso-customize-base: installer-ignition-gen-base
+	mkdir -p $(IMAGES_DIR) $(IMAGES_CUSTOMIZED_BASE_DIR)
 	iso="$$(find $(IMAGES_DIR) -type f -iname "*.iso" | sort -V | head -n1)"
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
 	[ -f "$${iso_out}" ] &&  rm $${iso_out}
 
-	hack/vendor/bashkit/local/bin/coreos-installer -s $(SECRET_IGNITION_FINAL_BASE_NAME) \
+	. $(INSTALLER_LIB)
+	coreos-installer -s $(SECRET_IGNITION_FINAL_BASE_NAME) \
 					-m "type=bind,src=$(FILES_BASE_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_BASE_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_CUSTOMIZED_BASE_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_BASE_DIR),bind-propagation=rslave,no-dereference" \
@@ -83,14 +105,16 @@ installer-iso-customize-base: installer-ignition-gen-base
 					customize \
 					--dest-ignition /$(PODMAN_SECRETS_MOUNT_DIR)/$(SECRET_IGNITION_FINAL_BASE_NAME) \
 					--output $${iso_out} \
-					./$${iso}
+					$${iso}
 
 installer-iso-customize-prod: installer-ignition-gen-prod
+	mkdir -p $(IMAGES_DIR) $(IMAGES_CUSTOMIZED_PROD_DIR)
 	iso="$$(find $(IMAGES_DIR) -type f -iname "*.iso" | sort -V | head -n1)"
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
 	[ -f "$${iso_out}" ] &&  rm $${iso_out}
 
-	hack/vendor/bashkit/local/bin/coreos-installer -s $(SECRET_IGNITION_FINAL_PROD_NAME) \
+	. $(INSTALLER_LIB)
+	coreos-installer -s $(SECRET_IGNITION_FINAL_PROD_NAME) \
 					-m "type=bind,src=$(FILES_PROD_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_PROD_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_CUSTOMIZED_PROD_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_PROD_DIR),bind-propagation=rslave,no-dereference" \
@@ -100,16 +124,7 @@ installer-iso-customize-prod: installer-ignition-gen-prod
 					--network-nmstate $(FILES_PROD_LIVE_DIR)/eno1.nmstate \
 					--dest-ignition /$(PODMAN_SECRETS_MOUNT_DIR)/$(SECRET_IGNITION_FINAL_PROD_NAME) \
 					--output $${iso_out} \
-					./$${iso}
-
-images := "$(HOME)/.local/share/libvirt/images"
-installer-download-libvirt:
-	coreos-installer download \
-					-s ${stream} \
-					-p qemu \
-					-f qcow2.xz \
-					--decompress
-					--directory ${IMAGES_DIR}
+					$${iso}
 
 FCOS_STAGING_NETWORK=fcos-staging
 staging-network-build:
@@ -117,10 +132,10 @@ staging-network-build:
 
 	virsh_net_is_defined $(FCOS_STAGING_NETWORK) \
 		|| virsh_net_define $(FCOS_STAGING_NETWORK) "Fedora CoreOS Staging Environment Network"
-
+	
 	virsh_net_is_active $(FCOS_STAGING_NETWORK) \
 		|| virsh_net_activate $(FCOS_STAGING_NETWORK)
-
+	
 	virsh_net_is_autostart $(FCOS_STAGING_NETWORK) \
 		|| virsh_net_autostart $(FCOS_STAGING_NETWORK)
 
