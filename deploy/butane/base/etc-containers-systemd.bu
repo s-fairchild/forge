@@ -44,7 +44,7 @@ storage:
     ######################
     ####### Images #######
     ######################
-    - path: /etc/containers/systemd/k3s@v1.36.1-k3s1.image
+    - path: /etc/containers/systemd/k3s@default.image
       target: /etc/containers/systemd/k3s@.image
       overwrite: true
 

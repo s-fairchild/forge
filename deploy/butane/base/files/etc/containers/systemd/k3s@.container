@@ -1,5 +1,6 @@
 [Unit]
 Documentation=https://docs.k3s.io/ https://github.com/k3s-io/k3s/blob/main/README.md
+ConditionEnvironment=NODE_IP
 
 [Service]
 Restart=on-failure
@@ -29,7 +30,7 @@ DNSSearch=expresso.lan
 Timezone=UTC
 Pull=never
 LogDriver=journald
-Image=k3s@v1.36.1-k3s1.image
+Image=k3s@default.image
 EnvironmentFile=-/usr/local/etc/sysconfig/%N
 # K3S configuration via environment
 # https://docs.k3s.io/cli/server#cluster-options
