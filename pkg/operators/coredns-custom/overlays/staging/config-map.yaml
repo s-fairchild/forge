@@ -5,4 +5,4 @@ metadata:
   namespace: kube-system
 data:
   jellyfin.override: |
-    rewrite name regex (.*)-(rick-dev)\.app.expresso\.lan {1}.cluster.{2}.local
+    rewrite name regex (.*)-(rick-staging)\.app.expresso\.lan {1}.cluster.{2}.local

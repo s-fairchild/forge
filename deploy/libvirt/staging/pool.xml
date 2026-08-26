@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!-- Path's $HOME placeholder is expanded by ensure_pool() in
+     hack/bin/ensure-staging-vm.sh before this is passed to virsh; libvirt
+     itself does no shell/env expansion on pool XML. -->
+<pool type="dir">
+  <name>fcos-staging</name>
+  <target>
+    <path>$HOME/.local/share/libvirt/images/fcos</path>
+  </target>
+</pool>

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<network>
+  <name>staging</name>
+  <description>Fedora CoreOS Staging Environment Network</description>
+  <bridge name="virbr1" stp="on" delay="0"/>
+  <forward mode="nat"/>
+  <ip address="192.168.150.1" netmask="255.255.255.0">
+    <dhcp>
+      <!-- No <range>: only hosts declared here get a lease. -->
+      <host mac="52:54:00:9b:2f:47" name="rick-staging" ip="192.168.150.10"/>
+    </dhcp>
+  </ip>
+</network>

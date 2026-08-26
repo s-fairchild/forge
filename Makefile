@@ -131,3 +131,12 @@ ignition-serve-prod:
 		  -c ssl-cert-prod \
 		  -k ssl-key-prod \
 		  -i ignition-prod
+
+LIBVIRT_ENV_RICK_STAGING := deploy/installer/etc/libvirt/rick-staging.env
+
+staging-vm-up: ignition-gen-staging
+	$(MAKE) -C deploy/installer install-staging-vm
+
+staging-vm-down:
+	. $(LIBVIRT_ENV_RICK_STAGING)
+	virsh destroy "$${DOMAIN_NAME}"

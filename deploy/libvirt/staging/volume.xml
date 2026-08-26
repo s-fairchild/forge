@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!-- Overlay disk for rick-staging, backed by the base FCOS qemu image.
+     backingStore path's $HOME placeholder is expanded by ensure_volume() in
+     hack/bin/ensure-staging-vm.sh before this is passed to virsh; libvirt
+     itself does no shell/env expansion on volume XML. The image filename must
+     be bumped when the base image is updated to a newer FCOS stream release. -->
+<volume type="file">
+  <name>rick-staging.qcow2</name>
+  <capacity unit="GiB">10</capacity>
+  <target>
+    <format type="qcow2"/>
+  </target>
+  <backingStore>
+    <path>$HOME/.local/share/libvirt/images/fedora-coreos-44.20260720.3.1-qemu.x86_64.qcow2</path>
+    <format type="qcow2"/>
+  </backingStore>
+</volume>

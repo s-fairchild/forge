@@ -110,3 +110,33 @@ installer-download-libvirt:
 					-f qcow2.xz \
 					--decompress
 					--directory ${IMAGES_DIR}
+
+FCOS_STAGING_NETWORK=fcos-staging
+staging-network-build:
+	. hack/vendor/bashkit/lib/virsh/virsh-network.sh
+
+	virsh_net_is_defined $(FCOS_STAGING_NETWORK) \
+		|| virsh_net_define $(FCOS_STAGING_NETWORK) "Fedora CoreOS Staging Environment Network"
+
+	virsh_net_is_active $(FCOS_STAGING_NETWORK) \
+		|| virsh_net_activate $(FCOS_STAGING_NETWORK)
+
+	virsh_net_is_autostart $(FCOS_STAGING_NETWORK) \
+		|| virsh_net_autostart $(FCOS_STAGING_NETWORK)
+
+LIBVIRT_ETC_DIR := $(DEPLOY_INSTALLER_DIR)/etc/libvirt
+LIBVIRT_ENV_RICK_STAGING := $(LIBVIRT_ETC_DIR)/rick-staging.env
+
+install-staging-vm:
+	. $(LIBVIRT_ENV_RICK_STAGING)
+
+	podman secret exists "$${IGNITION_SECRET}" \
+		|| { echo "podman secret $${IGNITION_SECRET} does not exist. Generate it first (e.g. 'make ignition-gen-staging' from the repo root)." >&2; exit 1; }
+
+	hack/bin/ensure-staging-vm.sh \
+		-l "$${LIBVIRT_DIR}" \
+		-n "$${NETWORK_NAME}" \
+		-p "$${POOL_NAME}" \
+		-d "$${VOLUME_NAME}" \
+		-m "$${DOMAIN_NAME}" \
+		-s "$${IGNITION_SECRET}"
