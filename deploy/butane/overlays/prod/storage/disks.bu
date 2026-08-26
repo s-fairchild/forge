@@ -22,6 +22,7 @@ storage:
   disks:
   # system
   - device: /dev/disk/by-id/coreos-boot-disk
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: root
@@ -35,74 +36,90 @@ storage:
 
   # appdata
   - device: /dev/disk/by-id/wwn-0x5000c500e62fb786
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.1_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500e643147a
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.2_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500e642d1f3
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.3_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8e4bd14
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.4_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   # cctv
   - device: /dev/disk/by-id/wwn-0x5000c500c8e196b3
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.5_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8e37087
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.6_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c937816a
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.7_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true
 
   - device: /dev/disk/by-id/wwn-0x5000c500c8a40802
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_table: true
     partitions:
       - label: appdata_raid10.8_p1
         number: 1
         size_mib: 0
         type_guid: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
         wipe_partition_entry: true

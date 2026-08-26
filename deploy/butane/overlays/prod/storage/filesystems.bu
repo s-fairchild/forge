@@ -66,6 +66,7 @@ storage:
   - device: /dev/mapper/var
     path: /var
     format: btrfs
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_filesystem: true
     with_mount_unit: true
     label: var
@@ -83,6 +84,7 @@ storage:
   - device: /dev/mapper/appdata
     path: /mnt/appdata
     format: btrfs
+    # TODO REMOVE THIS AFTER INITIAL BOOTSTRAP RUN!!!
     wipe_filesystem: true
     with_mount_unit: false
     label: appdata
