@@ -51,7 +51,6 @@ installer-ignition-gen-prod:
 installer-ignition-gen-all: installer-ignition-gen-base installer-ignition-gen-prod
 
 HACK_LIB_DIR := hack/lib
-INSTALLER_LIB := $(HACK_LIB_DIR)/ignition/installer.sh
 PODMAN_SECRET_LIB := $(HACK_LIB_DIR)/podman/podman-secret.sh
 PODMAN_SECRETS_MOUNT_DIR := var/run/secrets
 
@@ -75,8 +74,7 @@ installer-iso-customize-base: installer-ignition-gen-base
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
 	[ -f "$${iso_out}" ] &&  rm $${iso_out}
 
-	. $(INSTALLER_LIB)
-	coreos-installer -s $(SECRET_IGNITION_FINAL_BASE_NAME) \
+	hack/vendor/bashkit/local/bin/coreos-installer -s $(SECRET_IGNITION_FINAL_BASE_NAME) \
 					-m "type=bind,src=$(FILES_BASE_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_BASE_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_CUSTOMIZED_BASE_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_BASE_DIR),bind-propagation=rslave,no-dereference" \
@@ -92,8 +90,7 @@ installer-iso-customize-prod: installer-ignition-gen-prod
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
 	[ -f "$${iso_out}" ] &&  rm $${iso_out}
 
-	. $(INSTALLER_LIB)
-	coreos-installer -s $(SECRET_IGNITION_FINAL_PROD_NAME) \
+	hack/vendor/bashkit/local/bin/coreos-installer -s $(SECRET_IGNITION_FINAL_PROD_NAME) \
 					-m "type=bind,src=$(FILES_PROD_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_PROD_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
 					-m "type=bind,src=$(IMAGES_CUSTOMIZED_PROD_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_PROD_DIR),bind-propagation=rslave,no-dereference" \

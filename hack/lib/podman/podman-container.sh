@@ -12,12 +12,11 @@ declare -r __PODMAN_CONTAINER_VOLUME_TARGET_GRAPHROOT_USER_PODMAN="/home/podman/
 
 # podman_container_run()
 podman_container() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     podman_options=(
         "--user=${__PODMAN_CONTAINER_USER}"
         "--security-opt=label=disable"
-        "--mount=type=bind,src=./,target=${__PODMAN_CONTAINER_WORKDIR},ro=true,bind-nonrecursive,bind-propagation=slave,no-dereference"
         "--workdir=${__PODMAN_CONTAINER_WORKDIR}"
         "--volume=${__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN}:${__PODMAN_CONTAINER_VOLUME_TARGET_GRAPHROOT_USER_PODMAN}"
         "--rm"
@@ -33,10 +32,10 @@ podman_container() {
            ${@}
 }
 
-if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
-    declare __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
-    # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh
-    . "$__bash_utils_base_config_logging"
-    unset __bash_utils_base_config_logging
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
 fi

@@ -49,7 +49,7 @@ USAGE
 # env:
 #   * XTRACE=1 - enable bash xtrace for this script.
 main() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     local -a podman_secret_create_options=("--ignore")
     local prefix=""
@@ -60,7 +60,7 @@ main() {
                 exit 0
                 ;;
             l)
-                debug "appending ${OPTARG} to podman_secret_create_options"
+                log_debug "appending ${OPTARG} to podman_secret_create_options"
                 podman_secret_create_options+=(--label="${OPTARG}")
                 ;;
             p)
@@ -68,34 +68,35 @@ main() {
                 ;;
             :)
                 usage
-                fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}"
+                log_fatal "${ERROR_OPTION_REQUIRED}: -${OPTARG}"
                 ;;
             ?)
                 usage
-                fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}"
+                log_fatal "${ERROR_OPTION_UNKNOWN}: -${OPTARG}"
                 ;;
         esac
     done
-    [ -z "${prefix:-}" ] && { usage; fatal "$ERROR_OPTION_REQUIRED: -p"; }
+    [ -z "${prefix:-}" ] && { usage; log_fatal "$ERROR_OPTION_REQUIRED: -p"; }
 
     local -r prefix podman_secret_create_options
-    debug "$(declare -p prefix podman_secret_create_options)"
+    log_sensitive "$(declare -p prefix podman_secret_create_options)"
 
     k3s_tokens=(
         k3s-token
         k3s-token-agent
     )
 
-    info "Creating/Replacing podman secrets within podman container."
+    log_info "Starting podman secret creation..."
     # shellcheck disable=SC2068
     for s in ${k3s_tokens[@]}; do
-        info "Creating podman secret $s within podman container."
+        log_info "Creating podman secret $s within podman container."
+
         podman_container secret \
                          create \
                          ${podman_secret_create_options[@]} \
                          "$s" \
                          - \
-                         < <(k3s_gen_token) || fatal
+                         < <(k3s_gen_token) || log_fatal
     done
 
     local -Ar podman_filedriver_files=(
@@ -103,10 +104,10 @@ main() {
         ["${prefix}-secretsdata.json"]="$__PODMAN_SECRETS_FILEDRIVER_FILENAME"
     )
 
-    info "Creating podman secrets on the host using filedriver json files within the podman container graphroot."
+    log_info "Creating podman secrets on the host using filedriver json files within the podman container graphroot."
     # shellcheck disable=SC2068
     for s in ${!podman_filedriver_files[@]}; do
-        info "Creating/Replacing podman secret $s from volume=$__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN, file=${podman_filedriver_files[$s]}"
+        log_info "Creating/Replacing podman secret $s from volume=$__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN, file=${podman_filedriver_files[$s]}"
 
         podman secret \
             create \
@@ -117,17 +118,17 @@ main() {
     done
 }
 
-if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
-    declare __hack_env_vendor="hack/env/vendor.env"
-    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
-    # shellcheck source=../env/vendor.env
-    . "$__hack_env_vendor"
-    unset __hack_env_vendor
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
 fi
 
 if [ "${__hack_lib_k3s_gen_token_sourced:-}" != "true" ]; then
     declare __hack_lib_k3s_gen_token="hack/lib/k3s/k3s-gen-token.sh"
-    [ -f "$__hack_lib_k3s_gen_token" ] || fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_k3s_gen_token"
+    [ -f "$__hack_lib_k3s_gen_token" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $__hack_lib_k3s_gen_token"
     # shellcheck source=../lib/k3s/k3s-gen-token.sh
     . "$__hack_lib_k3s_gen_token"
     unset __hack_lib_k3s_gen_token
@@ -135,7 +136,7 @@ fi
 
 if [ "${__lib_podman_sourced:-}" != "true" ]; then
     declare __lib_podman_podman="hack/lib/podman/podman.sh"
-    [ -f "$__lib_podman_podman" ] || fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_podman"
+    [ -f "$__lib_podman_podman" ] || log_fatal "$ERROR_FILE_NOT_FOUND: $__lib_podman_podman"
     # shellcheck source=../lib/podman/podman.sh
     . "$__lib_podman_podman"
     unset __lib_podman_podman

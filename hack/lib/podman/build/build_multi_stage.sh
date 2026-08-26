@@ -16,19 +16,19 @@ podman_build() {
     local ctx_dir="$2"
 
 
-    info "Appending default podman build options."
+    log_info "Appending default podman build options."
 
     local -r opt_format_docker="--format=docker"
-    info "Adding option: $opt_format_docker"
+    log_info "Adding option: $opt_format_docker"
     build_opts+=("$opt_format_docker")
 
     local -r opt_build_threads="--build-arg=BUILD_THREADS=$(nproc)"
-    info "Adding option: $opt_build_threads"
+    log_info "Adding option: $opt_build_threads"
     build_opts+=("$opt_build_threads")
 
-    debug "build_opts=${build_opts[*]}"
-    debug "ctx_dir=$ctx_dir"
-    info "Starting podman build now."
+    log_debug "build_opts=${build_opts[*]}"
+    log_debug "ctx_dir=$ctx_dir"
+    log_info "Starting podman build now."
 
     # TODO add this command to an array, then execute the array string
     # Allows:
@@ -53,14 +53,14 @@ add_build_arg_file() {
 
     local -r build_arg_file_value="$context/$ARGFILE_CONF"
     if [ ! -f "$build_arg_file_value" ]; then
-        warn "Build arg file not found: ${build_arg_file_value}. No $ARGFILE_CONF will be added to build options."
+        log_warn "Build arg file not found: ${build_arg_file_value}. No $ARGFILE_CONF will be added to build options."
         return 0
     fi
 
     local -r opt_build_arg_file="--build-arg-file"
     local -r build_arg_file="$opt_build_arg_file=$build_arg_file_value"
 
-    info "Adding option: $build_arg_file"
+    log_info "Adding option: $build_arg_file"
     opts+=("$build_arg_file")
 }
 
@@ -82,46 +82,46 @@ load_podman_build_env() {
     local -n image_tag_primary_out="$4"
 
     local -r build_env="$BUILD_ENV_BASE/$image.env"
-    [ -f "$build_env" ] || fatal --status=5 "$build_env file not found."
+    [ -f "$build_env" ] || log_fatal --status=5 "$build_env file not found."
 
-    info "Sourcing $build_env"
+    log_info "Sourcing $build_env"
     # example.env is passed to shellcheck to provide dummy IDE descriptions for referenced variables
     # shellcheck source=../../../env/podman/build/example.env
     . "$build_env"
 
     if [ -n "${BUILD_ARGS[*]:-}" ]; then
-        info "BUILD_ARGS is set in $build_env. Using build-args: ${BUILD_ARGS[*]}"
+        log_info "BUILD_ARGS is set in $build_env. Using build-args: ${BUILD_ARGS[*]}"
 
         # shellcheck disable=SC2068
         for i in ${!BUILD_ARGS[@]}; do
             build_args_out+=(["$i"]="${BUILD_ARGS["$i"]}")
-            debug "build_args_out+=([$i]=${BUILD_ARGS[$i]})"
+            log_debug "build_args_out+=([$i]=${BUILD_ARGS[$i]})"
         done
     else
-        warn "BUILD_ARGS not set in $build_env. No additional build-args will be used."
+        log_warn "BUILD_ARGS not set in $build_env. No additional build-args will be used."
     fi
 
     if [ -n "${BUILD_CONTEXTS[*]:-}" ]; then
-        info "BUILD_CONTEXTS is set in $build_env. Keys and values will be added to "
+        log_info "BUILD_CONTEXTS is set in $build_env. Keys and values will be added to "
 
         # shellcheck disable=SC2068
         for i in ${!BUILD_CONTEXTS[@]}; do
             build_contexts_out+=(["$i"]="${BUILD_CONTEXTS["$i"]}")
-            debug "build_contexts_out+=[$i]=${BUILD_CONTEXTS[$i]})"
+            log_debug "build_contexts_out+=[$i]=${BUILD_CONTEXTS[$i]})"
         done
     else
-        warn "BUILD_CONTEXTS not set in $build_env. No additional build-contexts will be used."
+        log_warn "BUILD_CONTEXTS not set in $build_env. No additional build-contexts will be used."
     fi
 
     if [ -v IMAGE_TAG_PRIMARY ]; then
-        info "IMAGE_TAG_PRIMARY is set in $build_env. The final image built will be tagged: $IMAGE_TAG_PRIMARY"
+        log_info "IMAGE_TAG_PRIMARY is set in $build_env. The final image built will be tagged: $IMAGE_TAG_PRIMARY"
         image_tag_primary_out="$IMAGE_TAG_PRIMARY"
-        debug "image_tag_primary_out=$IMAGE_TAG_PRIMARY"
+        log_debug "image_tag_primary_out=$IMAGE_TAG_PRIMARY"
     else
-        warn "IMAGE_TAG_PRIMARY is unset in $build_env. The final image built will be tagged with $IMAGE_TAG_LATEST"
+        log_warn "IMAGE_TAG_PRIMARY is unset in $build_env. The final image built will be tagged with $IMAGE_TAG_LATEST"
         # shellcheck disable=SC2034
         image_tag_primary_out="$IMAGE_TAG_LATEST"
-        debug "image_tag_primary_out=$IMAGE_TAG_LATEST"
+        log_debug "image_tag_primary_out=$IMAGE_TAG_LATEST"
     fi
 
 }
@@ -147,9 +147,9 @@ add_build_primary_tag() {
 
     local -r opt_tag="--tag"
     local -r option_image_tag="$opt_tag=${local_repo}/${image}:${tag}"
-    debug "option_image_tag=$option_image_tag"
+    log_debug "option_image_tag=$option_image_tag"
 
-    info "Adding option: $option_image_tag"
+    log_info "Adding option: $option_image_tag"
     opts+=("$option_image_tag")
 }
 
@@ -173,9 +173,9 @@ add_build_options() {
     # shellcheck disable=SC2068
     for opt_value in ${!additional_opts[@]}; do
         new_build_opt="${option}=${opt_value}=${additional_opts["$opt_value"]}"
-        debug "new_build_opt=$new_build_opt"
+        log_debug "new_build_opt=$new_build_opt"
 
-        info "Adding option: $new_build_opt"
+        log_info "Adding option: $new_build_opt"
         opts+=("$new_build_opt")
     done
 }
@@ -223,14 +223,14 @@ add_container_files_ordered() {
     local ctx="$2"
 
     if [[ ${opts[*]} =~ ('-f'|'--file') ]]; then
-        warn "User provided Containerfiles found. Skipping addition of container files. NO Containerfiles will be added from ${ctx}"
+        log_warn "User provided Containerfiles found. Skipping addition of container files. NO Containerfiles will be added from ${ctx}"
         return 0
     fi
 
     # TODO Save containerfile list as a variable to log here. Pass this variable to mapfile.
-    # info "Building with Containerfiles: "
-    info "Gathering Containerfile(s) from context directory: $ctx"
-    warn "Container files will be processed in version order."
+    # log_info "Building with Containerfiles: "
+    log_info "Gathering Containerfile(s) from context directory: $ctx"
+    log_warn "Container files will be processed in version order."
     local -r containerfile="Containerfile"
     local -r opt_file="--file"
     mapfile -t -O "${#opts[@]}" "$1" < <(find "$ctx" -iname "$containerfile*" -printf "${opt_file}=%p\n" | sort --sort=version)
@@ -252,25 +252,25 @@ build_context_get() {
     local -n ctx="$2"
 
     ctx="${opts[0]}"
-    [ -d "$ctx" ] || fatal "Context directory not found: $ctx"
+    [ -d "$ctx" ] || log_fatal "Context directory not found: $ctx"
     unset "opts[-1]"
 
-    info "Container build context directory: ${ctx}"
+    log_info "Container build context directory: ${ctx}"
 }
 
 # log_image_tags()
 #
-# Logs each tag in the provided array at info level.
+# Logs each tag in the provided array at log_info level.
 #
 # args:
 #   * 1) tags - nameref; array of image tag strings to log.
 log_image_tags() {
     local -n tags="$1"
 
-    info "The image will be tagged with the following:"
+    log_info "The image will be tagged with the following:"
     # shellcheck disable=SC2068
     for t in ${tags[@]}; do
-        info "--tag=${t}"
+        log_info "--tag=${t}"
     done
 }
 
@@ -313,16 +313,17 @@ podman_build_with_options() {
                 "$context"
 }
 
-if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
-    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 1; }
-    # shellcheck source=../../logging.sh
-    . "$__bash_utils_base_config_logging"
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../../../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
 fi
 
 if [ "${__podman_build_constants_sourced:-}" != "true" ]; then
     declare -r __podman_build_constants_path="hack/lib/podman/build/constants.env"
-    [ -f "$__podman_build_constants_path" ] || fatal --status=5 "$__podman_build_constants_path file not found."
+    [ -f "$__podman_build_constants_path" ] || log_fatal --status=5 "$__podman_build_constants_path file not found."
 
     # shellcheck source=constants.env
     . "$__podman_build_constants_path"

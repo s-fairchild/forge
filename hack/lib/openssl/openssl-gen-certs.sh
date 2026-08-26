@@ -2,18 +2,18 @@
 #
 # shellcheck shell=bash
 
-declare -r __lib_gen_ssl_certs_sourced="true"
+declare -r __hack_lib_openssl_gen_certs_sourced="true"
 
 # openssl_gen_private_key()
 #
 # Generates an ECC private key with openssl and saves it as a podman secret.
 # Outputs the podman secret ID.
 openssl_gen_private_key() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    log_debug "Starting ${FUNCNAME[0]}()"
 
     openssl ecparam \
-        -name prime256v1 \
-        -genkey
+            -name prime256v1 \
+            -genkey
 }
 
 usage_openssl_gen_self_signed_certificate() {
@@ -36,9 +36,9 @@ USAGE
 # openssl_gen_self_signed_certificate()
 #
 openssl_gen_self_signed_certificate() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r input="$(cat)"
-    [ -z "$input" ] && fatal "$__fatal_msg_stdin_null"
+    [ -z "$input" ] && log_fatal "$ERROR_STDIN_NULL"
 
     local -i days=1825
     local subj="/C=US/ST=New York/L=New York City/O=Local Ignition Server/CN=ignition.local"
@@ -47,27 +47,25 @@ openssl_gen_self_signed_certificate() {
         case "$opt" in
             h) usage_openssl_gen_self_signed_certificate; return 0 ;;
             d)
-                debug "Updating Expiration Days"
+                log_debug "Updating Expiration Days"
                 days=$OPTARG
                 ;;
             s)
-                debug "Updating subject"
                 subj="$OPTARG"
-                debug "$(declare -p subj)"
+                log_sensitive "$(declare -p subj)"
                 ;;
             a)
-                debug "Appending SAN value"
                 san_values+=("$OPTARG")
-                debug "$(declare -p san_values)"
+                log_sensitive "$(declare -p san_values)"
                 ;;
             :)
                 usage_openssl_gen_self_signed_certificate
-                error "$ERROR_ARG_REQUIRED: -${OPTARG} requires an argument"
+                log_error "-${OPTARG} ${ERROR_OPTION_ARG_REQUIRED}"
                 return 1
                 ;;
             ?)
                 usage_openssl_gen_self_signed_certificate
-                error "$ERROR_OPTION_UNKNOWN: -${OPTARG}"
+                log_error "-${OPTARG} ${ERROR_OPTION_UNKNOWN}"
                 return 1
                 ;;
         esac
@@ -87,11 +85,18 @@ openssl_gen_self_signed_certificate() {
         <<< "$input"
 }
 
-if [ "${__bash_utils_base_config_logging_sourced:-}" != "true" ]; then
-    declare -r __bash_utils_base_config_logging="hack/vendor/bash-utils/lib/base-config-logging.sh"
-    [ -f "$__bash_utils_base_config_logging" ] || { printf '%s\n' "failed to find file: $__bash_utils_base_config_logging" >&2; exit 5; }
-    # shellcheck source=../../vendor/bash-utils/lib/base-config-logging.sh
-    . "$__bash_utils_base_config_logging"
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
 fi
 
-declare -r __fatal_msg_stdin_null="stdin input cannot be null."
+if [ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]; then
+    declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
+    [ -f "$__vendor_bashkit_local_lib_bashkit_options_operands_utils" ] || log "$LOG_LEVEL_FATAL"
+    # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
+    . "$__vendor_bashkit_local_lib_bashkit_options_operands_utils"
+    unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
+fi

@@ -6,6 +6,7 @@
 # args:
 #   * $@) all arguments are passed to the container
 envsubst() {
+    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     local -r log_level="${PODMAN_LOG_LEVEL:-warn}"
     local -r image="docker.io/steve51516/envsubst:latest"
 
@@ -34,3 +35,11 @@ envsubst() {
 
 # Allow Makefile and other programs access
 export -f envsubst
+
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
+fi

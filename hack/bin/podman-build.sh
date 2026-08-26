@@ -11,7 +11,7 @@ set -o nounset \
 # derives the image name as its basename, and delegates to
 # podman_build_with_options() with any remaining caller-supplied options.
 main () {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
     # shellcheck disable=SC2034
     local -a options_podman_build=("$@")
 
@@ -21,7 +21,7 @@ main () {
     #   * -d context_dir
     local build_context_dir
     build_context_get options_podman_build build_context_dir
-    info "User provided options: ${options_podman_build[*]}"
+    log_info "User provided options: ${options_podman_build[*]}"
 
     local -r build_image="$(basename "$build_context_dir")"
 
@@ -29,20 +29,20 @@ main () {
                               "$build_image" \
                               "$build_context_dir"
 
-    info "Complete."
+    log_info "Complete."
 }
 
-if [ "${__hack_env_vendor_sourced:-}" != "true" ]; then
-    declare __hack_env_vendor="hack/env/vendor.env"
-    [ -f "$__hack_env_vendor" ] || { printf '%s\n' "failed to find file: $__hack_env_vendor" >&2; exit 1; }
-    # shellcheck source=../env/vendor.env
-    . "$__hack_env_vendor"
-    unset __hack_env_vendor
+if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
+    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
+    # shellcheck source=../vendor/bash-logger-adapter/adapter.sh
+    . "$__bash_logger_adapter_path"
+    unset __bash_logger_adapter_path
 fi
 
 if [ "${__podman_build_multi_stage_sourced:-}" != "true" ]; then
     declare __podman_build_multi_stage_path="hack/lib/podman/build/build_multi_stage.sh"
-    [ -f "$__podman_build_multi_stage_path" ] || fatal "$__podman_build_multi_stage_path file not found."
+    [ -f "$__podman_build_multi_stage_path" ] || log_fatal "$__podman_build_multi_stage_path file not found."
     # shellcheck source=../lib/podman/build/build_multi_stage.sh
     . "$__podman_build_multi_stage_path"
     unset __podman_build_multi_stage_path
