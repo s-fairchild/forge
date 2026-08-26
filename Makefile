@@ -56,16 +56,25 @@ k3s-tokens-generate-prod:
 deploy_butane_path := deploy/butane
 
 ignition-gen-base: kube-manifests-gen-base
-	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/base/main.bu -s base
+	hack/bin/ignition-gen-main.sh \
+					-f ${deploy_butane_path}/base/main.bu \
+					-p base \
+					-l environment=base
 
 ignition-gen-staging: kube-manifests-gen-staging
-	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/staging/main.bu -s staging
+	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/staging/main.bu \
+								  -p staging \
+								  -l environment=staging
 
 ignition-gen-rpi4-0: k3s-tokens-generate
-	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/rpi4-0/main.bu -s rpi4-0
+	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/rpi4-0/main.bu \
+								  -p rpi4-0 \
+								  -l environment=rpi4-0
 
 ignition-gen-prod: kube-manifests-gen-all k3s-tokens-generate-prod
-	hack/bin/ignition-gen-main.sh -b ${deploy_butane_path}/overlays/prod/main.bu -s prod
+	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/prod/main.bu \
+								  -p prod \
+								  -l environment=prod
 
 ignition-serve-gen-certs-base:
 	hack/bin/ignition-gen-serving-certs.sh base \
