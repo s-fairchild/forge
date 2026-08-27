@@ -7,12 +7,14 @@ storage:
     format: btrfs
     wipe_filesystem: true
     label: root
+    options:
+      - --checksum
+      - sha256
+      - --features
+      - squota
     mount_options:
       - compress=zstd:3
       - x-systemd.device-timeout=0
-      - barrier
-      - datasum
-      - rescue=usebackuproot
       - discard=async
 
   - device: /dev/mapper/var
@@ -20,10 +22,12 @@ storage:
     format: btrfs
     with_mount_unit: true
     label: var
+    options:
+      - --checksum
+      - sha256
+      - --features
+      - squota
     mount_options:
       - compress=zstd:3
       - x-systemd.device-timeout=0
-      - barrier
-      - datasum
-      - rescue=usebackuproot
       - discard=async
