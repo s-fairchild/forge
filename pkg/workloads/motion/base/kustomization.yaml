@@ -1,51 +1,51 @@
 ---
 resources:
-- certificates/motion-webcontrol-server-cert.yaml
-- certificates/motion-client-cert.yaml
-- pvc/recordings-pvc.yaml
-- deployment.yaml
-- namespace.yaml
-- ingress-routes/webcontrol-svc-ir.yaml
-- middlewares/webcontrol-svc-https-redirect-mw.yaml
-- middlewares/webcontrol-svc-secured-chain-mw.yaml
-- services/webcontrol-svc.yaml
+  - certificates/motion-webcontrol-server-cert.yaml
+  - certificates/motion-client-cert.yaml
+  - pvc/recordings-pvc.yaml
+  - deployment.yaml
+  - namespace.yaml
+  - ingress-routes/webcontrol-svc-ir.yaml
+  - middlewares/webcontrol-svc-https-redirect-mw.yaml
+  - middlewares/webcontrol-svc-secured-chain-mw.yaml
+  - services/webcontrol-svc.yaml
 
 generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
-- name: motion-conf-cm
-  namespace: motion
-  behavior: create
-  files:
-    - configmap/motion.conf
+  - name: motion-conf-cm
+    namespace: motion
+    behavior: create
+    files:
+      - configmap/motion.conf
 
-- name: motion-system-conf
-  namespace: motion
-  behavior: create
-  envs:
-  - configmap/motion-system-conf.env
+  - name: motion-system-conf
+    namespace: motion
+    behavior: create
+    envs:
+      - configmap/motion-system-conf.env
 
-- name: motion-image-conf
-  namespace: motion
-  behavior: create
-  envs:
-  - configmap/motion-image-conf.env
+  - name: motion-image-conf
+    namespace: motion
+    behavior: create
+    envs:
+      - configmap/motion-image-conf.env
 
-- name: motion-movies-conf
-  namespace: motion
-  behavior: create
-  envs:
-  - configmap/motion-movies-conf.env
+  - name: motion-movies-conf
+    namespace: motion
+    behavior: create
+    envs:
+      - configmap/motion-movies-conf.env
 
-- name: motion-webcontrol-conf
-  namespace: motion
-  behavior: create
-  envs:
-  - configmap/motion-webcontrol-conf.env
+  - name: motion-webcontrol-conf
+    namespace: motion
+    behavior: create
+    envs:
+      - configmap/motion-webcontrol-conf.env
 
-- name: motion-stream-conf
-  namespace: motion
-  behavior: create
-  envs:
-  - configmap/motion-stream-conf.env
+  - name: motion-stream-conf
+    namespace: motion
+    behavior: create
+    envs:
+      - configmap/motion-stream-conf.env
