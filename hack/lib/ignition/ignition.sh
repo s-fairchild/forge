@@ -78,7 +78,10 @@ ignition_gen() {
 #   * 4) jq_bounds_check - string; jq `def bounds_check(expr): ...;` snippet shared with
 #         ignition_merge_write_entry()'s jq call.
 ignition_merge_read_inline_path() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    # $1 (config_json) accumulates inlined secrets as the merge loop in
+    # ignition_gen_config_merge_inlines() progresses, so it's redacted here rather than
+    # dumped via $* -- everything else about the call is still worth tracing normally.
+    debug "Starting ${FUNCNAME[0]}(<config_json redacted> $2 $3 $4)"
 
     # shellcheck disable=SC2068
     require_operands 4 $@ || return 1
@@ -160,7 +163,9 @@ ignition_merge_compile_entry() {
 #   * 5) ignition_json     - string; compiled ignition JSON to inline at this entry.
 #   * 6) verification_hash - string; "sha512-<hex>" formatted hash of ignition_json.
 ignition_merge_write_entry() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+    # $1 (config_json) and $5 (ignition_json) may carry secret-bearing content, so both are
+    # redacted here rather than dumped via $* -- everything else is still traced normally.
+    debug "Starting ${FUNCNAME[0]}(<config_json redacted> $2 $3 $4 <ignition_json redacted> $6)"
 
     require_operands 6 "$@" || return 1
     local -r config_json="$1"
@@ -311,7 +316,7 @@ get_secrets_from_env() {
     fi
 
     if [ -v SECRET_FILES ]; then
-        log_sensitive "$(declare -p SECRET_FILES)"
+        sensitive "$(declare -p SECRET_FILES)"
         # TODO directly add the SECRET_IDS returned here.
         podman_secret_create_from_file -l "env=$config_env" SECRET_FILES
         local f
@@ -358,7 +363,7 @@ source_env_files() {
                 return 1
             fi
 
-            log_sensitive "Sourcing $e"
+            sensitive "Sourcing $e"
             # shellcheck source=../../../deploy/butane/overlays/prod/secrets.env
             . "$e"
         fi

@@ -184,6 +184,15 @@ warn()  { log "$LOG_LEVEL_WARN" "$*"; }
 info()  { log "$LOG_LEVEL_INFO" "$*"; }
 debug() { log "$LOG_LEVEL_DEBUG" "$*"; }
 
+# sensitive(message...)
+#
+# Logs a message to the console only -- never to a log file or the system journal, regardless
+# of configured sinks. Wraps bash-logger's log_sensitive() directly rather than routing through
+# log()/LOG_LEVEL_*, since sensitive output isn't a severity level (it hardcodes LOG_LEVEL_INFO
+# internally) but a distinct sink policy. Use for secrets/tokens that must stay visible in an
+# interactive run but must never be persisted.
+sensitive() { _bash_logger_adapter_call log_sensitive "$*"; }
+
 declare -r LOG_LEVEL_WARNING="$LOG_LEVEL_WARN"
 declare -r LOG_LEVEL_ERR="$LOG_LEVEL_ERROR"
 declare -r LOG_LEVEL_CRIT="$LOG_LEVEL_CRITICAL"
