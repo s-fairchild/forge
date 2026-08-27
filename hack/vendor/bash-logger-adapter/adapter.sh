@@ -135,7 +135,17 @@ bash_logger_adapter_apply_overrides() {
     # --quiet's console-off behavior) take effect over the configured LOG_LEVEL, matching what a
     # caller means by passing -v/-q. (An earlier version of this file instead threw away --level
     # entirely whenever verbose was set, which was a latent bug, not a documented quirk.)
-    local -a init_opts=(--level "$cli_log_level")
+    #
+    # --stderr-level is pinned to DEBUG (the least severe level) so bash-logger routes every log
+    # message to stderr, never stdout. Nearly every function across hack/lib, hack/bin, and
+    # bashkit opens with a `debug "Starting ${FUNCNAME[0]}(...)"` trace, and some of those
+    # functions are called via command substitution (e.g. `app="$(get_app_name "$k")"` in
+    # kube-manifests-gen.sh) expecting only their real return value on stdout. bash-logger's own
+    # default only sends ERROR-and-worse to stderr, so raising verbosity enough to actually emit
+    # those DEBUG/INFO/NOTICE/WARN traces (e.g. LOG_LEVEL=7) previously leaked log lines into
+    # stdout and corrupted the captured value. Pinning stderr routing here, once, keeps stdout
+    # clean at any verbosity without having to fix every call site individually.
+    local -a init_opts=(--level "$cli_log_level" --stderr-level "$LOG_LEVEL_DEBUG")
 
     # CLI flag > env var: a CLI -v/-q wins outright; otherwise fall back to the env-tier values
     # captured at source time (__bash_logger_adapter_env_*).
