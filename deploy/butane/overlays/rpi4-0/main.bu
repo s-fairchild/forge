@@ -14,6 +14,6 @@ ignition:
     - inline: deploy/butane/base/system-config.bu
     - inline: deploy/butane/base/usr.bu
 
-    - inline: deploy/butane/overlays/rpi4-0/storage.bu
+    - inline: deploy/butane/overlays/rpi4-0/storage/disks.bu
     - inline: deploy/butane/overlays/rpi4-0/system-config.bu
     - inline: deploy/butane/overlays/rpi4-0/usr.bu

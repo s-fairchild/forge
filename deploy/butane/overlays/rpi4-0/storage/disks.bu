@@ -1,6 +1,9 @@
 ---
 variant: fcos
 version: 1.7.0
+boot_device:
+  layout: aarch64
+
 storage:
   disks:
   - device: /dev/disk/by-id/coreos-boot-disk
