@@ -7,7 +7,12 @@ TITAN_LOCAL_SHARE_DIR := $(HOME)/.local/share/titan/installer
 IMAGES_DIR := $(TITAN_LOCAL_SHARE_DIR)/images
 STREAM := stable
 
-installer-download-baremetal:
+help: ## Show this help message
+	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-32s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+.PHONY: help
+
+installer-download-baremetal: ## Download the FCOS bare-metal ISO into IMAGES_CUSTOMIZED_BASE_DIR
 	mkdir -p $(IMAGES_CUSTOMIZED_BASE_DIR)
 	hack/vendor/bashkit/local/bin/coreos-installer \
 		-m type=bind,src=$(PWD)/$(DEPLOY_INSTALLER_DIR),target=$(PWD)/$(DEPLOY_INSTALLER_DIR) \
@@ -18,7 +23,7 @@ installer-download-baremetal:
 		--format iso \
 		--directory $(IMAGES_CUSTOMIZED_BASE_DIR)
 
-installer-download-libvirt:
+installer-download-libvirt: ## Download the FCOS qemu qcow2.xz image into ~/.local/share/libvirt/images
 
 	libvirt_images_dir=$(HOME)/.local/share/libvirt/images
 	mkdir -p $${libvirt_images_dir}
@@ -47,7 +52,7 @@ INSTALLER_DIR_PROD := deploy/butane/overlays/$(PROD_NAME)/installer
 
 INSTALL_BUTANE_NAME := install.bu
 
-installer-ignition-gen-base:
+installer-ignition-gen-base: ## Compile the base installer ignition config (STALE: -b/-n flags no longer match ignition-gen-main.sh's -f/-p getopts)
 	hack/bin/ignition-gen-main.sh -b $(INSTALLER_DIR_BASE)/$(INSTALL_BUTANE_NAME) \
 								-n $(SECRET_IGNITION_FINAL_BASE_NAME) \
 								-l env=base \
@@ -61,14 +66,14 @@ installer-ignition-gen-base:
 								# -l type=installer \
 								# --
 
-installer-ignition-gen-prod:
+installer-ignition-gen-prod: ## Compile the prod installer ignition config (STALE: -b/-n flags no longer match ignition-gen-main.sh's -f/-p getopts)
 	hack/bin/ignition-gen-main.sh -b $(INSTALLER_DIR_PROD)/$(INSTALL_BUTANE_NAME) \
 								-n $(SECRET_IGNITION_FINAL_PROD_NAME) \
 								-l env=prod \
 								-l type=installer \
 								--
 
-installer-ignition-gen-all: installer-ignition-gen-base installer-ignition-gen-prod
+installer-ignition-gen-all: installer-ignition-gen-base installer-ignition-gen-prod ## Compile the base and prod installer ignition configs
 
 HACK_LIB_DIR := hack/lib
 INSTALLER_LIB := $(HACK_LIB_DIR)/ignition/installer.sh
@@ -89,7 +94,7 @@ FILES_PROD_LIVE_DIR := $(INSTALLER_DIR_PROD)/$(FILES_LIVE_DIR)
 # iso_out="/dev/sdc"
 # iso_in="coreos-installer/iso/fedora-coreos-43.20251214.3.0-live-iso.x86_64.iso"
 # sudo dd if="$iso_in" of="$iso_out" status=progress && sudo sync
-installer-iso-customize-base: installer-ignition-gen-base
+installer-iso-customize-base: installer-ignition-gen-base ## Embed base ignition into the newest ISO under IMAGES_DIR via coreos-installer
 	mkdir -p $(IMAGES_DIR) $(IMAGES_CUSTOMIZED_BASE_DIR)
 	iso="$$(find $(IMAGES_DIR) -type f -iname "*.iso" | sort -V | head -n1)"
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
@@ -107,7 +112,7 @@ installer-iso-customize-base: installer-ignition-gen-base
 					--output $${iso_out} \
 					$${iso}
 
-installer-iso-customize-prod: installer-ignition-gen-prod
+installer-iso-customize-prod: installer-ignition-gen-prod ## Embed prod ignition into the newest ISO under IMAGES_DIR via coreos-installer
 	mkdir -p $(IMAGES_DIR) $(IMAGES_CUSTOMIZED_PROD_DIR)
 	iso="$$(find $(IMAGES_DIR) -type f -iname "*.iso" | sort -V | head -n1)"
 	iso_out=$(IMAGES_CUSTOMIZED_PROD_DIR)/$$(basename $${iso/.iso/_custom.iso})
@@ -127,7 +132,7 @@ installer-iso-customize-prod: installer-ignition-gen-prod
 					$${iso}
 
 FCOS_STAGING_NETWORK=fcos-staging
-staging-network-build:
+staging-network-build: ## Define/activate/autostart the fcos-staging libvirt network (STALE path: missing local/ segment)
 	. hack/vendor/bashkit/lib/virsh/virsh-network.sh
 
 	virsh_net_is_defined $(FCOS_STAGING_NETWORK) \
@@ -142,7 +147,7 @@ staging-network-build:
 LIBVIRT_ETC_DIR := $(DEPLOY_INSTALLER_DIR)/etc/libvirt
 LIBVIRT_ENV_RICK_STAGING := $(LIBVIRT_ETC_DIR)/rick-staging.env
 
-install-staging-vm:
+install-staging-vm: ## Idempotently define and create the rick-staging libvirt VM from an ignition podman secret
 	. $(LIBVIRT_ENV_RICK_STAGING)
 
 	podman secret exists "$${IGNITION_SECRET}" \
