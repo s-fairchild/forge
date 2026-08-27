@@ -173,7 +173,10 @@ main() {
         esac
     done
     shift $((OPTIND - 1))
-    bash_logger_adapter_apply_overrides "$cli_verbose" "$cli_quiet" "$__bash_logger_adapter_env_log_level"
+
+    bash_logger_adapter_apply_overrides "$cli_verbose" \
+                                        "$cli_quiet" \
+                                        "$__bash_logger_adapter_env_log_level"
 
     : "${ignition_secret:=ignition-staging}"
     [ -n "$libvirt_dir" ] || { usage; fatal "-l $ERROR_OPTION_REQUIRED"; }

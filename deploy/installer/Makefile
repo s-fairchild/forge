@@ -120,38 +120,48 @@ installer-iso-customize-prod: installer-ignition-gen-prod ## Embed prod ignition
 
 	. $(INSTALLER_LIB)
 	coreos-installer -s $(SECRET_IGNITION_FINAL_PROD_NAME) \
-					-m "type=bind,src=$(FILES_PROD_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_PROD_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
-					-m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
-					-m "type=bind,src=$(IMAGES_CUSTOMIZED_PROD_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_PROD_DIR),bind-propagation=rslave,no-dereference" \
-					-- \
-	 				iso \
-					customize \
-					--network-nmstate $(FILES_PROD_LIVE_DIR)/eno1.nmstate \
-					--dest-ignition /$(PODMAN_SECRETS_MOUNT_DIR)/$(SECRET_IGNITION_FINAL_PROD_NAME) \
-					--output $${iso_out} \
-					$${iso}
+					 -m "type=bind,src=$(FILES_PROD_LIVE_DIR),target=$${__INSTALLER_WORKDIR}/$(FILES_PROD_LIVE_DIR),bind-propagation=rslave,no-dereference,ro=true" \
+					 -m "type=bind,src=$(IMAGES_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_DIR),bind-propagation=rslave,no-dereference,ro=true" \
+					 -m "type=bind,src=$(IMAGES_CUSTOMIZED_PROD_DIR),target=$${__INSTALLER_WORKDIR}/$(IMAGES_CUSTOMIZED_PROD_DIR),bind-propagation=rslave,no-dereference" \
+					 -- \
+	 				 iso \
+					 customize \
+					 --network-nmstate $(FILES_PROD_LIVE_DIR)/eno1.nmstate \
+					 --dest-ignition /$(PODMAN_SECRETS_MOUNT_DIR)/$(SECRET_IGNITION_FINAL_PROD_NAME) \
+					 --output $${iso_out} \
+					 $${iso}
 
 FCOS_STAGING_NETWORK=fcos-staging
 staging-network-build: ## Define/activate/autostart the fcos-staging libvirt network (STALE path: missing local/ segment)
 	. hack/vendor/bashkit/lib/virsh/virsh-network.sh
 
-	virsh_net_is_defined $(FCOS_STAGING_NETWORK) \
-		|| virsh_net_define $(FCOS_STAGING_NETWORK) "Fedora CoreOS Staging Environment Network"
+	if ! virsh_net_is_defined $(FCOS_STAGING_NETWORK); then
+		virsh_net_define $(FCOS_STAGING_NETWORK) "Fedora CoreOS Staging Environment Network"
+	fi
 	
-	virsh_net_is_active $(FCOS_STAGING_NETWORK) \
-		|| virsh_net_activate $(FCOS_STAGING_NETWORK)
+	if ! virsh_net_is_active $(FCOS_STAGING_NETWORK); then
+		virsh_net_activate $(FCOS_STAGING_NETWORK)
+	fi
 	
-	virsh_net_is_autostart $(FCOS_STAGING_NETWORK) \
-		|| virsh_net_autostart $(FCOS_STAGING_NETWORK)
+	if ! virsh_net_is_autostart $(FCOS_STAGING_NETWORK); then
+		virsh_net_autostart $(FCOS_STAGING_NETWORK)
+	fi
 
-LIBVIRT_ETC_DIR := $(DEPLOY_INSTALLER_DIR)/etc/libvirt
-LIBVIRT_ENV_RICK_STAGING := $(LIBVIRT_ETC_DIR)/rick-staging.env
+LIBVIRT_ENV_RICK_STAGING := $(DEPLOY_INSTALLER_DIR)/etc/libvirt/rick-staging.env
 
 install-staging-vm: ## Idempotently define and create the rick-staging libvirt VM from an ignition podman secret
+	# hack/bin/ensure-staging-vm.sh (like every non-bashkit consumer) sources its
+	# dependencies relative to the repo root, and LIBVIRT_DIR in the env file below
+	# is itself a repo-root-relative path -- so this recipe must run from there,
+	# regardless of whether it was reached via `make -C deploy/installer ...`.
+	cd "$$(git rev-parse --show-toplevel)"
+
 	. $(LIBVIRT_ENV_RICK_STAGING)
 
-	podman secret exists "$${IGNITION_SECRET}" \
-		|| { echo "podman secret $${IGNITION_SECRET} does not exist. Generate it first (e.g. 'make ignition-gen-staging' from the repo root)." >&2; exit 1; }
+	if ! podman secret exists "$${IGNITION_SECRET}"; then
+		echo "podman secret $${IGNITION_SECRET} does not exist. Generate it first (e.g. 'make ignition-gen-staging' from the repo root)." >&2
+		exit 1
+	fi
 
 	hack/bin/ensure-staging-vm.sh \
 		-l "$${LIBVIRT_DIR}" \
