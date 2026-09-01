@@ -6,7 +6,7 @@
      be bumped when the base image is updated to a newer FCOS stream release. -->
 <volume type="file">
   <name>rick-staging.qcow2</name>
-  <capacity unit="GiB">10</capacity>
+  <capacity unit="GiB">32</capacity>
   <target>
     <format type="qcow2"/>
   </target>

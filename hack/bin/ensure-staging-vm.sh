@@ -117,6 +117,13 @@ launch_domain() {
 
     local ignition merged_xml
     ignition="$(podman_secret_showsecret "$ignition_secret")"
+    # virt-xml's own --qemu-commandline value parser treats a literal double-quote as its
+    # own quoting delimiter (the same mini-syntax --disk path=...,size=... uses) and silently
+    # drops every one it sees rather than erroring -- a backslash in front of it is what
+    # survives virt-xml's parsing as a literal quote. This must run before the comma
+    # doubling below: the two escapes target disjoint characters, but this keeps the
+    # ignition JSON's own quotes intact before QEMU's separate opts-parsing layer is dealt with.
+    ignition="${ignition//\"/\\\"}"
     # QEMU's -fw_cfg option is itself comma-separated (name=...,string=...); a literal
     # comma anywhere in the ignition JSON must be doubled or QEMU misparses everything
     # after the first one as bogus sub-options.

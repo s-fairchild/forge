@@ -140,8 +140,12 @@ ignition_merge_compile_entry() {
     fi
 
     debug "Generating verification hash: $butane_file_path"
+    # printf '%s' (no here-string): a here-string would append a trailing newline before
+    # hashing, but ignition_merge_write_entry() embeds ignition_json_out verbatim via
+    # printf '%s' (no trailing newline) -- the hash must cover the exact bytes that get
+    # embedded, or Ignition rejects the merge config with a verification hash mismatch.
     # shellcheck disable=SC2034
-    if ! verification_hash_out="$(sha512sum_gen <<< "$ignition_json_out" | checksum_format_verification_hash_sha512)"; then
+    if ! verification_hash_out="$(printf '%s' "$ignition_json_out" | sha512sum_gen_stdin | checksum_format_verification_hash_sha512)"; then
         error "failed to generate verification hash for: $butane_file_path"
         return 1
     fi
