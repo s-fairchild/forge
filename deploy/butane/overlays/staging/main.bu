@@ -22,4 +22,5 @@ ignition:
 
       - inline: deploy/butane/overlays/staging/etc-containers-secrets.bu
       - inline: deploy/butane/overlays/staging/etc-containers-systemd.bu
+      - inline: deploy/butane/overlays/staging/etc-networkmanager.bu
       - inline: deploy/butane/overlays/staging/passwd.bu

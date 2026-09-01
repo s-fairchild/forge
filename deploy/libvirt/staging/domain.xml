@@ -54,13 +54,40 @@
     <controller type="pci" model="pcie-root-port"/>
     <controller type="pci" model="pcie-root-port"/>
     <controller type="pci" model="pcie-root-port"/>
-    <!-- rick-staging gets a static IP (192.168.150.10, see
-         ../staging/network.xml) directly reachable over virbr1, so no
-         portForward/hostfwd is needed to reach it from the host. -->
-    <interface type="network">
-      <source network="staging"/>
+    <!-- Bridge+NAT (network.xml) needs a privileged libvirtd and isn't available
+         under an unprivileged qemu:///session connection, so rick-staging uses
+         passt's userspace network stack instead: no host bridge, no root. The
+         guest statically configures the same 192.168.150.10/24 address itself
+         (see ../../butane/overlays/staging/etc-networkmanager.bu); the ip
+         element below just tells passt the same address (its -a flag) so its
+         built-in ARP/DHCP responders resolve correctly for that subnet, and
+         DHCP itself stays inert as a fallback if the static profile ever fails
+         to apply. There is no route element here: libvirt 12.0.0's qemu driver
+         accepts one in the domain XML schema but rejects it at "virsh create"
+         time with "Invalid attempt to set network interface guest-side IP
+         route, not supported by QEMU"; passt still derives a default gateway
+         on its own from the host's own default route even without one
+         configured here, and the guest's own static route to 192.168.150.1
+         (see etc-networkmanager.bu) is unaffected by this, since passt
+         forwards traffic transparently regardless of what gateway address the
+         guest thinks it's using. That 192.168.150.10 address only exists
+         inside passt's process, so the host can no longer reach it by routing
+         to it directly; ports the host needs are forwarded explicitly
+         instead. Host-side ports below start at 2222/16443 rather than the
+         guest's real 22/6443: passt (like any unprivileged process) can't
+         bind a host listener below 1024 under qemu:///session, and fails the
+         whole "virsh create" if asked to. -->
+    <interface type="user">
+      <backend type="passt"/>
       <mac address="52:54:00:9b:2f:47"/>
       <model type="virtio"/>
+      <ip address="192.168.150.10" family="ipv4" prefix="24"/>
+      <portForward proto="tcp">
+        <range start="2222" to="22"/>
+      </portForward>
+      <portForward proto="tcp">
+        <range start="16443" to="6443"/>
+      </portForward>
     </interface>
     <console type="pty"/>
     <channel type="unix">

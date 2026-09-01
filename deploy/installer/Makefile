@@ -14,6 +14,7 @@ help: ## Show this help message
 
 installer-download-baremetal: ## Download the FCOS bare-metal ISO into IMAGES_CUSTOMIZED_BASE_DIR
 	mkdir -p $(IMAGES_CUSTOMIZED_BASE_DIR)
+
 	hack/vendor/bashkit/local/bin/coreos-installer \
 		-m type=bind,src=$(PWD)/$(DEPLOY_INSTALLER_DIR),target=$(PWD)/$(DEPLOY_INSTALLER_DIR) \
 		-- \
@@ -24,7 +25,6 @@ installer-download-baremetal: ## Download the FCOS bare-metal ISO into IMAGES_CU
 		--directory $(IMAGES_CUSTOMIZED_BASE_DIR)
 
 installer-download-libvirt: ## Download the FCOS qemu qcow2.xz image into ~/.local/share/libvirt/images
-
 	libvirt_images_dir=$(HOME)/.local/share/libvirt/images
 	mkdir -p $${libvirt_images_dir}
 	chcon -t svirt_home_t $${libvirt_images_dir}
@@ -52,19 +52,15 @@ INSTALLER_DIR_PROD := deploy/butane/overlays/$(PROD_NAME)/installer
 
 INSTALL_BUTANE_NAME := install.bu
 
+# There is no installer-ignition-gen-staging target as it's not needed
+# The qemu base disk image is mounted and ignition is applied this way
+
 installer-ignition-gen-base: ## Compile the base installer ignition config (STALE: -b/-n flags no longer match ignition-gen-main.sh's -f/-p getopts)
 	hack/bin/ignition-gen-main.sh -b $(INSTALLER_DIR_BASE)/$(INSTALL_BUTANE_NAME) \
 								-n $(SECRET_IGNITION_FINAL_BASE_NAME) \
 								-l env=base \
 								-l type=installer \
 								--
-
-# installer-ignition-gen-staging:
-	# hack/bin/ignition-gen-main.sh -b $(INSTALLER_DIR_STAGING)/$(INSTALL_BUTANE_NAME) \
-								# -n $(SECRET_IGNITION_FINAL_STAGING_NAME) \
-								# -l env=prod \
-								# -l type=installer \
-								# --
 
 installer-ignition-gen-prod: ## Compile the prod installer ignition config (STALE: -b/-n flags no longer match ignition-gen-main.sh's -f/-p getopts)
 	hack/bin/ignition-gen-main.sh -b $(INSTALLER_DIR_PROD)/$(INSTALL_BUTANE_NAME) \
@@ -165,7 +161,6 @@ install-staging-vm: ## Idempotently define and create the rick-staging libvirt V
 
 	hack/bin/ensure-staging-vm.sh \
 		-l "$${LIBVIRT_DIR}" \
-		-n "$${NETWORK_NAME}" \
 		-p "$${POOL_NAME}" \
 		-d "$${VOLUME_NAME}" \
 		-m "$${DOMAIN_NAME}" \

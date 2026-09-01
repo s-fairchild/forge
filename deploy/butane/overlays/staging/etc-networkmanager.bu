@@ -1,0 +1,15 @@
+---
+variant: fcos
+version: 1.7.0
+# rick-staging's address is static on both ends now: passt (see
+# ../../../libvirt/staging/domain.xml) assigns 192.168.150.10 via its own
+# built-in DHCP server, but pinning it here too means boot no longer
+# depends on that DHCP round-trip succeeding, and DNS can point straight at
+# the real upstream resolver (passt forwards it like any other traffic)
+# instead of a synthetic address passt would otherwise hand out itself.
+storage:
+  files:
+    - path: /etc/NetworkManager/system-connections/staging.nmconnection
+      mode: 0600
+      contents:
+        local: etc/NetworkManager/system-connections/staging.nmconnection

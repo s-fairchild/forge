@@ -21,17 +21,22 @@ set -o nounset \
 
 usage() {
     cat <<USAGE >&2
-Usage: ${0##*/} -l libvirt_dir -n network_name -p pool_name -d volume_name -m domain_name [-s ignition_secret] [-v] [-q] [-h]
+Usage: ${0##*/} -l libvirt_dir -p pool_name -d volume_name -m domain_name [-n network_name] [-s ignition_secret] [-v] [-q] [-h]
 
-Idempotently defines a libvirt network, storage pool, and overlay disk volume from
-<libvirt_dir>/*.xml, then launches <domain_name> as a transient domain (virsh create)
-with the given podman secret's contents merged into a qemu:commandline -fw_cfg
-opt/com.coreos/config arg at launch time.
+Idempotently defines a libvirt storage pool and overlay disk volume (and, if -n is
+given, a libvirt network) from <libvirt_dir>/*.xml, then launches <domain_name> as a
+transient domain (virsh create) with the given podman secret's contents merged into a
+qemu:commandline -fw_cfg opt/com.coreos/config arg at launch time.
 
 Options:
-    -l libvirt_dir       Directory containing network.xml, pool.xml, volume.xml, and
-                          domain.xml for this VM domain (e.g. deploy/libvirt/staging).
-    -n network_name       libvirt network name to define/activate/autostart.
+    -l libvirt_dir       Directory containing pool.xml, volume.xml, and domain.xml (plus
+                          network.xml if -n is given) for this VM domain (e.g.
+                          deploy/libvirt/staging).
+    -n network_name       libvirt network name to define/activate/autostart. Omit this
+                          when the domain's own interface config doesn't reference a
+                          libvirt network (e.g. a passt/SLIRP user-mode interface) --
+                          bridge+NAT networks need a privileged libvirtd and can't be
+                          created under an unprivileged qemu:///session connection.
     -p pool_name          libvirt storage pool name to define/build/start/autostart.
     -d volume_name        Overlay disk volume name to create in the pool.
     -m domain_name        libvirt domain (VM) name to launch.
@@ -187,12 +192,15 @@ main() {
 
     : "${ignition_secret:=ignition-staging}"
     [ -n "$libvirt_dir" ] || { usage; fatal "-l $ERROR_OPTION_REQUIRED"; }
-    [ -n "$network" ]     || { usage; fatal "-n $ERROR_OPTION_REQUIRED"; }
     [ -n "$pool" ]        || { usage; fatal "-p $ERROR_OPTION_REQUIRED"; }
     [ -n "$volume" ]      || { usage; fatal "-d $ERROR_OPTION_REQUIRED"; }
     [ -n "$domain" ]      || { usage; fatal "-m $ERROR_OPTION_REQUIRED"; }
 
-    ensure_network "$libvirt_dir" "$network"
+    if [ -n "$network" ]; then
+        ensure_network "$libvirt_dir" "$network"
+    else
+        debug "no -n network given; skipping libvirt network provisioning"
+    fi
     ensure_pool "$libvirt_dir" "$pool"
     ensure_volume "$libvirt_dir" "$pool" "$volume"
     launch_domain "$libvirt_dir" "$domain" "$ignition_secret"
