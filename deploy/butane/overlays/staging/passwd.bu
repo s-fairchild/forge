@@ -3,10 +3,17 @@ variant: fcos
 version: 1.7.0
 passwd:
   users:
-  - name: root
-    ssh_authorized_keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDc5t81xw0LJtKe+QPlNvvkuZuQ5twTOSXfPs808NqRk steven@r10.expresso.lan
+    - name: root
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDc5t81xw0LJtKe+QPlNvvkuZuQ5twTOSXfPs808NqRk steven@r10.expresso.lan
 
-  - name: core
-    ssh_authorized_keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDc5t81xw0LJtKe+QPlNvvkuZuQ5twTOSXfPs808NqRk steven@r10.expresso.lan
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDc5t81xw0LJtKe+QPlNvvkuZuQ5twTOSXfPs808NqRk steven@r10.expresso.lan
+
+    - name: jellyfin
+      uid: 911
+      gecos: Jellyfin App System User
+      no_create_home: true
+      shell: /sbin/nologin
+      system: true

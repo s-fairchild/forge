@@ -10,16 +10,6 @@ passwd:
       shell: /sbin/nologin
       system: true
 
-    - name: jellyfin
-      uid: 911
-      gecos: Jellyfin App System User
-      no_create_home: true
-      groups:
-        - video
-        - render
-      shell: /sbin/nologin
-      system: true
-
 storage:
   directories:
     - path: /root/.bashrc.d
