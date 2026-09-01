@@ -3,31 +3,16 @@ variant: fcos
 version: 1.7.0
 storage:
   filesystems:
-  - device: /dev/disk/by-partlabel/root
-    format: btrfs
-    wipe_filesystem: true
-    label: root
-    options:
-      - --checksum
-      - sha256
-      - --features
-      - squota
-    mount_options:
-      - compress=zstd:3
-      - x-systemd.device-timeout=0
-      - discard=async
-
-  - device: /dev/mapper/var
-    path: /var
-    format: btrfs
-    with_mount_unit: true
-    label: var
-    options:
-      - --checksum
-      - sha256
-      - --features
-      - squota
-    mount_options:
-      - compress=zstd:3
-      - x-systemd.device-timeout=0
-      - discard=async
+    - device: /dev/disk/by-partlabel/root
+      format: btrfs
+      wipe_filesystem: true
+      label: root
+      options:
+        - --checksum
+        - sha256
+        - --features
+        - squota
+      mount_options:
+        - compress=zstd:3
+        - x-systemd.device-timeout=0
+        - discard=async
