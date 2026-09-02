@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# CDI (Containerized Data Importer) v1.66.0 operator
+# -- https://github.com/kubevirt/containerized-data-importer/releases/tag/v1.66.0
+#
+# Applied directly to the k3d/KubeVirt host cluster (hack/lib/kubevirt/kubevirt.sh),
+# not embedded into any FCOS node's ignition-delivered k3s manifests -- deliberately
+# flat (no base/staging/prod subdirectories anywhere under pkg/operators/cdi/) so
+# kube-manifests-gen.sh's `find pkg -type d -name "$overlay"` traversal can never match
+# anything under here.
+#
+# Kept separate from ../cr (the CDI custom resource) because the CR's CRD is registered
+# by this operator -- applying both in one batch races the CRD not existing yet;
+# cdi_install() applies and waits on this one first.
+resources:
+  - https://github.com/kubevirt/containerized-data-importer/releases/download/v1.66.0/cdi-operator.yaml

@@ -45,9 +45,11 @@ Submodules:
 │   │   ├── base/        # Shared FCOS config (containers, firewalld, sysctl, users…)
 │   │   └── overlays/
 │   │       ├── prod/    # x86 bare-metal node (rick.expresso.lan)
-│   │       ├── staging/ # libvirt development VM (rick-dev)
+│   │       ├── staging/ # KubeVirt development VM (rick-staging), runs on a local k3d cluster
 │   │       └── rpi4/    # Raspberry Pi 4 agent node
 │   ├── installer/       # Installer Makefile, downloaded FCOS ISOs, customised ISO variants
+│   ├── k3d/             # k3d cluster configs (staging today; prod later)
+│   ├── kubevirt/        # Per-overlay KubeVirt VirtualMachine/Namespace manifests
 │   └── ansible/         # Post-boot node configuration for edge nodes
 ├── hack/
 │   ├── bin/             # Executable scripts (ignition gen, token gen, manifest gen…)
@@ -193,7 +195,6 @@ Optional env var overrides: `LIBCAMERA_VERSION_GIT_TAG_OVERRIDE`, `RPICAM_APPS_V
 | Target | Description |
 |--------|-------------|
 | `installer-download-baremetal` | Download latest stable FCOS ISO |
-| `installer-download-libvirt` | Download latest FCOS qcow2 image for libvirt |
 | `installer-ignition-gen-base` | Compile base installer ignition → podman secret |
 | `installer-ignition-gen-prod` | Compile prod installer ignition → podman secret |
 | `installer-ignition-gen-all` | Compile base + prod installer ignition configs |
@@ -234,7 +235,7 @@ deploy/butane/
       main.bu         # Root config; lists all .bu files to merge under .ignition.config.merge[].inline
       secrets.env     # Declares SECRET_FILES array pointing to $HOME key files
       storage/        # disks.bu, filesystems.bu, luks.bu, raid.bu
-    staging/          # Dev VM overlay (libvirt, VM name rick-dev)
+    staging/          # Dev VM overlay (KubeVirt VM on a local k3d cluster, VM name rick-staging)
     rpi4/             # Raspberry Pi 4 agent node
 ```
 
@@ -280,7 +281,7 @@ Tokens are pre-generated before any node boots and embedded into ignition config
 
 ## Roadmap
 
-- [ ] Simplify the staging libvirt environment
+- [ ] Run KubeVirt directly on the `rick` prod host (`deploy/k3d/prod.yaml`), reusing the staging k3d/KubeVirt automation
 - [ ] GitHub Actions CI: lint and validate Quadlet container unit files
 - [ ] CIS hardening for k3s ([guide](https://docs.k3s.io/security/hardening-guide))
 - [ ] In-cluster container registry

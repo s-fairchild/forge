@@ -44,9 +44,13 @@ make kube-manifests-gen-all     # clean + base + staging + prod
 # Clean generated kube manifests
 make clean
 
-# Bring up / tear down the libvirt staging VM (see "Staging VM" below)
+# Bring up / tear down the k3d + KubeVirt staging VM (see "Staging VM" below)
 make staging-vm-up
 make staging-vm-down
+
+# Bring up / tear down the underlying k3d cluster itself (KubeVirt + CDI auto-installed)
+make k3d-cluster-create-staging
+make k3d-cluster-delete-staging
 ```
 
 `XTRACE=1` enables `set -x` tracing on most `hack/bin/*.sh` entry points. `kube-manifests-gen.sh` and `podman-build.sh` use `DEBUG=1` instead. Verbosity for the bash-logger-backed scripts also honors `VERBOSE=1`/`QUIET=1` env vars, and several entry points additionally accept `-v`/`-q` CLI flags that take precedence over those env vars for that invocation (see "Logging" below).
@@ -104,7 +108,7 @@ deploy/butane/
       secrets.env     # declares SECRET_FILES array pointing to $HOME key files
       storage/        # disks.bu (partition layout), filesystems.bu (btrfs), luks.bu, raid.bu
       installer/      # install.bu — compiled separately via deploy/installer/Makefile
-    staging/          # dev VM overlay (libvirt, VM name rick-staging)
+    staging/          # dev VM overlay (KubeVirt VM on a local k3d cluster, VM name rick-staging)
     rpi4-0/           # Raspberry Pi 4 agent node
 ```
 
@@ -134,16 +138,27 @@ Creates podman secrets `k3s-token` and `k3s-token-agent` (skips existing secrets
 
 `k3s_gen_token()` tries `openssl rand -hex 32` (primary), falls back to `tr` then `shasum`/`sha256sum`. All produce 64 lowercase hex characters with no trailing newline — `podman_secret_create_replace_from_stdin` uses `printf '%s'` (not a here-string) to avoid a `\n` corrupting the stored token.
 
-## Staging VM (libvirt)
+## Staging VM (k3d + KubeVirt)
 
-`deploy/libvirt/staging/*.xml` (network/pool/volume/domain templates, untracked) plus `hack/bin/ensure-staging-vm.sh -s <ignition_secret>` idempotently define the staging libvirt network/pool/volume and launch `rick-staging` as a **transient** domain (`virsh create`, never persisted): the ignition secret's contents are merged into a `qemu:commandline -fw_cfg opt/com.coreos/config` arg at launch time via `virt-xml --edit --print-xml`, so the decrypted ignition JSON never touches a git-tracked or on-disk domain definition. Driven by `make staging-vm-up` (depends on `ignition-gen-staging`) / `make staging-vm-down`. Uses `hack/vendor/bashkit/local/lib/bashkit/virsh/*.sh` for the `virsh_net_*`/`virsh_pool_*`/`virsh_vol_*`/`virsh_dom_*` wrapper functions.
+Two clusters are involved and must not be conflated:
+- **Outer cluster** — a local [k3d](https://k3d.io) cluster (config: `deploy/k3d/staging.yaml`, cluster name `kubevirt-staging`) hosting [KubeVirt](https://kubevirt.io) + CDI (Containerized Data Importer). This is what actually runs the FCOS guest as a `VirtualMachine` resource.
+- **Inner cluster** — the k3s cluster that boots *inside* the FCOS guest via the normal ignition pipeline. This is unchanged by any of the above — still driven by `pkg/operators`/`pkg/workloads` + `apps_enabled` (see "Kubernetes Manifests").
+
+`k3d`, `kubectl`, and `helm` are used as **host** binaries for this — unlike the containerized butane/yq/kubectl-kustomize used by the offline manifest pipeline, these commands manage/talk to a live cluster over the network, the same category of host tooling `virsh`/`virt-xml` used to be.
+
+- `hack/bin/k3d-cluster-up.sh -f <k3d_config>` idempotently creates the k3d cluster (`k3d cluster create --config`, name read from `.metadata.name` via the containerized `yq()` wrapper) and installs KubeVirt + CDI via `hack/lib/kubevirt/kubevirt.sh` (`kubevirt_install`, `cdi_install`). `hack/bin/k3d-cluster-down.sh -f <k3d_config>` idempotently deletes it.
+- KubeVirt (`v1.9.0`) and CDI (`v1.66.0`) are each defined as two flat `kustomization.yaml`s under `pkg/operators/{kubevirt,cdi}/{operator,cr}/`, each `resources:`-referencing the matching pinned upstream GitHub release URL — reusing the repo's normal kustomize-based operator pattern rather than raw `kubectl apply -f <url>`. `operator`/`cr` are separate kustomizations (not one) because the CR's CRD is only registered once the operator Deployment is running — `kubevirt_install`/`cdi_install` apply+wait on `operator` before applying `cr`. These are applied directly to the k3d/KubeVirt host cluster via `kubectl apply -k`, **not** picked up by `kube-manifests-gen.sh`/`apps_enabled` — deliberately flat (no `base`/`staging`/`prod` subdirectories anywhere under them) so its `find pkg -type d -name "$overlay"` traversal structurally can't match anything inside, keeping them out of any FCOS node's ignition-delivered k3s manifests.
+- `hack/bin/kubevirt-vm-up.sh -f <vm.yaml> -n <namespace.yaml> -s <podman_ignition_secret>` applies the namespace, builds/applies a Kubernetes Secret (default name `ignition-payload`, key `userdata`) from the raw contents of the given podman secret (`podman_secret_showsecret "$secret" | jq -c`, matching `kubectl create secret generic ignition-payload --from-literal=userdata=...`), then applies the `VirtualMachine` manifest — its `cloudInitConfigDrive` volume references that Secret, which is how FCOS receives its ignition config under KubeVirt (no qemu fw_cfg involved). `hack/bin/kubevirt-vm-down.sh -f <vm.yaml>` deletes just the VM (`--ignore-not-found`); the k3d cluster and KubeVirt/CDI install are left running.
+- `deploy/kubevirt/staging/vm.yaml` — the `VirtualMachine`: a registry-sourced `DataVolume` (CDI pulls `quay.io/fedora/fedora-coreos-kubevirt:stable`) for the OS disk, plus a masquerade-bound pod-network interface (KubeVirt's default NAT binding — the guest gets no LAN-routable IP; `deploy/butane/overlays/staging/files/etc/NetworkManager/system-connections/staging.nmconnection` is DHCP on `eth0` accordingly, not the static `192.168.150.10` the old passt setup used).
+- Root `Makefile`: `staging-vm-up` (depends on `ignition-gen-staging` + `k3d-cluster-create-staging`) / `staging-vm-down` drive `kubevirt-vm-up.sh`/`kubevirt-vm-down.sh` against `deploy/kubevirt/staging/{vm,namespace}.yaml`. `k3d-cluster-create-staging`/`k3d-cluster-delete-staging` drive the outer cluster directly.
+- `deploy/k3d/` is the common location for k3d cluster configs (`staging.yaml` today; a future `deploy/k3d/prod.yaml` + `k3d-cluster-create-prod`/`k3d-cluster-delete-prod` targets follow the same pattern, for running KubeVirt directly on the `rick` prod host once it's provisioned).
 
 ## Ignition Serving
 
 `hack/lib/ignition/serve.sh` defines a `serve()` function that launches a containerized nginx server. The Makefile sources this file and calls `serve` with:
-- `-i <ignition_secret>` — podman secret containing the ignition JSON to serve (required)
+- `-i <ignition_secret>` — podman secret containing the ignition JSON to serve as `config.ign` (optional — omit when ignition is delivered some other way, as staging now does via its KubeVirt `cloudInitConfigDrive` instead of HTTP)
 - `-c <ssl_cert>` / `-k <ssl_key>` — podman secret names for the TLS cert/key (required)
-- `-s <secret>` — additional podman secret spec passed to `podman run --secret` (repeatable; prod passes the LUKS keyfiles and k3s secretsdata this way)
+- `-s <secret>` — additional podman secret spec passed to `podman run --secret` (repeatable; prod passes the LUKS keyfiles and k3s secretsdata this way, staging passes just `staging-secrets.json`/`staging-secretsdata.json`)
 
 The `ignition-serve-gen-certs-<overlay>` targets (`hack/bin/ignition-gen-serving-certs.sh`) generate a self-signed TLS key+cert (stored as podman secrets `ssl-key-<env>`/`ssl-cert-<env>`) before serving; they no-op with a warning if the secrets already exist.
 
@@ -151,7 +166,8 @@ The `ignition-serve-gen-certs-<overlay>` targets (`hack/bin/ignition-gen-serving
 
 - `deploy/installer/` — own `Makefile`; downloads FCOS ISOs/qcow2 images and embeds ignition into them via `hack/vendor/bashkit/local/bin/coreos-installer` (podman wrapper) and `coreos-installer iso customize`. Several targets are commented out or reference stale paths (e.g. `hack/vendor/bashkit/lib/virsh/...` missing the `local/` segment) — verify a target actually runs before relying on it.
 - `deploy/ansible/` — post-boot node configuration for edge nodes
-- `deploy/libvirt/` — untracked libvirt XML templates for the staging VM (see "Staging VM" above)
+- `deploy/k3d/` — k3d cluster configs (see "Staging VM" above)
+- `deploy/kubevirt/` — per-overlay KubeVirt `VirtualMachine`/`Namespace` manifests (see "Staging VM" above)
 - `pkg/containers/` — own `Makefile`; builds and pushes custom images (`ffmpeg`, `ffmpeg-rpi`, `motion`, `libcamera`, `rpicam-apps`, `envsubst`, `btrfs-progs`, `archlinuxarm`) to `docker.io/steve51516`
 - `pkg/charts/` — vendored Helm chart sources; `pkg/schemas/` — JSON value schemas for Helm chart validation
 - `docs/` — extended docs (`ignition-pipeline.md`, `storage-layout.md`, `kubernetes.md`, `networking.md`, `node-provisioning.md`); `docs/subagent-recommendations.md` recommends working directly from this file for Butane/Ignition/FCOS work rather than delegating to a generic infrastructure subagent, since none of the catalogued ones target FCOS specifically
@@ -161,5 +177,5 @@ The `ignition-serve-gen-certs-<overlay>` targets (`hack/bin/ignition-gen-serving
 | Overlay | Node type | Notes |
 |---------|-----------|-------|
 | `prod` | x86 bare-metal | hostname `rick.expresso.lan`, RAID10 + LUKS |
-| `staging` | libvirt VM | dev cluster, VM name `rick-staging` |
+| `staging` | k3d + KubeVirt VM | dev cluster, VM name `rick-staging` |
 | `rpi4-0` | Raspberry Pi 4 | k3s agent node |

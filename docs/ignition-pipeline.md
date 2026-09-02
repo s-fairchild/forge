@@ -213,7 +213,7 @@ deploy/butane/
     │       ├── filesystems.bu   # btrfs volumes
     │       ├── luks.bu          # LUKS encryption config
     │       └── raid.bu          # mdadm RAID10 config
-    ├── staging/                 # libvirt VM overlay
+    ├── staging/                 # KubeVirt VM overlay (runs on a local k3d cluster)
     └── rpi4-0/                  # Raspberry Pi 4 agent node
         ├── main.bu
         ├── storage.bu

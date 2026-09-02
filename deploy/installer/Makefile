@@ -24,21 +24,6 @@ installer-download-baremetal: ## Download the FCOS bare-metal ISO into IMAGES_CU
 		--format iso \
 		--directory $(IMAGES_CUSTOMIZED_BASE_DIR)
 
-installer-download-libvirt: ## Download the FCOS qemu qcow2.xz image into ~/.local/share/libvirt/images
-	libvirt_images_dir=$(HOME)/.local/share/libvirt/images
-	mkdir -p $${libvirt_images_dir}
-	chcon -t svirt_home_t $${libvirt_images_dir}
-
-	hack/vendor/bashkit/local/bin/coreos-installer \
-		-m type=bind,src=$${libvirt_images_dir},target=$${libvirt_images_dir} \
-		-- \
-		download \
-		-s $(STREAM) \
-		-p qemu \
-		-f qcow2.xz \
-		-d \
-		-C $${libvirt_images_dir}
-
 BASE_NAME := base
 STAGING_NAME := staging
 PROD_NAME := prod
@@ -127,41 +112,6 @@ installer-iso-customize-prod: installer-ignition-gen-prod ## Embed prod ignition
 					 --output $${iso_out} \
 					 $${iso}
 
-FCOS_STAGING_NETWORK=fcos-staging
-staging-network-build: ## Define/activate/autostart the fcos-staging libvirt network (STALE path: missing local/ segment)
-	. hack/vendor/bashkit/lib/virsh/virsh-network.sh
-
-	if ! virsh_net_is_defined $(FCOS_STAGING_NETWORK); then
-		virsh_net_define $(FCOS_STAGING_NETWORK) "Fedora CoreOS Staging Environment Network"
-	fi
-	
-	if ! virsh_net_is_active $(FCOS_STAGING_NETWORK); then
-		virsh_net_activate $(FCOS_STAGING_NETWORK)
-	fi
-	
-	if ! virsh_net_is_autostart $(FCOS_STAGING_NETWORK); then
-		virsh_net_autostart $(FCOS_STAGING_NETWORK)
-	fi
-
-LIBVIRT_ENV_RICK_STAGING := $(DEPLOY_INSTALLER_DIR)/etc/libvirt/rick-staging.env
-
-install-staging-vm: ## Idempotently define and create the rick-staging libvirt VM from an ignition podman secret
-	# hack/bin/ensure-staging-vm.sh (like every non-bashkit consumer) sources its
-	# dependencies relative to the repo root, and LIBVIRT_DIR in the env file below
-	# is itself a repo-root-relative path -- so this recipe must run from there,
-	# regardless of whether it was reached via `make -C deploy/installer ...`.
-	cd "$$(git rev-parse --show-toplevel)"
-
-	. $(LIBVIRT_ENV_RICK_STAGING)
-
-	if ! podman secret exists "$${IGNITION_SECRET}"; then
-		echo "podman secret $${IGNITION_SECRET} does not exist. Generate it first (e.g. 'make ignition-gen-staging' from the repo root)." >&2
-		exit 1
-	fi
-
-	hack/bin/ensure-staging-vm.sh \
-		-l "$${LIBVIRT_DIR}" \
-		-p "$${POOL_NAME}" \
-		-d "$${VOLUME_NAME}" \
-		-m "$${DOMAIN_NAME}" \
-		-s "$${IGNITION_SECRET}"
+# The staging VM is provisioned via k3d + KubeVirt from the repo root now
+# (see `make staging-vm-up` / `make k3d-cluster-create-staging` in the top-level
+# Makefile) rather than via a libvirt network/pool/domain defined here.

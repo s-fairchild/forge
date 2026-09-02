@@ -4,14 +4,12 @@ uuid=8e3a2aa6-e492-4e7a-bb15-3249f06330e6
 type=ethernet
 
 [ethernet]
-mac-address=52:54:00:9b:2f:47
+
+[match]
+interface-name=eth0
 
 [ipv4]
-method=manual
-address1=192.168.150.10/24,192.168.150.1
-dns=10.50.0.1;8.8.8.8;
-dns-search=expresso.lan;
-may-fail=false
+method=auto
 
 [ipv6]
 method=disabled

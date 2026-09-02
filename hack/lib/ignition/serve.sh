@@ -30,13 +30,14 @@ declare -r __nginx_ssl_root="/run/secrets"
 
 usage_serve() {
     cat <<USAGE >&2
-Usage: serve -i ignition_secret -c ssl_cert -k ssl_key [-s secret]... [-d dropin_file]... [-e env_prefix]... [-h] [arg...]
+Usage: serve -c ssl_cert -k ssl_key [-i ignition_secret] [-s secret]... [-d dropin_file]... [-e env_prefix]... [-h] [arg...]
 
 Launches a containerised nginx server for serving ignition configs over HTTPS.
 
 Options:
     -i ignition_secret  Name of the podman secret containing the ignition config to serve
-                        as config.ign. (required)
+                        as config.ign. Omit when ignition is delivered by some other means
+                        (e.g. a KubeVirt cloudInitConfigDrive) and only -s secrets need serving.
     -c ssl_cert         Name of the podman secret containing the TLS certificate. (required)
     -k ssl_key          Name of the podman secret containing the TLS private key. (required)
     -s secret           Additional podman secret spec passed verbatim to \`podman run --secret\`
@@ -116,7 +117,6 @@ serve() {
     done
     shift $((OPTIND - 1))
 
-    [ -z "${ignition:-}" ] && { usage_serve; fatal "-b $ERROR_OPTION_REQUIRED"; }
     [ -z "${ssl_cert:-}" ] && { usage_serve; fatal "-c $ERROR_OPTION_REQUIRED"; }
     [ -z "${ssl_key:-}" ] && { usage_serve; fatal "-k $ERROR_OPTION_REQUIRED"; }
     (( ${#secrets[@]} )) || { warn "No -s option(s) provided. No secrets will be mounted."; }
@@ -132,11 +132,14 @@ serve() {
         "--log-level=${PODMAN_LOG_LEVEL:-warn}"
         "--publish=0.0.0.0:8080:8080"
         "--publish=0.0.0.0:8081:8081"
-        # Set ignition file to be served as index root
-        "--secret=${ignition},target=${__nginx_serve_root}/config.ign,mode=0444"
         "--secret=${ssl_cert},target=${__ssl_cert_mount_path},mode=0400,uid=65532,gid=65532"
         "--secret=${ssl_key},target=${__ssl_key_mount_path},mode=0400,uid=65532,gid=65532"
     )
+
+    if [ -n "${ignition:-}" ]; then
+        # Set ignition file to be served as index root
+        podman_run_options+=("--secret=${ignition},target=${__nginx_serve_root}/config.ign,mode=0444")
+    fi
 
     local item
     (( ${#dropins[@]} )) || dropins=("$__NGINX_DROPIN_CONFIG_DEFAULT_SRC" "$__NGINX_DROPIN_CONFIG_SECURE_SRC")

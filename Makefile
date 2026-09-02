@@ -113,11 +113,12 @@ ignition-serve-base: ignition-gen-base ignition-serve-gen-certs-base k3s-tokens-
 		  -k ssl-key-base \
 		  -i ignition-base
 
-ignition-serve-staging: ignition-gen-staging ignition-serve-gen-certs-staging k3s-tokens-generate-staging ## Serve the staging ignition config over HTTPS
+ignition-serve-staging: ignition-serve-gen-certs-staging k3s-tokens-generate-staging ## Serve staging's secrets.json/secretsdata.json over HTTPS (ignition itself is delivered via the KubeVirt VM's cloudInitConfigDrive, not HTTP)
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-staging \
 		  -k ssl-key-staging \
-		  -i ignition-staging
+		  -s staging-secrets.json \
+		  -s staging-secretsdata.json
 
 # k3s tokens should not be generated for worker node ignition bootstraps
 ignition-serve-rpi4-0: ignition-gen-rpi4-0 ignition-serve-gen-certs-rpi4-0 ## Serve the rpi4-0 ignition config over HTTPS
@@ -137,14 +138,25 @@ ignition-serve-prod: ## Serve the prod ignition config over HTTPS (run ignition-
 		  -k ssl-key-prod \
 		  -i ignition-prod
 
-LIBVIRT_ENV_RICK_STAGING := deploy/installer/etc/libvirt/rick-staging.env
+K3D_CONFIG_DIR := deploy/k3d
+K3D_CONFIG_STAGING := $(K3D_CONFIG_DIR)/staging.yaml
+KUBEVIRT_DIR_STAGING := deploy/kubevirt/staging
 
-staging-vm-up: ignition-gen-staging ## Bring up the rick-staging libvirt VM (transient domain)
-	$(MAKE) -C deploy/installer install-staging-vm
+k3d-cluster-create-staging: ## Create the staging k3d cluster and install KubeVirt + CDI
+	. hack/env/kubevirt-vm.env
+	hack/bin/k3d-cluster-up.sh -f $(K3D_CONFIG_STAGING)
 
-staging-vm-down: ## Tear down the rick-staging libvirt VM
-	. $(LIBVIRT_ENV_RICK_STAGING)
-	virsh destroy "$${DOMAIN_NAME}"
+k3d-cluster-delete-staging: ## Delete the staging k3d cluster
+	. hack/env/kubevirt-vm.env
+	hack/bin/k3d-cluster-down.sh -f $(K3D_CONFIG_STAGING)
+
+staging-vm-up: ignition-gen-staging k3d-cluster-create-staging ## Create/refresh the ignition-payload secret and apply the staging KubeVirt VirtualMachine
+	hack/bin/kubevirt-vm-up.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml \
+								-n $(KUBEVIRT_DIR_STAGING)/namespace.yaml \
+								-s ignition-staging
+
+staging-vm-down: ## Delete the staging KubeVirt VirtualMachine (the k3d cluster keeps running; use k3d-cluster-delete-staging to remove it)
+	hack/bin/kubevirt-vm-down.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml
 
 # hack/vendor/bash-logger is an independently-versioned submodule with its own lint tooling;
 # exclude it here and lint it via that submodule's own skill/toolchain instead.

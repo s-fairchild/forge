@@ -1,0 +1,52 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: staging
+  namespace: rick-staging
+spec:
+  runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: fcos-os-disk-volume
+    spec:
+      source:
+        registry:
+          url:
+           docker://quay.io/fedora/fedora-coreos-kubevirt:stable
+      storage:
+        volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 20Gi
+        accessModes:
+          - ReadWriteOnce
+  template:
+    spec:
+      networks:
+      - name: default
+        pod: {}
+      domain:
+        devices:
+          interfaces:
+          - name: default
+            masquerade: {}
+          disks:
+          - name: fcos-os-disk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          rng: {}
+        resources:
+          requests:
+            memory: 4096M
+      volumes:
+      - name: fcos-os-disk
+        dataVolume:
+          name: fcos-os-disk-volume
+      - name: cloudinitdisk
+        cloudInitConfigDrive:
+          secretRef:
+            name: ignition-payload
