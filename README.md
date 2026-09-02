@@ -1,4 +1,4 @@
-# titan
+# forge
 
 Infrastructure-as-code for a home [Fedora CoreOS](https://fedoraproject.org/coreos/) (FCOS) [k3s](https://k3s.io/) cluster. Covers both node provisioning — Butane configs compiled to Ignition JSON and delivered at boot — and the Kubernetes workloads running on top.
 

@@ -11,7 +11,7 @@ description: >
 
 Adapted from `hack/vendor/bash-logger/.claude/skills/linting-code/`. That skill assumes
 bash-logger's own toolchain (pre-commit, markdownlint, a test runner) — none of which exist
-at the titan repo level, so this version reflects what's actually here instead of reusing that
+at the forge repo level, so this version reflects what's actually here instead of reusing that
 one wholesale.
 
 ## Tools and where configuration lives
@@ -20,7 +20,7 @@ one wholesale.
 | ---------- | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | ShellCheck | Shell syntax, quoting, portability, common bugs | repo-root `.shellcheckrc` (`external-sources=true`, `source-path=SCRIPTDIR`, `check-sourced=true`) |
 
-Titan has **no pre-commit config and no markdownlint config** — unlike the bash-logger
+Forge has **no pre-commit config and no markdownlint config** — unlike the bash-logger
 submodule. ShellCheck runs as a plain host binary via two root `Makefile` targets
 (`lint-hack`, `lint-hack-file`); there is no automated test suite in this repo (per
 `CLAUDE.md`), so "does it lint clean" is only half the check — see "Confirm it actually

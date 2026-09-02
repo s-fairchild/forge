@@ -3,8 +3,8 @@ SHELL = /bin/bash
 .SHELLFLAGS := -o nounset -o errexit -o pipefail -o hashall -c
 
 DEPLOY_INSTALLER_DIR := deploy/installer
-TITAN_LOCAL_SHARE_DIR := $(HOME)/.local/share/titan/installer
-IMAGES_DIR := $(TITAN_LOCAL_SHARE_DIR)/images
+FORGE_LOCAL_SHARE_DIR := $(HOME)/.local/share/forge/installer
+IMAGES_DIR := $(FORGE_LOCAL_SHARE_DIR)/images
 STREAM := stable
 
 help: ## Show this help message
@@ -61,9 +61,9 @@ INSTALLER_LIB := $(HACK_LIB_DIR)/ignition/installer.sh
 PODMAN_SECRET_LIB := $(HACK_LIB_DIR)/podman/podman-secret.sh
 PODMAN_SECRETS_MOUNT_DIR := var/run/secrets
 
-IMAGES_CUSTOMIZED_BASE_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/base
-IMAGES_CUSTOMIZED_STAGING_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/staging
-IMAGES_CUSTOMIZED_PROD_DIR := $(TITAN_LOCAL_SHARE_DIR)/images_customized/prod
+IMAGES_CUSTOMIZED_BASE_DIR := $(FORGE_LOCAL_SHARE_DIR)/images_customized/base
+IMAGES_CUSTOMIZED_STAGING_DIR := $(FORGE_LOCAL_SHARE_DIR)/images_customized/staging
+IMAGES_CUSTOMIZED_PROD_DIR := $(FORGE_LOCAL_SHARE_DIR)/images_customized/prod
 
 FILES_LIVE_DIR := files/live
 FILES_BASE_LIVE_DIR := $(INSTALLER_DIR_BASE)/$(FILES_LIVE_DIR)

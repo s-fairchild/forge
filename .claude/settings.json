@@ -2,12 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(shellcheck --version)",
-      "Read(~/.local/share/titan/**)",
+      "Read(~/.local/share/forge/**)",
       "Bash(shellcheck hack/**)",
       "Bash(git show *)"
     ],
     "additionalDirectories": [
-      "~/src/github/s-fairchild/titan/hack/vendor"
+      "~/src/github/s-fairchild/forge/hack/vendor"
     ]
   }
 }
