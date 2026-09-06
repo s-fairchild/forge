@@ -2,13 +2,13 @@
 #
 # shellcheck shell=bash
 
-[ "${XTRACE:=0}" -eq 1 ] && set -x
+[[ "${XTRACE:=0}" -eq 1 ]] && set -x
 
 set -o nounset \
-    -o errexit \
-    -o pipefail \
-    -o noclobber \
-    -o hashall
+  -o errexit \
+  -o pipefail \
+  -o noclobber \
+  -o hashall
 
 declare -r __hack_lib_kubevirt_sourced="true"
 
@@ -35,30 +35,28 @@ declare -r __KUBECTL_WAIT_TIMEOUT="300s"
 # Deployment and the KubeVirt CR to become Available. The operator and CR are applied
 # (and waited on) as two separate steps because the CR's CRD is only registered once
 # the operator is running -- applying both at once races the CRD not existing yet.
-# shellcheck disable=SC2120 # takes no arguments; the debug trace's "$*" is boilerplate
+# shellcheck disable=SC2120  # takes no arguments; the debug trace's "$*" is boilerplate
 kubevirt_install() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    info "Applying $__KUBEVIRT_OPERATOR_KUSTOMIZATION"
-    if ! kubectl apply -k "$__KUBEVIRT_OPERATOR_KUSTOMIZATION"; then
-      fatal "failed to apply $__KUBEVIRT_OPERATOR_KUSTOMIZATION"
-    fi
+  info "Applying ${__KUBEVIRT_OPERATOR_KUSTOMIZATION}"
+  if ! kubectl apply -k "${__KUBEVIRT_OPERATOR_KUSTOMIZATION}"; then
+    fatal "failed to apply ${__KUBEVIRT_OPERATOR_KUSTOMIZATION}"
+  fi
 
-    if ! kubectl wait deployment/virt-operator \
-                 -n "$__KUBEVIRT_NAMESPACE" \
-                 --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
+  if ! kubectl wait deployment/virt-operator \
+    -n "${__KUBEVIRT_NAMESPACE}" \
+    --for=condition=Available \
+    --timeout="${__KUBECTL_WAIT_TIMEOUT}"; then
+    fatal "virt-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+  fi
 
-                  fatal "virt-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
-    fi
-
-    if ! kubectl wait kv/kubevirt \
-                 -n "$__KUBEVIRT_NAMESPACE" \
-                 --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
-
-                  fatal "KubeVirt CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
-    fi
+  if ! kubectl wait kv/kubevirt \
+    -n "${__KUBEVIRT_NAMESPACE}" \
+    --for=condition=Available \
+    --timeout="${__KUBECTL_WAIT_TIMEOUT}"; then
+    fatal "KubeVirt CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+  fi
 }
 
 # cdi_install()
@@ -68,37 +66,35 @@ kubevirt_install() {
 # CRDs used to populate KubeVirt VM disks (e.g. from a registry-sourced image) at the
 # block/filesystem level. Split into two applies for the same CRD-ordering reason as
 # kubevirt_install().
-# shellcheck disable=SC2120 # takes no arguments; the debug trace's "$*" is boilerplate
+# shellcheck disable=SC2120  # takes no arguments; the debug trace's "$*" is boilerplate
 cdi_install() {
-    debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-    info "Applying $__CDI_OPERATOR_KUSTOMIZATION"
-    if ! kubectl apply -k "$__CDI_OPERATOR_KUSTOMIZATION"; then
-      fatal "failed to apply $__CDI_OPERATOR_KUSTOMIZATION"
-    fi
+  info "Applying ${__CDI_OPERATOR_KUSTOMIZATION}"
+  if ! kubectl apply -k "${__CDI_OPERATOR_KUSTOMIZATION}"; then
+    fatal "failed to apply ${__CDI_OPERATOR_KUSTOMIZATION}"
+  fi
 
-    # TODO throw these two waits in the background, then wait on their PIDs
-    if ! kubectl wait deployment/cdi-operator \
-                 -n "$__CDI_NAMESPACE" \
-                 --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
+  # TODO throw these two waits in the background, then wait on their PIDs
+  if ! kubectl wait deployment/cdi-operator \
+    -n "${__CDI_NAMESPACE}" \
+    --for=condition=Available \
+    --timeout="${__KUBECTL_WAIT_TIMEOUT}"; then
+    fatal "cdi-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+  fi
 
-                  fatal "cdi-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
-    fi
-
-    # The CDI custom resource is cluster-scoped (no -n).
-    if kubectl wait cdi/cdi \
-                 --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
-
-                  fatal "CDI CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
-    fi
+  # The CDI custom resource is cluster-scoped (no -n).
+  if ! kubectl wait cdi/cdi \
+    --for=condition=Available \
+    --timeout="${__KUBECTL_WAIT_TIMEOUT}"; then
+    fatal "CDI CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+  fi
 }
 
-if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
-    declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
-    [ -f "$__bash_logger_adapter_path" ] || { printf '%s\n' "failed to find file: $__bash_logger_adapter_sourced" >&2; exit 1; }
-    # shellcheck source=../../vendor/bash-logger-adapter/adapter.sh
-    . "$__bash_logger_adapter_path"
-    unset __bash_logger_adapter_path
+if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
+  declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
+  [[ -f "${__bash_logger_adapter_path}" ]] || { printf '%s\n' "failed to find file: ${__bash_logger_adapter_path}" >&2; exit 1; }
+  # shellcheck source=../../vendor/bash-logger-adapter/adapter.sh
+  . "${__bash_logger_adapter_path}"
+  unset __bash_logger_adapter_path
 fi

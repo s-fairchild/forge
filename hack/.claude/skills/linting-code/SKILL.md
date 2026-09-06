@@ -62,23 +62,57 @@ file, or exercising a `hack/bin/*.sh` entry point's `-h`/actual invocation.
 
 ## Key rules — write clean code from the start
 
-* Follow **POSIX Utility Conventions** (Ch. 12) for any script that accepts CLI options: single-
-  character options preceded by `-`, options before operands, `--` terminates options, option-
-  arguments adjacent or as the next arg, no optional option-arguments.
-* Follow **POSIX Shell Command Language** (Ch. 2) for quoting, word expansion, command
-  substitution, arithmetic expansion, and control flow.
-* 4-space indentation, no tabs — matches existing `hack/bin`/`hack/lib` scripts.
-* Quote all variable expansions: `"$var"`, not `$var`.
-* `[[ ]]` for bash conditionals in bash-only files (most of `hack/`); reserve `[ ]` for scripts
-  where POSIX portability is explicitly required.
-* `$(...)`, not backticks.
+Based on [Google's Shell Style Guide](https://google.github.io/styleguide/shellguide.html).
+This repo has no POSIX-portability requirement — everything under `hack/` is bash-only
+(`#!/bin/bash`), so write to bash idioms directly rather than the lowest-common-denominator
+POSIX subset.
+
+* **Indentation**: 2 spaces, never tabs — the one exception is the body of a `<<-` here-document,
+  where a leading tab is permitted so the terminator can be indented.
+* **Line length**: soft-wrap around 80 columns. Split long `podman run`/similar option strings
+  across lines (one flag per line, `\` continuation) or build them as a quoted array instead of
+  one long string.
+* **Quoting**: quote every expansion; prefer `"${var}"` over `"$var"` (brace-delimit unless it's
+  a single-character shell special like `$?`/`$#`/`$$`/`$!`, which don't need braces). Use a
+  `local -a`/`declare -a` array (expanded `"${arr[@]}"`, quoted) for any list of command
+  options/flags rather than an unquoted string — don't reach for
+  `# shellcheck disable=SC2068` as a substitute for quoting the array correctly.
+* **Conditionals**: `[[ ]]` everywhere, not `[ ]`/`test`/`/usr/bin/[` — `[[ ]]` avoids word
+  splitting/pathname expansion and supports `==`/regex matching. Use `-z`/`-n` for string
+  emptiness checks, `==` for string equality, `(( ))` for numeric comparisons.
+* **Command substitution**: `$(...)`, never backticks.
+* **Arithmetic**: `(( ))` or `$(( ))` only — never `let` or `$[ ]`, and never `expr`.
+* **No `eval`**, no shell aliases (use a function instead).
+* **Naming**: lowercase `snake_case` for functions and variables; filenames lowercase with
+  underscores. Constants and anything exported are `SCREAMING_SNAKE_CASE`, declared at the top
+  of the file with `readonly`/`export` (or `declare -r`/`declare -rx`). Function-local variables
+  use `local` (add `-r`/`-a`/`-A`/`-i` where it fits); split `local x` from `x=$(...)` so a
+  command substitution's exit status isn't masked (see SC2155 below).
+* **File header**: every file starts with a one-line description of what it contains.
+* **Function comments**: required for every non-trivial function and for anything in a `hack/lib/*`
+  library file (even a small one) — Description, Globals used/modified, Arguments, Outputs, and
+  Return value. A short, self-evident helper (e.g. a one-line `usage_*()`) can skip this.
+* **`main`**: a script with more than one function defines `main()` and calls `main "$@"` as the
+  last line — already the convention for every `hack/bin/*.sh` entry point.
 * Every sourced lib file (`hack/lib/*`, `hack/vendor/bashkit/*`) guards against double-inclusion
-  with `declare -r __<lib>_sourced="true"` and re-sources its own dependencies rather than
-  assuming a caller already loaded them — preserve this when adding new lib files.
-* When suppressing a ShellCheck warning, add a reason:
+  with `declare -r __hack_lib_<path>_sourced="true"`, named after the file's path under
+  `hack/lib/` — `<dir>_<filename>` (e.g. `hack/lib/ignition/butane.sh` →
+  `__hack_lib_ignition_butane_sourced`), but drop the duplicate segment when the filename
+  already starts with (or equals) the directory name, to avoid stuttering (e.g.
+  `hack/lib/podman/podman-secret.sh` → `__hack_lib_podman_secret_sourced`, not
+  `__hack_lib_podman_podman_secret_sourced`; `hack/lib/ignition/ignition.sh` →
+  `__hack_lib_ignition_sourced`). Re-source a file's own dependencies rather than assuming a
+  caller already loaded them — preserve this when adding new lib files.
+* Shell **libraries** (`hack/lib/**/*.sh`) must not be executable (`chmod -x`) — only
+  `hack/bin/*.sh` entry points are. This also signals at a glance which files are meant to be
+  sourced vs. run.
+* When suppressing a ShellCheck warning, add a reason. `# shellcheck disable=SCXXXX -- reason`
+  is **not** valid directive syntax and fails to parse (SC1072/SC1073) — ShellCheck only accepts
+  `key=value` pairs after `# shellcheck`. Use a second `#` to start a plain trailing comment
+  instead:
 
   ```bash
-  # shellcheck disable=SC2034 -- consumed by a script that sources this file
+  # shellcheck disable=SC2034  # consumed by a script that sources this file
   ```
 
 ## Interpreting failures

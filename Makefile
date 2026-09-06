@@ -155,7 +155,27 @@ staging-vm-down: ## Delete the staging KubeVirt VirtualMachine (the k3d cluster 
 lint_hack_exclude_path := hack/vendor/bash-logger
 
 lint-hack: ## Run shellcheck on all scripts under hack (excludes bash-logger submodule)
-	find hack -name '*.sh' -not -path '${lint_hack_exclude_path}/*' -exec shellcheck {} +
+	find hack \
+		-name '*.sh' \
+		-not \
+		-path '${lint_hack_exclude_path}/*' \
+		-exec shellcheck {} +
 
 lint-hack-file: ## Run shellcheck on a single file (FILE=path/to/script.sh)
 	shellcheck ${FILE}
+
+test_bats_bin := test/vendor/bats-core/bin/bats
+test_jobs := $(shell nproc 2> /dev/null || echo 1)
+# Only our own test dirs -- NOT `test` itself, which would make --recursive descend into the
+# vendored bats-core/bats-support/bats-assert/bats-file/bats-mock submodules' own .bats suites.
+test_dirs := test/bin test/lib test/vendor/bash-logger-adapter
+
+.PHONY: test coverage
+
+test: ## Run the hack/ bats test suite in parallel
+	${test_bats_bin} --jobs ${test_jobs} --recursive ${test_dirs}
+
+coverage: ## Run the hack/ bats test suite under kcov and generate an HTML coverage report
+	command -v kcov > /dev/null 2>&1 || { echo "kcov not found; install kcov to run 'make coverage'" >&2; exit 1; }
+	rm -rf coverage-report
+	kcov --include-path=hack/bin,hack/lib,hack/vendor/bash-logger-adapter coverage-report ${test_bats_bin} --recursive ${test_dirs}

@@ -5,3 +5,4 @@
 *.ign
 deploy/butane/**/manifests/**
 deploy/butane/**/secrets.env
+coverage-report/

@@ -7,3 +7,18 @@
 [submodule "hack/vendor/bash-logger"]
 	path = hack/vendor/bash-logger
 	url = git@github.com:s-fairchild/bash-logger.git
+[submodule "test/vendor/bats-core"]
+	path = test/vendor/bats-core
+	url = git@github.com:bats-core/bats-core.git
+[submodule "test/vendor/bats-support"]
+	path = test/vendor/bats-support
+	url = git@github.com:bats-core/bats-support.git
+[submodule "test/vendor/bats-assert"]
+	path = test/vendor/bats-assert
+	url = git@github.com:bats-core/bats-assert.git
+[submodule "test/vendor/bats-file"]
+	path = test/vendor/bats-file
+	url = git@github.com:bats-core/bats-file.git
+[submodule "test/vendor/bats-mock"]
+	path = test/vendor/bats-mock
+	url = git@github.com:jasonkarns/bats-mock.git
