@@ -1,7 +1,7 @@
 #!/bin/bash
 # Idempotently create a k3d cluster from a config file and install KubeVirt + CDI onto it.
 
-[ "${XTRACE:-0}" -eq 1 ] && set -x
+[ "${XTRACE:=0}" -eq 1 ] && set -x
 
 set -o nounset \
     -o errexit \

@@ -10,7 +10,7 @@ image: docker.io/rancher/k3s:v1.35.5-k3s1
 network: k3d
 
 kubeAPI:
-  host: "host.containers.internal"
+  host: "127.0.0.1"
   hostIP: "127.0.0.1"
   hostPort: "6550"
 
@@ -19,9 +19,14 @@ ports:
     nodeFilters:
       - loadbalancer
 
-# options:
-  # k3s:
-    # extraArgs:
-      # - arg: "--tls-san=host.containers.internal"
-        # nodeFilters:
-          # - "server:*"
+# Rootless Podman runs cluster containers in a user namespace, where the kubelet's
+# OOM watcher can't open /dev/kmsg ("operation not permitted") -- this crashes the
+# embedded kubelet (and with it the whole k3s process) a few seconds after every
+# server/agent start. KubeletInUserNamespace tells kubelet to skip that watcher.
+options:
+  k3s:
+    extraArgs:
+      - arg: "--kubelet-arg=feature-gates=KubeletInUserNamespace=true"
+        nodeFilters:
+          - "server:*"
+          - "agent:*"

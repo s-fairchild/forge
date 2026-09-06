@@ -75,10 +75,14 @@ main() {
     debug "$(declare -p vm_manifest namespace_manifest ignition_secret k8s_secret_name)"
 
     info "Applying namespace manifest $namespace_manifest"
-    kubectl apply -f "$namespace_manifest" || fatal "kubectl apply -f $namespace_manifest failed"
+    if ! kubectl apply -f "$namespace_manifest"; then
+      fatal "kubectl apply -f $namespace_manifest failed"
+    fi
 
     local namespace
-    namespace="$(yq eval '.metadata.name' "$namespace_manifest")" || fatal "failed to read .metadata.name from $namespace_manifest"
+    if ! namespace="$(yq eval '.metadata.name' "$namespace_manifest")"; then
+      fatal "failed to read .metadata.name from $namespace_manifest"
+    fi
     local -r namespace
     [ -n "$namespace" ] && [ "$namespace" != "null" ] || fatal "$namespace_manifest has no .metadata.name"
 
@@ -92,7 +96,10 @@ main() {
     local ignition_userdata
     ignition_userdata="$(podman_secret_showsecret "$ignition_secret" | jq -c)"
     kubectl --namespace="$namespace" \
-            create secret generic "$k8s_secret_name" \
+            create \
+            secret \
+            generic \
+            "$k8s_secret_name" \
             --from-literal="userdata=${ignition_userdata}" \
             --dry-run=client \
             -o yaml \

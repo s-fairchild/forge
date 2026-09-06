@@ -3,7 +3,7 @@
 set -o nounset \
     -o errexit
 
-[ "${DEBUG:=0}" -eq 1 ] && set -x
+[ "${XTRACE:=0}" -eq 1 ] && set -x
 
 # main()
 #

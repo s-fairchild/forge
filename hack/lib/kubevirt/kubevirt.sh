@@ -2,7 +2,7 @@
 #
 # shellcheck shell=bash
 
-[ "${XTRACE:-0}" -eq 1 ] && set -x
+[ "${XTRACE:=0}" -eq 1 ] && set -x
 
 set -o nounset \
     -o errexit \
@@ -19,11 +19,10 @@ declare -r __hack_lib_kubevirt_sourced="true"
 # Version pins live in the referenced kustomization.yaml files' resources: URLs, not here --
 # see pkg/operators/kubevirt/{operator,cr}/kustomization.yaml and
 # pkg/operators/cdi/{operator,cr}/kustomization.yaml.
-declare -r __KUBEVIRT_OPERATOR_KUSTOMIZATION="pkg/operators/kubevirt/operator"
-declare -r __KUBEVIRT_CR_KUSTOMIZATION="pkg/operators/kubevirt/cr"
+declare -r __KUBEVIRT_OPERATOR_KUSTOMIZATION="pkg/operators/kubevirt/overlays/staging"
 declare -r __KUBEVIRT_NAMESPACE="kubevirt"
 
-declare -r __CDI_OPERATOR_KUSTOMIZATION="pkg/operators/cdi/operator"
+declare -r __CDI_OPERATOR_KUSTOMIZATION="pkg/operators/cdi/overlays/staging"
 declare -r __CDI_CR_KUSTOMIZATION="pkg/operators/cdi/cr"
 declare -r __CDI_NAMESPACE="cdi"
 
@@ -41,20 +40,25 @@ kubevirt_install() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     info "Applying $__KUBEVIRT_OPERATOR_KUSTOMIZATION"
-    kubectl apply -k "$__KUBEVIRT_OPERATOR_KUSTOMIZATION" || fatal "failed to apply $__KUBEVIRT_OPERATOR_KUSTOMIZATION"
-    kubectl wait deployment/virt-operator \
-                 -n "$__KUBEVIRT_NAMESPACE" \
-                 --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT" \
-        || fatal "virt-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+    if ! kubectl apply -k "$__KUBEVIRT_OPERATOR_KUSTOMIZATION"; then
+      fatal "failed to apply $__KUBEVIRT_OPERATOR_KUSTOMIZATION"
+    fi
 
-    info "Applying $__KUBEVIRT_CR_KUSTOMIZATION"
-    kubectl apply -k "$__KUBEVIRT_CR_KUSTOMIZATION" || fatal "failed to apply $__KUBEVIRT_CR_KUSTOMIZATION"
-    kubectl wait kv/kubevirt \
+    if ! kubectl wait deployment/virt-operator \
                  -n "$__KUBEVIRT_NAMESPACE" \
                  --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT" \
-        || fatal "KubeVirt CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
+
+                  fatal "virt-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+    fi
+
+    if ! kubectl wait kv/kubevirt \
+                 -n "$__KUBEVIRT_NAMESPACE" \
+                 --for=condition=Available \
+                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
+
+                  fatal "KubeVirt CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+    fi
 }
 
 # cdi_install()
@@ -69,20 +73,26 @@ cdi_install() {
     debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
     info "Applying $__CDI_OPERATOR_KUSTOMIZATION"
-    kubectl apply -k "$__CDI_OPERATOR_KUSTOMIZATION" || fatal "failed to apply $__CDI_OPERATOR_KUSTOMIZATION"
-    kubectl wait deployment/cdi-operator \
+    if ! kubectl apply -k "$__CDI_OPERATOR_KUSTOMIZATION"; then
+      fatal "failed to apply $__CDI_OPERATOR_KUSTOMIZATION"
+    fi
+
+    # TODO throw these two waits in the background, then wait on their PIDs
+    if ! kubectl wait deployment/cdi-operator \
                  -n "$__CDI_NAMESPACE" \
                  --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT" \
-        || fatal "cdi-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
 
-    info "Applying $__CDI_CR_KUSTOMIZATION"
-    kubectl apply -k "$__CDI_CR_KUSTOMIZATION" || fatal "failed to apply $__CDI_CR_KUSTOMIZATION"
+                  fatal "cdi-operator did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+    fi
+
     # The CDI custom resource is cluster-scoped (no -n).
-    kubectl wait cdi/cdi \
+    if kubectl wait cdi/cdi \
                  --for=condition=Available \
-                 --timeout="$__KUBECTL_WAIT_TIMEOUT" \
-        || fatal "CDI CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+                 --timeout="$__KUBECTL_WAIT_TIMEOUT"; then
+
+                  fatal "CDI CR did not become Available within ${__KUBECTL_WAIT_TIMEOUT}"
+    fi
 }
 
 if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then

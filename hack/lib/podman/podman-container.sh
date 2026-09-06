@@ -3,7 +3,6 @@
 declare -r __lib_podman_run_sourced="true"
 
 declare -r __PODMAN_CONTAINER_USER="podman"
-declare -r __PODMAN_CONTAINER_WORKDIR="/home/podman/data"
 declare -r __PODMAN_CONTAINER_GRAPHROOT_USER_PODMAN_VOLUME_NAME="graphroot-user-podman"
 declare -r __PODMAN_CONTAINER_GRAPHROOT_USER_PODMAN_TARGET="/home/podman/.local/share/containers/storage"
 
@@ -17,7 +16,6 @@ podman_container() {
     podman_options=(
         "--user=${__PODMAN_CONTAINER_USER}"
         "--security-opt=label=disable"
-        "--workdir=${__PODMAN_CONTAINER_WORKDIR}"
         "--volume=${__PODMAN_CONTAINER_VOLUME_GRAPHROOT_USER_PODMAN}:${__PODMAN_CONTAINER_VOLUME_TARGET_GRAPHROOT_USER_PODMAN}"
         "--rm"
         "-i"

@@ -68,7 +68,9 @@ main() {
     debug "$(declare -p vm_manifest)"
 
     info "Deleting VirtualMachine manifest $vm_manifest"
-    kubectl delete -f "$vm_manifest" --ignore-not-found || fatal "kubectl delete -f $vm_manifest failed"
+    if ! kubectl delete -f "$vm_manifest" --ignore-not-found; then
+        fatal "kubectl delete -f $vm_manifest failed"
+    fi
 }
 
 if [ "${__bash_logger_adapter_sourced:-}" != "true" ]; then
