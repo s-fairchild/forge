@@ -2,6 +2,9 @@
 #
 # Tests for hack/lib/podman/podman-secret.sh.
 #
+# Uses `run -127`, which requires bats >= 1.5.0.
+bats_require_minimum_version 1.5.0
+#
 # See test/test_helper.bash's "IMPORTANT" comment: each @test sources the file under test as
 # its own first line, never in setup().
 
@@ -56,8 +59,11 @@ teardown() {
 }
 
 @test "podman_secret_create_replace_from_stdin exits fatally when secret_name is missing" {
-  run bash -c "source hack/lib/podman/podman-secret.sh; echo -n data | podman_secret_create_replace_from_stdin"
-  assert_failure
+  # secret_name is read via `${1?$(fatal ...)}` -- bash's own unset-parameter expansion error
+  # for a non-interactive shell, which exits 127 (confirmed empirically; not a "command not
+  # found" typo bats' BW01 warning would otherwise suspect this is). `run -127` both declares
+  # that expectation explicitly and silences the warning.
+  run -127 bash -c "source hack/lib/podman/podman-secret.sh; echo -n data | podman_secret_create_replace_from_stdin"
 }
 
 @test "podman_secret_create_replace_from_stdin exits fatally on empty stdin" {
@@ -89,8 +95,8 @@ teardown() {
 }
 
 @test "podman_secret_showsecret exits fatally when the secret name is missing" {
-  run bash -c "source hack/lib/podman/podman-secret.sh; podman_secret_showsecret"
-  assert_failure
+  # Same `${1?$(fatal ...)}` unset-parameter expansion error as above -- exits 127.
+  run -127 bash -c "source hack/lib/podman/podman-secret.sh; podman_secret_showsecret"
 }
 
 @test "podman_secret_showsecret prints the secret's raw data" {
