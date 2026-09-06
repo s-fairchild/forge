@@ -50,7 +50,6 @@ Submodules:
 │   ├── installer/       # Installer Makefile, downloaded FCOS ISOs, customised ISO variants
 │   ├── k3d/             # k3d cluster configs (staging today; prod later)
 │   ├── kubevirt/        # Per-overlay KubeVirt VirtualMachine/Namespace manifests
-│   └── ansible/         # Post-boot node configuration for edge nodes
 ├── hack/
 │   ├── bin/             # Executable scripts (ignition gen, token gen, manifest gen…)
 │   ├── lib/             # Sourced shell libraries

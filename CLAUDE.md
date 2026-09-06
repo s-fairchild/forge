@@ -165,7 +165,6 @@ The `ignition-serve-gen-certs-<overlay>` targets (`hack/bin/ignition-gen-serving
 ## Other Directories
 
 - `deploy/installer/` — own `Makefile`; downloads FCOS ISOs/qcow2 images and embeds ignition into them via `hack/vendor/bashkit/local/bin/coreos-installer` (podman wrapper) and `coreos-installer iso customize`. Several targets are commented out or reference stale paths (e.g. `hack/vendor/bashkit/lib/virsh/...` missing the `local/` segment) — verify a target actually runs before relying on it.
-- `deploy/ansible/` — post-boot node configuration for edge nodes
 - `deploy/k3d/` — k3d cluster configs (see "Staging VM" above)
 - `deploy/kubevirt/` — per-overlay KubeVirt `VirtualMachine`/`Namespace` manifests (see "Staging VM" above)
 - `pkg/containers/` — own `Makefile`; builds and pushes custom images (`ffmpeg`, `ffmpeg-rpi`, `motion`, `libcamera`, `rpicam-apps`, `envsubst`, `btrfs-progs`, `archlinuxarm`) to `docker.io/steve51516`
