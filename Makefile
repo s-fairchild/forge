@@ -32,22 +32,22 @@ clean: ## Remove generated kube manifest YAML files from all overlays
 	fi
 
 kustomize_base_path := pkg
-kube-manifests-gen-base: ## Generate kube manifests for the base overlay
-	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+generate-kustomize-base: ## Generate kube manifests for the base overlay
+	hack/bin/generate-kustomize.sh ${kustomize_base_path} \
 		${manifests_custom_base} \
 		base
 
-kube-manifests-gen-staging: ## Generate kube manifests for the staging overlay
-	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+generate-kustomize-staging: ## Generate kube manifests for the staging overlay
+	hack/bin/generate-kustomize.sh ${kustomize_base_path} \
 		${manifests_custom_staging} \
 		staging
 
-kube-manifests-gen-prod: ## Generate kube manifests for the prod overlay
-	hack/bin/kube-manifests-gen.sh ${kustomize_base_path} \
+generate-kustomize-prod: ## Generate kube manifests for the prod overlay
+	hack/bin/generate-kustomize.sh ${kustomize_base_path} \
 		${manifests_custom_prod} \
 		prod
 
-kube-manifests-gen-all: clean kube-manifests-gen-base kube-manifests-gen-staging kube-manifests-gen-prod ## Clean and regenerate kube manifests for all overlays
+generate-kustomize: clean generate-kustomize-base generate-kustomize-staging generate-kustomize-prod ## Clean and regenerate kube manifests for all overlays
 
 k3s-tokens-generate-base: ## Generate k3s tokens for the base overlay (skips existing secrets)
 	hack/bin/k3s-tokens-generate.sh -l environment=base -p base
@@ -60,60 +60,52 @@ k3s-tokens-generate-prod: ## Generate k3s tokens for the prod overlay (skips exi
 
 deploy_butane_path := deploy/butane
 
-ignition-gen-base: kube-manifests-gen-base ## Compile and store the base ignition config as a podman secret
-	hack/bin/ignition-gen-main.sh \
+generate-ignition-base: generate-kustomize-base ## Compile and store the base ignition config as a podman secret
+	hack/bin/generate-ignition-main.sh \
 					-f ${deploy_butane_path}/base/main.bu \
 					-p base \
 					-l environment=base
 
-ignition-gen-staging: kube-manifests-gen-staging ## Compile and store the staging ignition config as a podman secret
-	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/staging/main.bu \
+generate-ignition-staging: generate-kustomize-staging ## Compile and store the staging ignition config as a podman secret
+	hack/bin/generate-ignition-main.sh -f ${deploy_butane_path}/overlays/staging/main.bu \
 								  -p staging \
 								  -l environment=staging
 
-ignition-gen-rpi4-0: k3s-tokens-generate ## Compile and store the rpi4-0 ignition config (BROKEN: depends on nonexistent k3s-tokens-generate target)
-	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/rpi4-0/main.bu \
+generate-ignition-rpi4-0: k3s-tokens-generate ## Compile and store the rpi4-0 ignition config (BROKEN: depends on nonexistent k3s-tokens-generate target)
+	hack/bin/generate-ignition-main.sh -f ${deploy_butane_path}/overlays/rpi4-0/main.bu \
 								  -p rpi4-0 \
 								  -l environment=rpi4-0
 
-ignition-gen-prod: kube-manifests-gen-all k3s-tokens-generate-prod ## Compile and store the prod ignition config as a podman secret
-	hack/bin/ignition-gen-main.sh -f ${deploy_butane_path}/overlays/prod/main.bu \
+generate-ignition-prod: generate-kustomize k3s-tokens-generate-prod ## Compile and store the prod ignition config as a podman secret
+	hack/bin/generate-ignition-main.sh -f ${deploy_butane_path}/overlays/prod/main.bu \
 								  -p prod \
 								  -l environment=prod
 
-ignition-serve-gen-certs-base: ## Generate self-signed TLS cert/key secrets for serving base ignition
-	hack/bin/ignition-gen-serving-certs.sh base \
+generate-ignition: generate-ignition-base generate-ignition-staging generate-ignition-rpi4-0 generate-ignition-prod
+
+generate-serve-certs-base: ## Generate self-signed TLS cert/key secrets for serving base ignition
+	hack/bin/generate-serve-certs.sh base \
 		-a "DNS:localhost" \
 		-a "IP:127.0.0.1"
 
-ignition-serve-gen-certs-staging: ## Generate self-signed TLS cert/key secrets for serving staging ignition
-	hack/bin/ignition-gen-serving-certs.sh staging \
-		-a "DNS:r10.expresso.lan" \
-		-a "DNS:*.r10.expresso.lan"
-
-ignition-serve-gen-certs-rpi4-0: ## Generate self-signed TLS cert/key secrets for serving rpi4-0 ignition
-	hack/bin/ignition-gen-serving-certs.sh rpi4-0 \
+generate-serve-certs-prod: ## Generate self-signed TLS cert/key secrets for serving prod ignition
+	hack/bin/generate-serve-certs.sh prod \
 		-d 365 \
 		-a "DNS:r10.expresso.lan" \
 		-a "DNS:*.r10.expresso.lan" \
 		-a "IP:10.50.0.202"
 
-ignition-serve-gen-certs-prod: ## Generate self-signed TLS cert/key secrets for serving prod ignition
-	hack/bin/ignition-gen-serving-certs.sh prod \
-		-d 365 \
-		-a "DNS:r10.expresso.lan" \
-		-a "DNS:*.r10.expresso.lan" \
-		-a "IP:10.50.0.202"
+generate-serve-certs: generate-serve-certs-base generate-serve-certs-prod
 
 LIB_IGNITION_SERVE := hack/lib/ignition/serve.sh
 
-ignition-serve-base: ignition-gen-base ignition-serve-gen-certs-base k3s-tokens-generate-base ## Serve the base ignition config over HTTPS
+ignition-serve-base: generate-ignition-base generate-serve-certs-base k3s-tokens-generate-base ## Serve the base ignition config over HTTPS
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-base \
 		  -k ssl-key-base \
 		  -i ignition-base
 
-ignition-serve-staging: ignition-serve-gen-certs-staging k3s-tokens-generate-staging ## Serve staging's secrets.json/secretsdata.json over HTTPS (ignition itself is delivered via the KubeVirt VM's cloudInitConfigDrive, not HTTP)
+ignition-serve-staging: generate-serve-certs-staging k3s-tokens-generate-staging ## Serve staging's secrets.json/secretsdata.json over HTTPS (ignition itself is delivered via the KubeVirt VM's cloudInitConfigDrive, not HTTP)
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-staging \
 		  -k ssl-key-staging \
@@ -121,14 +113,14 @@ ignition-serve-staging: ignition-serve-gen-certs-staging k3s-tokens-generate-sta
 		  -s staging-secretsdata.json
 
 # k3s tokens should not be generated for worker node ignition bootstraps
-ignition-serve-rpi4-0: ignition-gen-rpi4-0 ignition-serve-gen-certs-rpi4-0 ## Serve the rpi4-0 ignition config over HTTPS
+ignition-serve-rpi4-0: generate-ignition-rpi4-0 generate-serve-certs-rpi4-0 ## Serve the rpi4-0 ignition config over HTTPS
 	. $(LIB_IGNITION_SERVE)
 	serve -c ssl-cert-rpi4-0 \
 		  -k ssl-cert-rpi4-0 \
 		  -i ignition-rpi4-0
 
-# ignition-serve-prod: ignition-gen-prod ignition-serve-gen-certs-prod k3s-tokens-generate-prod
-ignition-serve-prod: ## Serve the prod ignition config over HTTPS (run ignition-gen-prod and ignition-serve-gen-certs-prod first)
+# ignition-serve-prod: generate-ignition-prod generate-serve-certs-prod k3s-tokens-generate-prod
+ignition-serve-prod: ## Serve the prod ignition config over HTTPS (run generate-ignition-prod and generate-serve-certs-prod first)
 	. $(LIB_IGNITION_SERVE)
 	serve -s var.keyfile.gz \
 		  -s appdata.keyfile.gz \
@@ -150,7 +142,7 @@ k3d-cluster-delete-staging: ## Delete the staging k3d cluster
 	. hack/env/kubevirt-vm.env
 	hack/bin/k3d-cluster-down.sh -f $(K3D_CONFIG_STAGING)
 
-staging-vm-up: ignition-gen-staging k3d-cluster-create-staging ## Create/refresh the ignition-payload secret and apply the staging KubeVirt VirtualMachine
+staging-vm-up: generate-ignition-staging k3d-cluster-create-staging ## Create/refresh the ignition-payload secret and apply the staging KubeVirt VirtualMachine
 	hack/bin/kubevirt-vm-up.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml \
 								-n $(KUBEVIRT_DIR_STAGING)/namespace.yaml \
 								-s ignition-staging
