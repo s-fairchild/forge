@@ -95,7 +95,7 @@ generate_kube_manifests() {
   debug "$(declare -p overlay)"
 
   local -a MAPFILE=()
-  mapfile -d '' -t < <(find "${pkgs}" -type d -name "${overlay}")
+  mapfile -d '' -t < <(find "${pkgs}" -type d -name "${overlay}" -print0)
   if [[ ! -v MAPFILE ]]; then
     error "No overlays were found in ${pkgs}."
     return 1
