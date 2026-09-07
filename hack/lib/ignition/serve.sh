@@ -85,7 +85,7 @@ serve() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
   local -a secrets=() dropins=() env_prefixes=()
-  local opt OPTIND=1 ignition ssl_key ssl_cert
+  local opt OPTIND=1 ignition="" ssl_key="" ssl_cert=""
   while getopts ':i:s:d:e:h:c:k:' opt; do
     case "${opt}" in
       i)

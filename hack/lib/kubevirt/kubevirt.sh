@@ -19,14 +19,13 @@ declare -r __hack_lib_kubevirt_sourced="true"
 # Version pins live in the referenced kustomization.yaml files' resources: URLs, not here --
 # see pkg/operators/kubevirt/{operator,cr}/kustomization.yaml and
 # pkg/operators/cdi/{operator,cr}/kustomization.yaml.
-declare -r __KUBEVIRT_KUSTOMIZATION_DEFAULT="pkg/operators/kubevirt/base"
+declare -r __KUBEVIRT_KUSTOMIZATION_DEFAULT="pkg/operators/kubevirt/overlays/staging"
 declare -r __KUBEVIRT_NAMESPACE="kubevirt"
 
-declare -r __CDI_OPERATOR_KUSTOMIZATION="pkg/operators/cdi/base"
-declare -r __CDI_CR_KUSTOMIZATION="pkg/operators/cdi/cr"
+declare -r __CDI_KUSTOMIZATION_DEFAULT="pkg/operators/cdi/overlays/staging"
 declare -r __CDI_NAMESPACE="cdi"
 
-declare -r __KUBECTL_WAIT_TIMEOUT_DEFAULT="600s"
+declare -r __KUBECTL_WAIT_TIMEOUT_DEFAULT="300s"
 
 # kubevirt_install()
 #
@@ -73,7 +72,7 @@ kubevirt_install() {
 # shellcheck disable=SC2120  # takes no arguments; the debug trace's "$*" is boilerplate
 cdi_install() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-  local -r kustomize_dir="${1:-$__KUBEVIRT_KUSTOMIZATION_DEFAULT}"
+  local -r kustomize_dir="${1:-$__CDI_KUSTOMIZATION_DEFAULT}"
   local -r kubectl_wait_timeout="${2:-$__KUBECTL_WAIT_TIMEOUT_DEFAULT}"
 
   info "Applying ${kustomize_dir}"

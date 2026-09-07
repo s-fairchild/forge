@@ -6,7 +6,7 @@
 # its own first line, never in setup() -- sourcing from setup() would make serve.sh's
 # `declare -r` constants local to setup() and gone by the time the @test body runs.
 #
-# NOTE on two real bugs in serve() discovered while writing these tests (not fixed here, per
+# NOTE on a real bug in serve() discovered while writing these tests (not fixed here, per
 # instructions -- tests below assert the CURRENT, buggy behavior):
 #
 #   1. The getopts spec is `':i:s:d:e:h:c:k:'` -- `h:` gives -h a *required* argument, so a
@@ -14,13 +14,11 @@
 #      intended `h)` usage-and-exit-0 branch, and `-h` followed by any other token (even one
 #      that looks like another flag, e.g. `-c`) silently swallows that token as its own OPTARG
 #      instead of parsing it as a separate option.
-#   2. The `i`/`c`/`k` case branches call `is_option_arg_dup "${opt}" "${OPTARG}"` -- passing
-#      the just-parsed OPTARG (always non-empty) instead of the target variable's
-#      *pre-assignment* value (the documented calling convention, see
-#      hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh). Since OPTARG is always
-#      non-empty here, is_option_arg_dup treats the very first use of -i/-c/-k as a duplicate
-#      and always returns 1 -- serve() can never actually reach the podman invocation, since
-#      -c and -k are mandatory and both are broken this way.
+#
+# A second bug this file used to document -- the `i`/`c`/`k` case branches passing the
+# just-parsed OPTARG instead of the target variable's pre-assignment value to
+# core::is_option_arg_dup, which misreported the first use of -i/-c/-k as a duplicate -- has
+# since been fixed in serve.sh; see the regression test below instead of a bug note.
 
 load "${PWD}/test/test_helper"
 
@@ -54,14 +52,15 @@ teardown() {
   assert_output --partial "must be provided"
 }
 
-@test "serve -c triggers the is_option_arg_dup bug and never reaches the -k check" {
-  # Documents bug #2 above: the very first -c use is misreported as a duplicate, so the
-  # intended "-k missing" fatal path (which would only be reached after a working -c) is
-  # actually unreachable through the public serve() interface as currently written.
+@test "serve -c does not falsely trigger is_option_arg_dup, reaching the -k check" {
+  # Regression test: core::is_option_arg_dup is called with the target variable's
+  # pre-assignment value, so a single -c is not misreported as a duplicate -- serve()
+  # proceeds past -c and correctly fails on the still-missing -k.
   source hack/lib/ignition/serve.sh
   run serve -c my-cert
   assert_failure
-  assert_output --partial "can only be specified once"
+  assert_output --partial "-k"
+  assert_output --partial "must be provided"
 }
 
 @test "a bare -h fails instead of printing usage, due to the getopts spec bug" {
