@@ -4,7 +4,11 @@ description: >
   Lints shell scripts under hack/ (hack/bin, hack/lib, hack/vendor/bashkit) using ShellCheck
   per this repo's .shellcheckrc. Use whenever checking code quality or fixing lint errors in
   this tree. Does not cover hack/vendor/bash-logger/, which has its own more specific
-  linting-code skill — that one wins for files under it.
+  linting-code skill — that one wins for files under it. hack/vendor/bashkit/ also carries its
+  own linting-code skill for work done directly in that submodule as a standalone repo (no
+  forge Makefile/`.shellcheckrc` available there); this one still applies — and is the
+  simpler path — when linting bashkit files from within a forge checkout, since `lint-hack`
+  already includes them.
 ---
 
 # Linting Code (hack/)
