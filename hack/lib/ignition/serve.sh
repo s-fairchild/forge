@@ -89,7 +89,7 @@ serve() {
   while getopts ':i:s:d:e:h:c:k:' opt; do
     case "${opt}" in
       i)
-        is_option_arg_dup "${opt}" "${OPTARG}" || return 1
+        is_option_arg_dup "${opt}" "${ignition}" || return 1
         ignition="${OPTARG}"
         local -r ignition
         ;;
@@ -103,12 +103,12 @@ serve() {
         env_prefixes+=("${OPTARG}")
         ;;
       c)
-        is_option_arg_dup "${opt}" "${OPTARG}" || return 1
+        is_option_arg_dup "${opt}" "${ssl_cert}" || return 1
         ssl_cert="${OPTARG}"
         local -r ssl_cert
         ;;
       k)
-        is_option_arg_dup "${opt}" "${OPTARG}" || return 1
+        is_option_arg_dup "${opt}" "${ssl_key}" || return 1
         ssl_key="${OPTARG}"
         local -r ssl_key
         ;;
@@ -143,8 +143,8 @@ serve() {
     "--pull=missing"
     "--security-opt=label=disable"
     "--log-level=${PODMAN_LOG_LEVEL:-warn}"
-    "--publish=0.0.0.0:8080:8080"
-    "--publish=0.0.0.0:8081:8081"
+    "--publish=0.0.0.0:8180:8080"
+    "--publish=0.0.0.0:8181:8081"
     "--secret=${ssl_cert},target=${__ssl_cert_mount_path},mode=0400,uid=65532,gid=65532"
     "--secret=${ssl_key},target=${__ssl_key_mount_path},mode=0400,uid=65532,gid=65532"
   )
