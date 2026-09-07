@@ -1,14 +1,14 @@
 ---
 name: linting-code
 description: >
-  Lints shell scripts under hack/ (hack/bin, hack/lib, hack/vendor/bashkit) using ShellCheck
-  per this repo's .shellcheckrc. Use whenever checking code quality or fixing lint errors in
-  this tree. Does not cover hack/vendor/bash-logger/, which has its own more specific
-  linting-code skill — that one wins for files under it. hack/vendor/bashkit/ also carries its
-  own linting-code skill for work done directly in that submodule as a standalone repo (no
-  forge Makefile/`.shellcheckrc` available there); this one still applies — and is the
-  simpler path — when linting bashkit files from within a forge checkout, since `lint-hack`
-  already includes them.
+  Lints shell scripts under hack/ (hack/bin, hack/lib — excluding every git submodule under
+  hack/) using ShellCheck per this repo's .shellcheckrc. Use whenever checking code quality or
+  fixing lint errors in this tree. Does not cover hack/vendor/bash-logger/ or
+  hack/vendor/bashkit/ — both are independently-versioned git submodules with their own more
+  specific linting-code skills, and both are excluded from `lint-hack`; use each submodule's
+  own skill/toolchain for files under it. hack/vendor/bashkit/ also carries a linting-code
+  skill for work done directly in that submodule as a standalone repo (no forge
+  Makefile/`.shellcheckrc` available there).
 ---
 
 # Linting Code (hack/)
@@ -30,6 +30,15 @@ submodule. ShellCheck runs as a plain host binary via two root `Makefile` target
 `CLAUDE.md`), so "does it lint clean" is only half the check — see "Confirm it actually
 behaves" below.
 
+`lint-hack` excludes **every git submodule under `hack/`** (currently `hack/vendor/bashkit`
+and `hack/vendor/bash-logger`), derived at Makefile-eval time from `.gitmodules` rather than
+hardcoded — a future submodule added under `hack/` is excluded automatically, no Makefile edit
+needed. Non-submodule vendored code (e.g. `hack/vendor/bash-logger-adapter/`, a plain directory
+in this repo, not a submodule) is still linted. `lint-hack` also runs ShellCheck once per file
+in parallel across `nproc` jobs via `xargs -P`, printing each `shellcheck <file>` invocation to
+stderr as it's dispatched (`xargs -t`) so a long run shows visible progress instead of sitting
+silent.
+
 ## Commands
 
 Run from the **repo root** (the root `Makefile`'s targets are always invoked directly, never
@@ -49,14 +58,14 @@ itself doesn't require it, but stay consistent).
 make lint-hack-file FILE=hack/bin/k3s-tokens-generate.sh
 ```
 
-### Everything under hack/, excluding the bash-logger submodule
+### Everything under hack/, excluding its git submodules
 
 ```bash
 make lint-hack
 ```
 
-(`hack/vendor/bash-logger/` is independently versioned and has its own `linting-code` skill —
-use that one for files under it, not this target.)
+(`hack/vendor/bash-logger/` and `hack/vendor/bashkit/` are independently versioned and each
+has its own `linting-code` skill — use those for files under them, not this target.)
 
 ### Confirm it actually behaves, not just parses
 

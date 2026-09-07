@@ -38,7 +38,7 @@ ignition_gen() {
   # INFO-level log call below.
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))" 1>&2
 
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r butane_path="$1"
   local -n _secret_names_ref="${2:-"$__empty_array_ref"}"
 
@@ -98,7 +98,7 @@ ignition_merge_read_inline_path() {
   # dumped via $* -- everything else about the call is still worth tracing normally.
   debug "Starting ${FUNCNAME[0]}(<config_json redacted> $2 $3 $4)"
 
-  require_operands 4 "$@" || return 1
+  core::require_operands 4 "$@" || return 1
   local -r config_json="$1"
   local -r merge_jq_path="$2"
   local -ri idx="$3"
@@ -141,7 +141,7 @@ ignition_merge_read_inline_path() {
 ignition_merge_compile_entry() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-  require_operands 3 "$@" || return 1
+  core::require_operands 3 "$@" || return 1
   local -r butane_file_path="$1"
   local -n ignition_json_out="$2"
   local -n verification_hash_out="$3"
@@ -193,7 +193,7 @@ ignition_merge_write_entry() {
   # redacted here rather than dumped via $* -- everything else is still traced normally.
   debug "Starting ${FUNCNAME[0]}(<config_json redacted> $2 $3 $4 <ignition_json redacted> $6)"
 
-  require_operands 6 "$@" || return 1
+  core::require_operands 6 "$@" || return 1
   local -r config_json="$1"
   local -r merge_jq_path="$2"
   local -ri idx="$3"
@@ -251,7 +251,7 @@ getpath(\$verification_hash_jq_path) = \$verification_hash)" \
 ignition_gen_config_merge_inlines() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-  require_operands 2 "$@" || return 1
+  core::require_operands 2 "$@" || return 1
   local -r butane_path="$1"
   local -n out="$2"
   local -r secrets="${3:-"$__empty_array_ref"}"
@@ -358,7 +358,7 @@ ignition_gen_config_merge_inlines() {
 get_secrets_from_env() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -n names="$1"
   local -r config_env="${2:-}"
 
@@ -410,7 +410,7 @@ get_secrets_from_env() {
 source_env_files() {
   debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -n files="$1"
 
   if [[ ${!files@a} == *a* ]]; then
@@ -441,12 +441,12 @@ if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
   unset __bash_logger_adapter_path
 fi
 
-if [[ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]]; then
-  declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-  [[ -f "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
-  . "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
+if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
+  declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"
+  [[ -f "${__bashkit_core}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__bashkit_core}"
+  # shellcheck source=../../vendor/bashkit/local/lib/bashkit/core/contract-utils.sh
+  . "${__bashkit_core}"
+  unset __bashkit_core
 fi
 
 if [[ "${__hack_lib_ignition_butane_sourced:-}" != "true" ]]; then

@@ -89,7 +89,7 @@ serve() {
   while getopts ':i:s:d:e:h:c:k:' opt; do
     case "${opt}" in
       i)
-        is_option_arg_dup "${opt}" "${ignition}" || return 1
+        core::is_option_arg_dup "${opt}" "${ignition}" || return 1
         ignition="${OPTARG}"
         local -r ignition
         ;;
@@ -103,12 +103,12 @@ serve() {
         env_prefixes+=("${OPTARG}")
         ;;
       c)
-        is_option_arg_dup "${opt}" "${ssl_cert}" || return 1
+        core::is_option_arg_dup "${opt}" "${ssl_cert}" || return 1
         ssl_cert="${OPTARG}"
         local -r ssl_cert
         ;;
       k)
-        is_option_arg_dup "${opt}" "${ssl_key}" || return 1
+        core::is_option_arg_dup "${opt}" "${ssl_key}" || return 1
         ssl_key="${OPTARG}"
         local -r ssl_key
         ;;
@@ -191,10 +191,10 @@ if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
   unset __bash_logger_adapter_path
 fi
 
-if [[ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]]; then
-  declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-  [[ -f "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  # shellcheck source=../../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
-  . "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
+if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
+  declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"
+  [[ -f "${__bashkit_core}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__bashkit_core}"
+  # shellcheck source=../../vendor/bashkit/local/lib/bashkit/core/contract-utils.sh
+  . "${__bashkit_core}"
+  unset __bashkit_core
 fi

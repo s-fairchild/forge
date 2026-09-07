@@ -150,16 +150,18 @@ staging-vm-up: generate-ignition-staging k3d-cluster-create-staging ## Create/re
 staging-vm-down: ## Delete the staging KubeVirt VirtualMachine (the k3d cluster keeps running; use k3d-cluster-delete-staging to remove it)
 	hack/bin/kubevirt-vm-down.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml
 
-# hack/vendor/bash-logger is an independently-versioned submodule with its own lint tooling;
-# exclude it here and lint it via that submodule's own skill/toolchain instead.
-lint_hack_exclude_path := hack/vendor/bash-logger
+# Every git submodule under hack/ (bash-logger, bashkit, ...) is independently versioned with
+# its own lint tooling; exclude all of them here and lint each via its own skill/toolchain
+# instead. Derived from .gitmodules so a future submodule added under hack/ is excluded
+# automatically.
+lint_hack_exclude_paths := $(shell git config --file .gitmodules --get-regexp path 2> /dev/null \
+	| awk '{print $$2}' | grep '^hack/')
+lint_hack_find_exclude_args := $(foreach p,${lint_hack_exclude_paths},-not -path '$(p)/*')
+lint_hack_jobs := $(shell nproc 2> /dev/null || echo 1)
 
-lint-hack: ## Run shellcheck on all scripts under hack (excludes bash-logger submodule)
-	find hack \
-		-name '*.sh' \
-		-not \
-		-path '${lint_hack_exclude_path}/*' \
-		-exec shellcheck {} +
+lint-hack: ## Run shellcheck on all scripts under hack (excludes hack/ submodules), in parallel across nproc jobs
+	find hack -name '*.sh' ${lint_hack_find_exclude_args} -print0 \
+		| xargs -0 -t -P ${lint_hack_jobs} -n 1 shellcheck
 
 lint-hack-file: ## Run shellcheck on a single file (FILE=path/to/script.sh)
 	shellcheck ${FILE}
@@ -173,9 +175,18 @@ test_dirs := test/bin test/lib test/vendor/bash-logger-adapter
 .PHONY: test coverage
 
 test: ## Run the hack/ bats test suite in parallel
-	${test_bats_bin} --jobs ${test_jobs} --recursive ${test_dirs}
+	# test_jobs=$$(( $$(nproc || echo -n 3) / 3))
+	${test_bats_bin} \
+		--jobs ${test_jobs} \
+		--no-parallelize-across-files \
+		--recursive ${test_dirs} \
+		--show-output-of-passing-tests \
+		--pretty
 
 coverage: ## Run the hack/ bats test suite under kcov and generate an HTML coverage report
 	command -v kcov > /dev/null 2>&1 || { echo "kcov not found; install kcov to run 'make coverage'" >&2; exit 1; }
 	rm -rf coverage-report
-	kcov --include-path=hack/bin,hack/lib,hack/vendor/bash-logger-adapter coverage-report ${test_bats_bin} --recursive ${test_dirs}
+	kcov --include-path=hack/bin,hack/lib,hack/vendor/bash-logger-adapter \
+		coverage-report \
+		${test_bats_bin} \
+		--recursive ${test_dirs}

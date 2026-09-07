@@ -70,15 +70,15 @@ main() {
   while getopts ':f:n:s:k:vqh' opt; do
     case "${opt}" in
       f)
-        is_option_arg_dup "${opt}" "${vm_manifest}"
+        core::is_option_arg_dup "${opt}" "${vm_manifest}"
         vm_manifest="${OPTARG}"
         ;;
       n)
-        is_option_arg_dup "${opt}" "${namespace_manifest}"
+        core::is_option_arg_dup "${opt}" "${namespace_manifest}"
         namespace_manifest="${OPTARG}"
         ;;
       s)
-        is_option_arg_dup "${opt}" "${ignition_secret}"
+        core::is_option_arg_dup "${opt}" "${ignition_secret}"
         ignition_secret="${OPTARG}"
         ;;
       k)
@@ -121,9 +121,9 @@ main() {
   info "Applying Secret ${k8s_secret_name} in namespace ${namespace} from podman secret ${ignition_secret}"
   # xtrace must be off before the secret is read into the shell, not just before it's
   # used -- it's the trace line's expanded arguments that would leak the value.
-  # shellcheck disable=SC2034 # populated via nameref inside with_xtrace_suppressed
+  # shellcheck disable=SC2034 # populated via nameref inside core::with_xtrace_suppressed
   local -i ignition_xtrace_was_on=0
-  with_xtrace_suppressed save ignition_xtrace_was_on
+  core::with_xtrace_suppressed save ignition_xtrace_was_on
 
   local ignition_userdata
   ignition_userdata="$(podman_secret_showsecret "${ignition_secret}" | jq -c)"
@@ -138,7 +138,7 @@ main() {
     | kubectl apply -f - || fatal "failed to apply Secret ${k8s_secret_name}"
   unset ignition_userdata
 
-  with_xtrace_suppressed restore ignition_xtrace_was_on
+  core::with_xtrace_suppressed restore ignition_xtrace_was_on
 
   info "Applying VirtualMachine manifest ${vm_manifest}"
   kubectl apply -f "${vm_manifest}" || fatal "kubectl apply -f ${vm_manifest} failed"
@@ -152,12 +152,12 @@ if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
   unset __bash_logger_adapter_path
 fi
 
-if [[ "${__vendor_bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]]; then
-  declare __vendor_bashkit_local_lib_bashkit_options_operands_utils="hack/vendor/bashkit/local/lib/bashkit/options-operands-utils.sh"
-  [[ -f "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  # shellcheck source=../vendor/bashkit/local/lib/bashkit/options-operands-utils.sh
-  . "${__vendor_bashkit_local_lib_bashkit_options_operands_utils}"
-  unset __vendor_bashkit_local_lib_bashkit_options_operands_utils
+if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
+  declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"
+  [[ -f "${__bashkit_core}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__bashkit_core}"
+  # shellcheck source=../vendor/bashkit/local/lib/bashkit/core/contract-utils.sh
+  . "${__bashkit_core}"
+  unset __bashkit_core
 fi
 
 if [[ "${__hack_lib_yq_sourced:-}" != "true" ]]; then

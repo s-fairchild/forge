@@ -23,6 +23,16 @@
 declare XTRACE=${XTRACE:=0}
 (( XTRACE )) && set -x
 
+# Caps bash function-call nesting depth process-wide. This file is sourced by
+# every hack/bin and hack/lib script, so it's the one place a cap here
+# protects everything. Without it, an accidental call cycle through the
+# logging path (e.g. a helper's own "Starting ..." trace calling back into
+# log()) recurses silently until the process exhausts memory instead of
+# failing fast with a clear error -- 200 is far above this codebase's normal
+# call depth (a handful of frames) but far below what it'd take to run a
+# system out of memory.
+declare -gi FUNCNEST=200
+
 declare -r __bash_logger_adapter_sourced="true"
 
 declare __bash_logger_adapter_local_path="${BASH_SOURCE[0]%/*}"
@@ -162,7 +172,7 @@ _bash_logger_adapter_call() {
 bash_logger_adapter_apply_overrides() {
   log "${LOG_LEVEL_DEBUG}" "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
 
-  require_operands 3 "$@" || return 1
+  core::require_operands 3 "$@" || return 1
   local -ri cli_verbose="$1"
   local -ri cli_quiet="$2"
   local -ri cli_log_level="$3"
@@ -272,8 +282,12 @@ declare -r LOG_LEVEL_CRIT="${LOG_LEVEL_CRITICAL}"
 declare -r LOG_LEVEL_EMERG="${LOG_LEVEL_EMERGENCY}"
 
 validate_log_level() {
-  local level="${1:-}"
-  require_operands 1 "$@" || return 1
+  # Deliberately not core::require_operands here: that helper logs its own
+  # "Starting ..." trace via debug() -> log() -> validate_log_level(), which
+  # would recurse into this function infinitely -- this is the logging
+  # bootstrap itself, so it validates its own operand inline instead.
+  [[ -v 1 ]] || return 1
+  local level="${1}"
   readonly level="${level^^}"
 
   local level_keywords="${LOG_LEVEL_DEBUG}|${LOG_LEVEL_NOTICE}|INFO|${LOG_LEVEL_INFO}"
@@ -286,7 +300,7 @@ validate_log_level() {
     level="${LOG_LEVEL_INFO}"
   fi
 
-  printf "%n" "$level"
+  printf '%s' "$level"
 }
 
 # log(level, message...)
@@ -307,7 +321,7 @@ validate_log_level() {
 log() {
   local level="${1:-}"
 
-  level="$(validate_log_level level)" && shift
+  level="$(validate_log_level "${level}")" && shift
 
   case "${level}" in
     "${LOG_LEVEL_DEBUG}")
@@ -341,14 +355,14 @@ log() {
 }
 
 set_script_name() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r name="$1"
 
   bash_logger_adapter::call set_script_name "$name"
 }
 
 set_log_level() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r level="$1"
 
   bash_logger_adapter::call set_log_level "$level"
@@ -362,7 +376,7 @@ declare -r BOOLEAN_YES="yes"
 declare -r BOOLEAN_NO="no"
 
 is_boolean() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local bool="$1"
   readonly bool="${bool,,}"
 
@@ -372,13 +386,13 @@ is_boolean() {
 
   if ! [[ "$bool" =~ ^($boolean_values)$ ]]; then
     error "${1} must match regex: ${boolean_values}"
-    bashkit_print_stack_trace
+    core::print_stack_trace
     return 1
   fi
 }
 
 set_timezone_utc() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r utc="$1"
   is_boolean utc
 
@@ -386,14 +400,14 @@ set_timezone_utc() {
 }
 
 set_log_format() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r format="$1"
 
   _bash_logger_adapter_call set_log_format "$format"
 }
 
 set_journal_logging() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r journal="$1"
   is_boolean journal
 
@@ -401,21 +415,21 @@ set_journal_logging() {
 }
 
 set_journal_tag() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r tag="$1"
 
   _bash_logger_adapter_call set_journal_tag "$tag"
 }
 
 set_syslog_facility() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r facility="$1"
 
   _bash_logger_adapter_call set_syslog_facility "$facility"
 }
 
 set_unsafe_allow_ansi_codes() {
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
   local -r bool="$1"
   is_boolean "$bool"
 
@@ -423,18 +437,18 @@ set_unsafe_allow_ansi_codes() {
 }
 
 declare __bashkit_local_path="${__bash_logger_adapter_local_path}/../bashkit"
-if [[ "${__bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]]; then
-  declare __bashkit_local_lib_bashkit_options_operands_utils="${__bashkit_local_path}/local/lib/bashkit/options-operands-utils.sh"
-  [[ -f "${__bashkit_local_lib_bashkit_options_operands_utils}" ]] || { printf '%s\n' "error file not found: ${__bashkit_local_lib_bashkit_options_operands_utils}" >&2; exit 1; }
-  # shellcheck source=../bashkit/local/lib/bashkit/options-operands-utils.sh
-  . "${__bashkit_local_lib_bashkit_options_operands_utils}"
-  unset __bashkit_local_lib_bashkit_options_operands_utils
+if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
+  declare __bashkit_core="${__bashkit_local_path}/local/lib/bashkit/core/contract-utils.sh"
+  [[ -f "${__bashkit_core}" ]] || { printf '%s\n' "error file not found: ${__bashkit_core}" >&2; exit 1; }
+  # shellcheck source=../bashkit/local/lib/bashkit/core/contract-utils.sh
+  . "${__bashkit_core}"
+  unset __bashkit_core
 fi
 
 if [[ "${facilities:-}" != "true" ]]; then
   declare facilities="${__bash_logger_adapter_local_path}/facilities.sh"
   [[ -f "$facilities" ]] || { printf '%s\n' "error file not found: ${facilities}" >&2; exit 1; }
-  # shellcheck source=adapter.sh
+  # shellcheck source=facilities.sh
   . "$facilities"
   unset facilities
 fi

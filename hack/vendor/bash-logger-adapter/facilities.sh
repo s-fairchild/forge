@@ -25,7 +25,7 @@ declare -r LOG_FACILITY_LOCAL7="local7"
 
 validate_log_facility() {
   local -n f="${1}"
-  require_operands 1 "$@" || return 1
+  core::require_operands 1 "$@" || return 1
 
   local log_facilities="${LOG_FACILITY_KERN}|${LOG_FACILITY_USER}|${LOG_FACILITY_MAIL}"
   log_facilities+="|${LOG_FACILITY_DAEMON}|${LOG_FACILITY_AUTH}|${LOG_FACILITY_SYSLOG}"

@@ -12,7 +12,7 @@ image: docker.io/rancher/k3s:v1.35.5-k3s1
 network: k3d
 
 kubeAPI:
-  host: "127.0.0.1"
+  host: "localhost"
   hostIP: "127.0.0.1"
   hostPort: "6550"
 
@@ -38,3 +38,7 @@ options:
         nodeFilters:
           - "server:*"
           - "agent:*"
+
+      - arg: --tls-san=host.containers.internal
+        nodeFilters:
+          - server:*

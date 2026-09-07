@@ -110,3 +110,21 @@ teardown() {
   source hack/vendor/bash-logger-adapter/adapter.sh
   [[ "${__bash_logger_adapter_sourced}" == true ]]
 }
+
+@test "a log call terminates promptly instead of looping through the log path" {
+  # Regression test for the 2026-09 incident: validate_log_level() called
+  # core::require_operands(), which itself logs via debug() -> log() ->
+  # validate_log_level() -> core::require_operands() -> ... -- an
+  # unconditional cycle triggered by *any* log call (debug/error/warn/info/
+  # fatal), recursing until the process exhausted all system memory.
+  # `timeout` is the hard backstop here: FUNCNEST (set in adapter.sh) should
+  # abort a reintroduced cycle within a few seconds on its own via "maximum
+  # function nesting level exceeded", but if FUNCNEST is ever removed this
+  # still bounds the test instead of hanging the whole suite.
+  run timeout 15 bash -c '
+    source hack/vendor/bash-logger-adapter/adapter.sh
+    debug "one"
+  '
+  assert_success
+  refute_output --partial "maximum function nesting level exceeded"
+}
