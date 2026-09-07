@@ -1,3 +1,5 @@
+# yaml-language-server: https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha5/schema.json
+# https://k3d.io/v5.4.1/usage/configfile/
 ---
 apiVersion: k3d.io/v1alpha5
 kind: Simple
@@ -18,6 +20,12 @@ ports:
   - port: 8080:80
     nodeFilters:
       - loadbalancer
+
+volumes: # repeatable flags are represented as YAML lists
+  - volume: /dev/kvm:/dev/kvm # same as `--volume '/dev/kvm:/dev/kvm@server:0;agent:*'`
+    nodeFilters:
+      - server:0
+      - agent:*
 
 # Rootless Podman runs cluster containers in a user namespace, where the kubelet's
 # OOM watcher can't open /dev/kmsg ("operation not permitted") -- this crashes the
