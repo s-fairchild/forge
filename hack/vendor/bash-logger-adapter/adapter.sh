@@ -271,11 +271,23 @@ declare -r LOG_LEVEL_ERR="${LOG_LEVEL_ERROR}"
 declare -r LOG_LEVEL_CRIT="${LOG_LEVEL_CRITICAL}"
 declare -r LOG_LEVEL_EMERG="${LOG_LEVEL_EMERGENCY}"
 
-declare __bash_logger_adapter_level_keywords="${LOG_LEVEL_DEBUG}|${LOG_LEVEL_NOTICE}|INFO|${LOG_LEVEL_INFO}"
-__bash_logger_adapter_level_keywords+="|${LOG_LEVEL_WARN}|${LOG_LEVEL_WARNING}|${LOG_LEVEL_ERR}|${LOG_LEVEL_ERROR}"
-__bash_logger_adapter_level_keywords+="|${LOG_LEVEL_CRIT}|${LOG_LEVEL_CRITICAL}|${LOG_LEVEL_ALERT}"
-__bash_logger_adapter_level_keywords+="|${LOG_LEVEL_EMERG}|${LOG_LEVEL_EMERGENCY}|${LOG_LEVEL_FATAL}"
-declare -r __bash_logger_adapter_level_keywords
+validate_log_level() {
+  local level="${1:-}"
+  require_operands 1 "$@" || return 1
+  readonly level="${level^^}"
+
+  local level_keywords="${LOG_LEVEL_DEBUG}|${LOG_LEVEL_NOTICE}|INFO|${LOG_LEVEL_INFO}"
+  level_keywords+="|${LOG_LEVEL_WARN}|${LOG_LEVEL_WARNING}|${LOG_LEVEL_ERR}|${LOG_LEVEL_ERROR}"
+  level_keywords+="|${LOG_LEVEL_CRIT}|${LOG_LEVEL_CRITICAL}|${LOG_LEVEL_ALERT}"
+  level_keywords+="|${LOG_LEVEL_EMERG}|${LOG_LEVEL_EMERGENCY}|${LOG_LEVEL_FATAL}"
+  readonly keywords
+
+  if ! [[ ${level} =~ ^(${level_keywords})$ ]]; then
+    level="${LOG_LEVEL_INFO}"
+  fi
+
+  printf "%n" "$level"
+}
 
 # log(level, message...)
 #
@@ -291,17 +303,11 @@ declare -r __bash_logger_adapter_level_keywords
 # Outputs:
 #   The formatted log line at the resolved level.
 # Returns:
-#   Always 0 (via _bash_logger_adapter_call).
+#   Always 0 (via bash_logger_adapter::call).
 log() {
   local level="${1:-}"
 
-  level="${level^^}"
-  if [[ ${level} =~ ^(${__bash_logger_adapter_level_keywords})$ ]]; then
-    shift
-  else
-    level="${LOG_LEVEL_INFO}"
-  fi
-  local -r level
+  level="$(validate_log_level level)" && shift
 
   case "${level}" in
     "${LOG_LEVEL_DEBUG}")
@@ -334,13 +340,103 @@ log() {
   esac
 }
 
+set_script_name() {
+  require_operands 1 "$@" || return 1
+  local -r name="$1"
+
+  bash_logger_adapter::call set_script_name "$name"
+}
+
+set_log_level() {
+  require_operands 1 "$@" || return 1
+  local -r level="$1"
+
+  bash_logger_adapter::call set_log_level "$level"
+}
+
+declare -r BOOLEAN_TRUE="true"
+declare -r BOOLEAN_FALSE="false"
+declare -r BOOLEAN_ON="on"
+declare -r BOOLEAN_OFF="off"
+declare -r BOOLEAN_YES="yes"
+declare -r BOOLEAN_NO="no"
+
+is_boolean() {
+  require_operands 1 "$@" || return 1
+  local bool="$1"
+  readonly bool="${bool,,}"
+
+  local boolean_values="${BOOLEAN_TRUE}|${BOOLEAN_FALSE}|${BOOLEAN_ON}|${BOOLEAN_OFF}"
+  boolean_values+="|${BOOLEAN_YES}|${BOOLEAN_NO}"
+  readonly boolean_values
+
+  if ! [[ "$bool" =~ ^($boolean_values)$ ]]; then
+    error "${1} must match regex: ${boolean_values}"
+    bashkit_print_stack_trace
+    return 1
+  fi
+}
+
+set_timezone_utc() {
+  require_operands 1 "$@" || return 1
+  local -r utc="$1"
+  is_boolean utc
+
+  _bash_logger_adapter_call set_timezone_utc "$utc"
+}
+
+set_log_format() {
+  require_operands 1 "$@" || return 1
+  local -r format="$1"
+
+  _bash_logger_adapter_call set_log_format "$format"
+}
+
+set_journal_logging() {
+  require_operands 1 "$@" || return 1
+  local -r journal="$1"
+  is_boolean journal
+
+  _bash_logger_adapter_call set_journal_logging "$journal"
+}
+
+set_journal_tag() {
+  require_operands 1 "$@" || return 1
+  local -r tag="$1"
+
+  _bash_logger_adapter_call set_journal_tag "$tag"
+}
+
+set_syslog_facility() {
+  require_operands 1 "$@" || return 1
+  local -r facility="$1"
+
+  _bash_logger_adapter_call set_syslog_facility "$facility"
+}
+
+set_unsafe_allow_ansi_codes() {
+  require_operands 1 "$@" || return 1
+  local -r bool="$1"
+  is_boolean "$bool"
+
+  _bash_logger_adapter_call set_unsafe_allow_ansi_codes "$bool"
+}
+
 declare __bashkit_local_path="${__bash_logger_adapter_local_path}/../bashkit"
 if [[ "${__bashkit_local_lib_bashkit_options_operands_utils_sourced:-}" != "true" ]]; then
   declare __bashkit_local_lib_bashkit_options_operands_utils="${__bashkit_local_path}/local/lib/bashkit/options-operands-utils.sh"
   [[ -f "${__bashkit_local_lib_bashkit_options_operands_utils}" ]] || { printf '%s\n' "error file not found: ${__bashkit_local_lib_bashkit_options_operands_utils}" >&2; exit 1; }
-  # shellcheck source=/../bashkit/local/lib/bashkit/options-operands-utils.sh
+  # shellcheck source=../bashkit/local/lib/bashkit/options-operands-utils.sh
   . "${__bashkit_local_lib_bashkit_options_operands_utils}"
   unset __bashkit_local_lib_bashkit_options_operands_utils
+fi
+
+if [[ "${facilities:-}" != "true" ]]; then
+  declare facilities="${__bash_logger_adapter_local_path}/facilities.sh"
+  [[ -f "$facilities" ]] || { printf '%s\n' "error file not found: ${facilities}" >&2; exit 1; }
+  # shellcheck source=adapter.sh
+  . "$facilities"
+  unset facilities
 fi
 
 unset __bash_logger_adapter_local_path __bashkit_local_path
