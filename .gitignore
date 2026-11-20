@@ -1,6 +1,8 @@
 .ansible/
 .claude/settings.local.json
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 # Ignition files shouldn't exist, but just in case one gets erroneously created.
 *.ign
 deploy/butane/**/manifests/**

@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "amatlash.json-schema-validation-tool",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "mads-hartmann.bash-ide-vscode",
+        "rogalmic.bash-debug",
+        "timonwong.shellcheck",
+        "jetmartin.bats",
+        "aaron-bond.better-comments",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-vscode.makefile-tools"
+    ]
+}

@@ -1,0 +1,28 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/kubevirt.io/virtualmachine_v1.json": [
+            "pkg/workloads/rick-vm/base/virtual-machine.yaml"
+        ],
+        "https://raw.githubusercontent.com/k3d-io/k3d/main/pkg/config/v1alpha5/schema.json": [
+            "deploy/k3d/**/*.yaml"
+        ],
+        "https://relativ-it.github.io/Butane-Schemas/Butane-Schema.json": [
+            "*.bu"
+        ],
+        "https://raw.githubusercontent.com/k3s-io/k3s-charts/refs/heads/main/charts/traefik/39.0.201%2Bup39.0.2/.schema.yaml": [
+            "pkg/operators/traefik-custom/overlays/prod/values.yaml"
+        ],
+        "https://www.schemastore.org/traefik-v2.json": [
+            "pkg/operators/traefik-custom/base/tlsstore/default.yaml"
+        ],
+    },
+    "files.associations": {
+        "*.env.example": "shellscript",
+        "*.env": "shellscript",
+        "*.toml.example": "toml"
+    },
+    "cSpell.words": [
+        "virtualmachine",
+        "virtualmachines"
+    ],
+}
