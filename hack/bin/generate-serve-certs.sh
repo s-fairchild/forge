@@ -1,47 +1,47 @@
 #!/bin/bash
 #
-# hack/bin/generate-serve-certs.sh
+# Generate a self-signed TLS key and certificate for serving ignition, stored as
+# podman secrets.
 
-_warn_log() {
-  local -r n="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-  warn "podman secret ${n} already exists. Refusing to replace ${n}. Delete ${n} to recreate."
-}
-
-# main()
+# main(environment [cert_options...])
 #
-# Generates an nginx TLS private key and self-signed certificate, storing both
-# as named podman secrets for use by the ignition serving container.
+# Generates an nginx TLS private key with openssl::private_key_gen and a
+# self-signed certificate with openssl::self_signed_cert_gen, storing them as the
+# podman secrets ssl-key-<environment> and ssl-cert-<environment> for use by the
+# ignition serving container. Does nothing if either secret already exists.
 #
 # Globals:
-#   None.
+#   SCRIPT_NAME   Read to scope the logger's script name.
 # Arguments:
-#   1) environment - string; environment name used to derive the
-#      ssl-key-<environment>/ssl-cert-<environment> podman secret names.
-#   remaining args - passed through to openssl_gen_self_signed_certificate.
+#   $1   Environment name used to derive the ssl-key-<environment> and
+#        ssl-cert-<environment> podman secret names.
+#   $@   Remaining operands, passed to openssl::self_signed_cert_gen.
 # Outputs:
-#   Writes progress/warning messages via info/warn; the generated key and
-#   certificate are stored as podman secrets, not printed.
+#   Writes progress/warning log lines; the generated key and certificate are
+#   stored as podman secrets, not printed.
 # Returns:
 #   0 on success, including the no-op case where either secret already
-#   exists. Calls fatal (exit 1) if key/certificate generation or secret
-#   storage fails.
+#   exists. 1 if the environment operand is missing, or (after a fatal log
+#   line) if key/certificate generation or secret storage fails.
 main() {
-  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-  local -r environment="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
+  set_script_name "${SCRIPT_NAME:-}:${FUNCNAME[0]}"
+  log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
+  core::require_operands 1 "$@" || return
+  local -r environment="$1"
   shift
 
   local -r key_name="ssl-key-${environment}" cert_name="ssl-cert-${environment}"
-  debug "$(declare -p environment key_name cert_name)"
+  log_debug "$(declare -p environment key_name cert_name)"
 
-  if podman_secret_exists "${key_name}"; then
-    _warn_log "${key_name}"
-    return
-  elif podman_secret_exists "${cert_name}"; then
-    _warn_log "${cert_name}"
-    return
+  if podman::secret_exists "${key_name}"; then
+    log_warn "podman secret ${key_name} already exists. Refusing to replace ${key_name}. Delete ${key_name} to recreate."
+    return 0
+  elif podman::secret_exists "${cert_name}"; then
+    log_warn "podman secret ${cert_name} already exists. Refusing to replace ${cert_name}. Delete ${cert_name} to recreate."
+    return 0
   fi
 
-  local -r fatal_msg_prefix="failed to generate and save podman secret"
   local -a labels_common=(
     "-l"
     "environment=${environment}"
@@ -49,55 +49,47 @@ main() {
     "type=ssl"
   )
 
-  info "Generating ssl private key... saving to podman secret: ${key_name}"
-  openssl_gen_private_key \
-    | podman_secret_create_replace_from_stdin \
+  log_info "Generating ssl private key... saving to podman secret: ${key_name}"
+  openssl::private_key_gen \
+    | podman::secret_create_replace_from_stdin \
       "${labels_common[@]}" \
       -l "ssl=key" \
       "${key_name}" \
-    || fatal "${fatal_msg_prefix}: ${key_name}"
+    || {
+      core::print_stack_trace
+      log_fatal "failed to generate and save podman secret: ${key_name}"
+      # log_fatal only logs.
+      return 1
+    }
 
-  info "Generating self signed certificate... saving to podman secret: ${cert_name}"
-  podman_secret_showsecret "${key_name}" \
-    | openssl_gen_self_signed_certificate "$@" \
-    | podman_secret_create_replace_from_stdin \
+  log_info "Generating self signed certificate..."
+  if podman::secret_showsecret "${key_name}" \
+    | openssl::self_signed_cert_gen "$@" \
+    | podman::secret_create_replace_from_stdin \
       "${labels_common[@]}" \
       -l "ssl=cert" \
-      "${cert_name}" \
-    || fatal "${fatal_msg_prefix}: ${cert_name}"
+      "${cert_name}"; then
+
+      log_info "Self signed certificate saved in podman secret: ${cert_name}"
+  else
+    core::print_stack_trace
+    log_fatal "failed to generate self signed certificate and/or failed to create podman secret: ${cert_name}"
+    return 1
+  fi
 }
 
-if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
-  declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
-  [[ -f "${__bash_logger_adapter_path}" ]] || { printf '%s\n' "failed to find file: ${__bash_logger_adapter_path}" >&2; exit 1; }
-  # shellcheck source=../vendor/bash-logger-adapter/adapter.sh
-  . "${__bash_logger_adapter_path}"
-  unset __bash_logger_adapter_path
-fi
+# shellcheck source=../lib/git/submodule.sh
+. "${BASH_SOURCE[0]%/*}/../lib/git/submodule.sh"
+git::submodule_require "${BASH_SOURCE[0]%/*}/../vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh"
 
-if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
-  declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"
-  [[ -f "${__bashkit_core}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__bashkit_core}"
-  # shellcheck source=../vendor/bashkit/local/lib/bashkit/core/contract-utils.sh
-  . "${__bashkit_core}"
-  unset __bashkit_core
-fi
+# Sourced, not imported: `import` is defined by the bootstrap itself.
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh
+. "${BASH_SOURCE[0]%/*}/../vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh"
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/openssl/cert-utils.sh
+import "${BASH_SOURCE[0]%/*}/../vendor/bashkit/local/lib/bashkit/openssl/cert-utils.sh"
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/podman/podman-secret.sh
+import "${BASH_SOURCE[0]%/*}/../vendor/bashkit/local/lib/bashkit/podman/podman-secret.sh"
 
-if [[ "${__hack_lib_openssl_gen_certs_sourced:-}" != "true" ]]; then
-  declare gen_ssl_certificates="hack/lib/openssl/openssl-gen-certs.sh"
-  [[ -f "${gen_ssl_certificates}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${gen_ssl_certificates}"
-  info "Sourcing ${gen_ssl_certificates}"
-  # shellcheck source=../lib/openssl/openssl-gen-certs.sh
-  . "${gen_ssl_certificates}"
-  unset gen_ssl_certificates
-fi
-
-if [[ "${__hack_lib_podman_secret_sourced:-}" != "true" ]]; then
-  declare podman_secrets="hack/lib/podman/podman-secret.sh"
-  [[ -f "${podman_secrets}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${podman_secrets}"
-  # shellcheck source=../lib/podman/podman-secret.sh
-  . "${podman_secrets}"
-  unset podman_secrets
-fi
+core::logger_init --name "$(basename "$0")"
 
 main "$@"

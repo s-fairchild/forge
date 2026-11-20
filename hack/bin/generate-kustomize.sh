@@ -1,148 +1,171 @@
 #!/bin/bash
-
-set -o nounset \
-  -o errexit
-
-[[ "${XTRACE:=0}" -eq 1 ]] && set -x
-
-# main()
 #
-# Entry point. Validates arguments and delegates to generate_kube_manifests.
+# Build every enabled app's kustomize overlay into a directory of manifests.
+
+[[ "${XTRACE:-0}" -eq 1 ]] && set -x
+
+# main(base_dir manifests overlay)
+#
+# Entry point. Creates <base_dir> and <manifests> if needed, then delegates to
+# generate_kube_manifests.
+#
+# Globals:
+#   SCRIPT_NAME   Read to scope the logger's script name.
+# Arguments:
+#   $1   Root path to search for overlay directories (e.g. pkg).
+#   $2   Destination directory for the generated YAML files.
+#   $3   Overlay name to match (e.g. "prod", "staging").
+# Outputs:
+#   Writes generated manifests under <manifests>; log lines.
+# Returns:
+#   0 on success. Calls fatal or log_fatal (non-zero exit) if an operand is
+#   missing, a directory can't be created, or generate_kube_manifests fails.
+main() {
+  log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  set_script_name "${SCRIPT_NAME:-}:${FUNCNAME[0]}"
+
+  core::require_operands 3 "$@" || return
+  local -r base="${1}"
+  local -r out="${2}"
+  local -r overlay="${3}"
+  log_debug "$(declare -p base out overlay)"
+
+  mkdir -p "${base}" || {
+    core::fail "failed to create directory: ${base}" || return
+  }
+  mkdir -p "${out}" || {
+     core::fail "failed to create directory: ${out}" || return
+  }
+
+  if ! generate_kube_manifests "${base}" "${out}" "${overlay}"; then
+    core::fail "failed to generate kube manifests." || return
+  fi
+}
+
+# is_enabled(app enabled)
+#
+# Tests whether <app> matches the array named by <enabled>, joined into an ERE
+# alternation (app1|app2|...). The match is unanchored, so <app> also matches
+# when an entry matches only part of its name.
 #
 # Globals:
 #   None.
 # Arguments:
-#   1) base_dir  - string; root path to search for overlay directories.
-#   2) manifests - string; destination directory for generated YAML files.
-#   3) overlay   - string; overlay name to match (e.g. "prod", "staging").
+#   $1   The application name to test.
+#   $2   Nameref: the name of an array of enabled app names (e.g. apps_enabled).
 # Outputs:
-#   Writes generated manifests under $manifests; logs progress via debug/info.
+#   None.
 # Returns:
-#   0 on success. Calls fatal (exit 1) if an operand is missing, a
-#   destination directory can't be created, or manifest generation fails.
-main() {
-  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-  local -r base="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-  local -r out="${2?$(fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
-  local -r overlay="${3?$(fatal "\$3 ${ERROR_OPERAND_REQUIRED}")}"
-  debug "$(declare -p base)"
-  debug "$(declare -p out)"
-  debug "$(declare -p overlay)"
-
-  mkdir -p "${base}" || fatal "${ERROR_FAILED_TO_CREATE_DIR}: ${base}"
-  mkdir -p "${out}" || fatal "${ERROR_FAILED_TO_CREATE_DIR}: ${out}"
-
-  if ! generate_kube_manifests "${base}" "${out}" "${overlay}"; then
-    fatal "failed to generate kube manifests."
-  fi
-}
-
-# is_enabled()
-#
-# Returns 0 if $app is NOT matched by the $disabled regex, non-zero if it is.
-# Used to skip apps listed in $apps_enabled.
-#
-# args:
-#   * 1) app          - string; application name to test.
-#   * 2) apps_enabled - string; ERE pattern of disabled app names (e.g.
-#     "(pihole|coredns-custom)").
+#   0 if <app> matches; 1 otherwise.
 is_enabled() {
-  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
-  local -r app="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-  local -n enabled="${2?$(fatal "\$2 ${ERROR_OPERAND_REQUIRED}")}"
+  log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+
+  core::require_operands 2 "$@" || return
+  local -r app="${1}"
+  local -n enabled="${2}"
 
   local enabled_regex
   enabled_regex="$(IFS='|'; printf '%s' "${enabled[*]}")"
-  debug "$(declare -p app enabled enabled_regex)"
-  [[ "${app}" =~ ${enabled_regex} ]] || return 1
+  log_debug "$(declare -p app enabled enabled_regex)"
+
+  [[ "${app}" =~ ${enabled_regex} ]]
 }
 
-# get_app_name()
+# get_app_name(path)
 #
-# Extracts the application name from an overlay directory path by walking two
+# Prints the application name for an overlay directory path by walking two
 # dirname levels up and taking the basename.
 # Example: pkg/workloads/jellyfin/overlays/prod → jellyfin
 #
-# args:
-#   * 1) path - string; overlay directory path as returned by find.
+# Globals:
+#   None.
+# Arguments:
+#   $1   Overlay directory path, as found by find.
+# Outputs:
+#   The application name on stdout.
+# Returns:
+#   basename's exit status.
 get_app_name() {
-  local -r path="${1?$(fatal "\$1 ${ERROR_OPERAND_REQUIRED}")}"
-  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  core::require_operands 1 "$@" || return
+  local -r path="${1}"
 
   basename "$(dirname "$(dirname "${path}")")"
 }
 
-# generate_kube_manifests()
+# generate_kube_manifests(base dest overlay)
 #
-# Finds all directories named $overlay under $base, runs
-# `kubectl kustomize --enable-helm` on each, and writes the output to
-# $dest/<app-name>.yaml.  Apps listed in $apps_enabled are skipped.
+# Finds every directory named <overlay> under <base> and, for each one whose app
+# is enabled (is_enabled against apps_enabled), runs `kustomize build` on it and
+# writes the output to <dest>/<app-name><__manifest_file_extension>. Stops at the
+# first build that fails. Apps not listed in apps_enabled are skipped.
 #
-# args:
-#   * 1) base    - string; root path to search.
-#   * 2) dest    - string; destination directory for generated YAML files.
-#   * 3) overlay - string; directory name to match (e.g. "prod").
+# Globals:
+#   apps_enabled                Read: allow-list of app names, from
+#                               hack/etc/kube-manifests-gen.env.
+#   __manifest_file_extension   Read: extension of the generated files, from
+#                               hack/etc/kube-manifests-gen.env.
+# Arguments:
+#   $1   Root path to search.
+#   $2   Destination directory for the generated YAML files.
+#   $3   Directory name to match (e.g. "prod").
+# Outputs:
+#   Writes one file per enabled app to <dest>; log lines, and an error if no
+#   overlay directories are found or a build fails.
+# Returns:
+#   1 if an operand is missing or no overlay directories are found; 0 otherwise.
 generate_kube_manifests() {
-  debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  log_debug "Starting ${FUNCNAME[0]}($(IFS=' '; echo "$*"))"
+  set_script_name "${SCRIPT_NAME:-}:${FUNCNAME[0]}"
 
-  core::require_operands 3 "$@" || return 1
-  local -r pkgs="$1"
-  local -r dest="$2"
-  local -r overlay="$3"
+  core::require_operands 3 "$@" || return
+  local -r pkgs="${1}"
+  local -r dest="${2}"
+  local -r overlay="${3}"
+  log_debug "$(declare -p base dest overlay)"
 
-  debug "$(declare -p base)"
-  debug "$(declare -p dest)"
-  debug "$(declare -p overlay)"
+  local -a pkg_overlays=()
+  mapfile -t \
+    < <(find "${pkgs}" -type d -name "${overlay}") \
+    pkg_overlays
 
-  local -a MAPFILE=()
-  mapfile -d '' -t < <(find "${pkgs}" -type d -name "${overlay}" -print0)
-  if [[ ! -v MAPFILE ]]; then
-    error "No overlays were found in ${pkgs}."
-    return 1
+  if [[ ! -v pkg_overlays ]]; then
+    core::fail "No overlays were found in ${pkgs}." || return
   fi
-  debug "$(declare -p MAPFILE)"
+  readonly pkg_overlays
+  log_debug "$(declare -p pkg_overlays)"
 
-  local out app
-  for k in "${MAPFILE[@]}"; do
-    app="$(get_app_name "${k}")"
-    debug "$(declare -p app)"
+  local manifest_out app_kustomize_base
+  for k in "${pkg_overlays[@]}"; do
+    app_kustomize_base="$(get_app_name "${k}")"
+    log_debug "$(declare -p app_kustomize_base)"
 
-    if is_enabled "${app}" apps_enabled; then
-      out="${dest}/${app}${__manifest_file_extension}"
-      debug "$(declare -p out)"
+    if is_enabled "${app_kustomize_base}" apps_enabled; then
+      manifest_out="${dest}/${app_kustomize_base}${__manifest_out_extension}"
+      log_debug "$(declare -p manifest_out)"
 
-      info "Building ${k}"
-      if ! kustomize build "${k}" > "${out}"; then
-        error "kustomize build failed: ${k}"
-        break 2
+      if ! kube::kustomize_build "${k}" > "${manifest_out}"; then
+        core::fail "kustomize build failed: ${k}" || return
       fi
-      info "Build succeeded: ${out}"
+      log_info "manifest_out: ${manifest_out}"
     fi
   done
 }
 
-if [[ "${__bash_logger_adapter_sourced:-}" != "true" ]]; then
-  declare __bash_logger_adapter_path="hack/vendor/bash-logger-adapter/adapter.sh"
-  [[ -f "${__bash_logger_adapter_path}" ]] || { printf '%s\n' "failed to find file: ${__bash_logger_adapter_path}" >&2; exit 1; }
-  # shellcheck source=../vendor/bash-logger-adapter/adapter.sh
-  . "${__bash_logger_adapter_path}"
-  unset __bash_logger_adapter_path
-fi
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh
+. "${BASH_SOURCE[0]%/*}/../vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh"
+# shellcheck source=../vendor/bash-logger/logging.sh
+. /dev/null
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/core/logger-utils.sh
+. /dev/null
+import core/logger-utils.sh
+# shellcheck source=../etc/kube-manifests-gen.env
+. /dev/null
+import "${BASH_SOURCE[0]%/*}/../etc/kube-manifests-gen.env"
+# shellcheck source=../vendor/bashkit/local/lib/bashkit/kube/kube.sh
+. /dev/null
+import kube/kube.sh
 
-if [[ "${__bashkit_core_sourced:-}" != "true" ]]; then
-  declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"
-  [[ -f "${__bashkit_core}" ]] || fatal "${ERROR_FILE_NOT_FOUND}: ${__bashkit_core}"
-  # shellcheck source=../vendor/bashkit/local/lib/bashkit/core/contract-utils.sh
-  . "${__bashkit_core}"
-  unset __bashkit_core
-fi
-
-if [[ "${__hack_etc_kube_manifests_gen_sourced:-}" != "true" ]]; then
-  declare __hack_etc_kube_manifests_gen="hack/etc/kube-manifests-gen.env"
-  [[ -f "${__hack_etc_kube_manifests_gen}" ]] || fatal " ${ERROR_FILE_NOT_FOUND}: ${__hack_etc_kube_manifests_gen}"
-  # shellcheck source=../etc/kube-manifests-gen.env
-  . "${__hack_etc_kube_manifests_gen}"
-  unset __hack_etc_kube_manifests_gen
-fi
+core::logger_init --name "$(basename "$0")"
 
 main "$@"
