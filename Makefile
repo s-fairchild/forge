@@ -198,3 +198,12 @@ coverage: ## Run the hack/ bats test suite under kcov and generate an HTML cover
 		coverage-report \
 		${test_bats_bin} \
 		--recursive ${test_dirs}
+
+gitleaks-report:
+	podman run \
+		--rm \
+		-v $${PWD}:/repo:O \
+		ghcr.io/gitleaks/gitleaks:latest \
+			git \
+			/repo \
+			-v
