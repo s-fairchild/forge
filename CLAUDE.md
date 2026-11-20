@@ -15,9 +15,9 @@ After cloning, initialize submodules:
 ```bash
 git submodule update --init --recursive
 ```
-Submodules: `hack/vendor/bashkit/` (github:s-fairchild/bashkit, standalone bash function library), `hack/vendor/bash-logger/` (github:s-fairchild/bash-logger, logging engine), and `deploy/butane/base/vendor/btrfsmaintenance/`. There is no `bash-utils` submodule — an earlier logging stack of that name was fully replaced by `bash-logger` (see below).
+Submodules: `hack/vendor/bashkit/` (github:s-fairchild/bashkit, standalone bash function library), `hack/vendor/bash-logger/` (github:s-fairchild/bash-logger, logging engine), `deploy/butane/base/vendor/btrfsmaintenance/`, and the bats test framework under `test/vendor/` (`bats-core`, `bats-support`, `bats-assert`, `bats-file`, `bats-mock`). There is no `bash-utils` submodule — an earlier logging stack of that name was fully replaced by `bash-logger` (see below).
 
-There is no automated test suite (no bats/shellcheck-CI). `.shellcheckrc` sets `external-sources=true source-path=SCRIPTDIR check-sourced=true`; validate a changed script with `shellcheck <file>` and by actually sourcing/running it from repo root.
+`make test` runs the bats suites (vendored `test/vendor/bats-core`, run from repo root): `test/bin/<name>.bats` for `hack/bin/<name>.sh`, and `test/lib/<dir>/<file>.bats` for `hack/lib/<dir>/<file>.sh` (none yet). `test/test_helper.bash` has the shared setup and explains how to load what a new test exercises. Today only `generate-ignition-main.sh`, `generate-kustomize.sh` and `generate-serve-certs.sh` have tests. There is no CI. `.shellcheckrc` sets `external-sources=true source-path=SCRIPTDIR check-sourced=true`; validate a changed script with `shellcheck <file>` (`make lint-hack`), `make test`, and by actually sourcing/running it from repo root.
 
 ## Key Make Targets
 
@@ -68,13 +68,13 @@ $EDITOR deploy/butane/overlays/prod/secrets.env
 
 ## Logging and Vendored Dependencies
 
-All scripts source `hack/vendor/bash-logger-adapter/adapter.sh`, a compatibility shim that backs the *old* bash-utils logging API (`fatal`/`error`/`warn`/`info`/`debug`/`log`, the `ERROR_*`/`WARN_*` message constants, and `core::require_operands`) with the vendored `bash-logger` submodule (`hack/vendor/bash-logger/`). Every call site across `hack/lib`, `hack/bin`, and `hack/vendor/bashkit` is unchanged from the bash-utils days; only the sourcing path was repointed. Precedence for verbosity/quiet is **CLI flag > env var (`VERBOSE`/`QUIET`/`DEBUG`) > built-in default**; a script with its own `-v`/`-q` getopts flags calls `bash_logger_adapter_apply_overrides` after parsing to give the CLI tier priority.
+`hack/vendor/bashkit/` is a standalone, independently-versioned library (its own `hack/vendor/bashkit/CLAUDE.md` and `docs/STYLEGUIDE.md` have full detail) vendored as a git submodule at exactly `hack/vendor/bashkit/`. Logging comes from the vendored `bash-logger` submodule (`hack/vendor/bash-logger/`), which bashkit's `core::logger_init` loads and initializes; verbosity comes from `BASHKIT_VERBOSE`/`BASHKIT_QUIET`/`BASHKIT_LEVEL` (see bashkit's `CLAUDE.md`). There are no `ERROR_*` message constants: messages are written out.
 
-`hack/vendor/bashkit/` is a standalone, independently-versioned library (its own `CLAUDE.md` at `hack/vendor/bashkit/CLAUDE.md` has full detail) vendored as a git submodule at exactly `hack/vendor/bashkit/`. Two different sourcing conventions are load-bearing and must not be mixed up:
-- **Files inside `hack/vendor/bashkit/`** source their sibling dependencies (`bash-logger-adapter/adapter.sh`, `options.sh`) relative to their own location via `${BASH_SOURCE[0]%/*}/<relative-path>` — this lets `local/bin/*` wrapper executables (e.g. `coreos-installer`) run correctly regardless of the caller's CWD, including when installed standalone to `~/.local/bin`.
-- **Every other consumer** (`hack/lib/*`, `hack/bin/*`) sources bashkit/bash-logger-adapter files with paths hardcoded relative to the **repo root** (e.g. `declare __bashkit_core="hack/vendor/bashkit/local/lib/bashkit/core/contract-utils.sh"`), which is why those scripts must always be run from repo root.
+- **Entry points** (`hack/bin/*.sh`) source `hack/vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh` first, relative to themselves (`${BASH_SOURCE[0]%/*}/../vendor/bashkit/...`), then load bashkit (`import core/contract-utils`, or a `.` line) and call `core::logger_init` once. The bootstrap turns on `errexit`/`nounset`/`pipefail` and defines `import`. Without it, a bashkit library's `import` lines run ImageMagick's `import(1)`, which hangs waiting for a mouse click.
+- **Files inside `hack/vendor/bashkit/`** import their own dependencies by name, so the `local/bin/*` wrappers work from any CWD. A wrapper run as a script sources the bootstrap itself.
+- **`hack/lib/*`** files source their dependencies relative to themselves (`${BASH_SOURCE[0]%/*}/...`) and never source the bootstrap: the entry point that loads them must have done so.
 
-Every sourced lib file (in both `hack/lib/` and `hack/vendor/bashkit/`) guards against double-inclusion with a `declare -r __<lib>_sourced="true"` check, and re-sources its own dependencies rather than assuming a caller already loaded them.
+Every sourced file (`hack/lib/*`, `hack/etc/*.env`, and everything in `hack/vendor/bashkit/`) can be sourced any number of times without changing anything. There are no `__*_SOURCED` guard variables, and constants are only defined if they aren't already (`[[ -v X ]] || readonly X="..."`; for an array, test with `declare -p` and declare it with `declare -g`). Each file still loads its own dependencies rather than assuming a caller already did. bashkit's `os/bk-bootstrap.sh` is the one file that keeps a guard.
 
 ## Ignition Generation Pipeline
 
@@ -95,7 +95,6 @@ Key library files:
 - `hack/lib/podman/podman-secret.sh` — secret create/inspect/filter/showsecret helpers (`podman_secret_create_replace_from_stdin`, `podman_secret_create_from_file`, `podman_secret_gen_file_secretsdata`, `podman_secret_filter_by_label`)
 - `hack/lib/podman/podman.sh` — umbrella loader for `podman-container.sh`, `podman-secret.sh`, `podman-volume.sh`
 - `hack/lib/checksum/checksum.sh` — umbrella loader for `format.sh` (`checksum_parse_hash`) and `sha512sum.sh` (`sha512sum_gen`)
-- `hack/vendor/bash-logger-adapter/adapter.sh` — logging shim described above
 
 ## Butane Config Structure
 

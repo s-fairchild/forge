@@ -175,7 +175,10 @@ test_bats_bin := test/vendor/bats-core/bin/bats
 test_jobs := $(shell nproc 2> /dev/null || echo 1)
 # Only our own test dirs -- NOT `test` itself, which would make --recursive descend into the
 # vendored bats-core/bats-support/bats-assert/bats-file/bats-mock submodules' own .bats suites.
-test_dirs := test/bin test/lib test/vendor/bash-logger-adapter
+# test/bin holds tests for hack/bin/*.sh and test/lib those for hack/lib/**/*.sh. Only the ones
+# that exist are passed: bats fails the whole run on a path that doesn't, and git drops an empty
+# directory, so test/lib appears once it has a test in it.
+test_dirs := $(wildcard test/bin test/lib)
 
 .PHONY: test coverage
 
@@ -191,7 +194,7 @@ test: ## Run the hack/ bats test suite in parallel
 coverage: ## Run the hack/ bats test suite under kcov and generate an HTML coverage report
 	command -v kcov > /dev/null 2>&1 || { echo "kcov not found; install kcov to run 'make coverage'" >&2; exit 1; }
 	rm -rf coverage-report
-	kcov --include-path=hack/bin,hack/lib,hack/vendor/bash-logger-adapter \
+	kcov --include-path=hack/bin,hack/lib \
 		coverage-report \
 		${test_bats_bin} \
 		--recursive ${test_dirs}

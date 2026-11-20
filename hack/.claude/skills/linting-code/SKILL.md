@@ -26,15 +26,14 @@ one wholesale.
 
 Forge has **no pre-commit config and no markdownlint config** — unlike the bash-logger
 submodule. ShellCheck runs as a plain host binary via two root `Makefile` targets
-(`lint-hack`, `lint-hack-file`); there is no automated test suite in this repo (per
-`CLAUDE.md`), so "does it lint clean" is only half the check — see "Confirm it actually
-behaves" below.
+(`lint-hack`, `lint-hack-file`). The bats suites (`make test`) only cover a few `hack/bin` scripts so
+far, so "does it lint clean" is only half the check — see "Confirm it actually behaves" below.
 
 `lint-hack` excludes **every git submodule under `hack/`** (currently `hack/vendor/bashkit`
 and `hack/vendor/bash-logger`), derived at Makefile-eval time from `.gitmodules` rather than
 hardcoded — a future submodule added under `hack/` is excluded automatically, no Makefile edit
-needed. Non-submodule vendored code (e.g. `hack/vendor/bash-logger-adapter/`, a plain directory
-in this repo, not a submodule) is still linted. `lint-hack` also runs ShellCheck once per file
+needed. Non-submodule vendored code (a plain directory under `hack/vendor/`, not a submodule) is
+still linted. `lint-hack` also runs ShellCheck once per file
 in parallel across `nproc` jobs via `xargs -P`, printing each `shellcheck <file>` invocation to
 stderr as it's dispatched (`xargs -t`) so a long run shows visible progress instead of sitting
 silent.
@@ -46,11 +45,11 @@ via `make -C`, which is what keeps cwd at repo root — see the note on sourcing
 below). `.shellcheckrc`'s `source-path=SCRIPTDIR` + `check-sourced=true` mean ShellCheck
 follows `source`/`.` statements relative to each script's own directory (this resolution is
 cwd-independent — verified by diffing output run from repo root vs. from `hack/`), but whether
-that resolution is *correct* still depends on the repo's two sourcing conventions (see
-`CLAUDE.md` "Logging and Vendored Dependencies") — files under `hack/vendor/bashkit/` source
-siblings relative to their own location, everything else (`hack/lib/*`, `hack/bin/*`)
-hardcodes paths relative to repo root, which is why those must be *run* from there (linting
-itself doesn't require it, but stay consistent).
+that resolution is *correct* still depends on the sourcing conventions in `CLAUDE.md` ("Logging
+and Vendored Dependencies"): `hack/lib/*` and `hack/bin/*` source files relative to themselves
+(`${BASH_SOURCE[0]%/*}/...`), and files under `hack/vendor/bashkit/` `import` theirs by name. The
+scripts still assume they run from repo root (e.g. `hack/etc/kube-manifests-gen.env` finds `pkg/`
+from the CWD).
 
 ### Single file
 
@@ -69,9 +68,13 @@ has its own `linting-code` skill — use those for files under them, not this ta
 
 ### Confirm it actually behaves, not just parses
 
-There's no automated test suite here. After ShellCheck passes, validate by actually sourcing
-or running the script from repo root — e.g. `source hack/lib/ignition/ignition.sh` for a lib
-file, or exercising a `hack/bin/*.sh` entry point's `-h`/actual invocation.
+After ShellCheck passes, run `make test` if the script has a suite (`test/bin/<name>.bats` or
+`test/lib/<dir>/<file>.bats`; see `test/test_helper.bash` for adding one), and validate by actually
+sourcing or running the script from repo root — e.g. for a lib file, source
+`hack/vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh` first and then
+`. hack/lib/kubevirt/kubevirt.sh` (twice, to check it changes nothing), or exercise a
+`hack/bin/*.sh` entry point's `-h`/actual invocation. Without the bootstrap, a bashkit library's
+`import` lines run ImageMagick's `import(1)` and hang.
 
 ## Key rules — write clean code from the start
 
@@ -107,15 +110,13 @@ POSIX subset.
   Return value. A short, self-evident helper (e.g. a one-line `usage_*()`) can skip this.
 * **`main`**: a script with more than one function defines `main()` and calls `main "$@"` as the
   last line — already the convention for every `hack/bin/*.sh` entry point.
-* Every sourced lib file (`hack/lib/*`, `hack/vendor/bashkit/*`) guards against double-inclusion
-  with `declare -r __hack_lib_<path>_sourced="true"`, named after the file's path under
-  `hack/lib/` — `<dir>_<filename>` (e.g. `hack/lib/ignition/butane.sh` →
-  `__hack_lib_ignition_butane_sourced`), but drop the duplicate segment when the filename
-  already starts with (or equals) the directory name, to avoid stuttering (e.g.
-  `hack/lib/podman/podman-secret.sh` → `__hack_lib_podman_secret_sourced`, not
-  `__hack_lib_podman_podman_secret_sourced`; `hack/lib/ignition/ignition.sh` →
-  `__hack_lib_ignition_sourced`). Re-source a file's own dependencies rather than assuming a
-  caller already loaded them — preserve this when adding new lib files.
+* Every sourced file (`hack/lib/*`, `hack/etc/*.env`, `hack/vendor/bashkit/*`) can be sourced any
+  number of times without changing anything. There are no `__*_SOURCED` guard variables: define
+  each constant only if it isn't already (`[[ -v X ]] || readonly X="..."`; for an array, test
+  with `declare -p` and declare it with `declare -g`), and keep the top level to sourcing,
+  function definitions, and constants. Load a file's own dependencies rather than assuming a
+  caller already did. `hack/bin/*.sh` entry points source bashkit's `os/bk-bootstrap.sh` before
+  anything from bashkit — preserve this when adding new files.
 * Shell **libraries** (`hack/lib/**/*.sh`) must not be executable (`chmod -x`) — only
   `hack/bin/*.sh` entry points are. This also signals at a glance which files are meant to be
   sourced vs. run.
@@ -138,5 +139,5 @@ Common in this repo:
 | Code   | Cause                                        | Fix                                                          |
 | ------ | --------------------------------------------- | -------------------------------------------------------------- |
 | SC2086 | Unquoted variable                            | Wrap in `"$var"`                                              |
-| SC1091 | Can't follow a sourced file                  | Usually resolved by `external-sources=true`; if it still fires, confirm you're running from repo root (or, for `hack/vendor/bashkit/`, that the sibling file exists relative to the sourcing file itself) |
+| SC1091 | Can't follow a sourced file                  | Usually resolved by `external-sources=true`; if it still fires, check that the `# shellcheck source=` directive's path exists relative to the file it is in |
 | SC2155 | Combined `local`/assign masking exit status  | Split: `local x; x=$(...)`                                    |

@@ -2,8 +2,12 @@
 #
 # Shared bats setup for the hack/ test suite. Every .bats file loads this via
 # `load "${PWD}/test/test_helper"` — that only resolves correctly when bats is invoked from the
-# repo root (as `make test`/`make coverage` do), matching this repo's existing "run from repo
-# root" convention for hack/lib and hack/bin (see CLAUDE.md "Logging and Vendored Dependencies").
+# repo root (as `make test`/`make coverage` do), matching this repo's "run from repo root"
+# convention for hack/lib and hack/bin (see CLAUDE.md).
+#
+# Tests for hack/bin/<name>.sh go in test/bin/<name>.bats, and tests for hack/lib/<dir>/<file>.sh
+# in test/lib/<dir>/<file>.bats. `make test` runs every .bats file under both directories. See the
+# end of this file for how to load what each kind of test exercises.
 
 REPO_ROOT="$(pwd)"
 export REPO_ROOT
@@ -29,8 +33,8 @@ fi
 
 # common_setup()
 #
-# Call from every .bats file's setup(). Ensures cwd is the repo root (hack/lib/*.sh and
-# hack/bin/*.sh hardcode sourcing paths relative to it) and creates a fresh scratch directory
+# Call from every .bats file's setup(). Ensures cwd is the repo root (the scripts under test read
+# pkg/, hack/etc/ and deploy/ relative to it) and creates a fresh scratch directory
 # for the test to use instead of touching /tmp directly, keeping parallel bats jobs isolated
 # from each other.
 #
@@ -42,6 +46,10 @@ common_setup() {
   cd "${REPO_ROOT}" || return 1
   TEST_DIR="$(mktemp -d "${BATS_TEST_TMPDIR:-${TMPDIR:-/tmp}}/forge-test.XXXXXX")"
   export TEST_DIR
+  # The scripts under test log through bashkit, which picks its bash-logger config from
+  # BASHKIT_ENV. Pin it, so that a developer's own value doesn't apply: the prod config logs to
+  # the journal, and journald broadcasts the emergency level log_fatal uses to every terminal.
+  export BASHKIT_ENV="test"
   # Deliberately NOT setting QUIET=1 here: bash-logger's --quiet means CONSOLE_LOG=false, which
   # suppresses ALL console output including error()/fatal() -- and plenty of tests assert on
   # exactly that text via `assert_output --partial`. Partial matching already tolerates the
@@ -62,35 +70,31 @@ common_teardown() {
 # Loading bats-mock/stub above already prepends its stub bindir onto PATH for the whole test
 # process — call its `stub`/`unstub`/`stub_repeated` functions directly, no wrapper needed here.
 
-# IMPORTANT — sourcing hack/lib/*.sh (or hack/vendor/bash-logger-adapter/adapter.sh) in tests:
+# Testing a hack/bin/*.sh entry point (test/bin/):
 #
-# Every one of those files declares its constants with `declare -r NAME=value` at what looks
-# like file top-level — correct Google-style code when the file is sourced at a script's real
-# top level (which is how hack/bin/*.sh and hack/lib/*.sh actually use each other). But bats
-# runs `setup()`, each `@test` body, and `teardown()` as separate bash *functions*, and `declare`
-# (with or without `-r`/`-a`/etc.) used inside any active function frame always creates a
-# variable local to that frame -- never a global -- regardless of whether the name already
-# exists. (Plain assignment without `declare`/`local`, and `export`, do NOT have this problem --
-# only `declare`/`local`/`readonly` do.)
+# Run it with `run hack/bin/<name>.sh ...` instead of sourcing it. It calls `main "$@"` as its
+# last line, and running it keeps $0 right for its usage text. See test/bin/*.bats.
 #
-# Concretely: if you `source hack/lib/ignition/ignition.sh` inside `setup()`, every `declare -r`
-# constant in that file (and transitively in adapter.sh/bashkit) becomes local to `setup()` and
-# is destroyed the instant `setup()` returns -- by the time your `@test` body runs, those
-# constants are gone (functions themselves are unaffected and stay callable, since function
-# *definitions* are always global regardless of where they're defined; only the constants
-# vanish). The same is true of sourcing at what looks like the .bats file's top level -- bats
-# executes that in its own frame too, which also returns before your `@test` body runs.
+# Testing a hack/lib/**/*.sh file (test/lib/):
 #
-# The only frame that's still active when your test logic runs is the `@test` body itself
-# (bash's `local` variables are visible dynamically to whatever a still-active frame calls,
-# including via bats' `run`). So: **always `source` the file under test as the first line
-# inside the `@test { ... }` body, never in `setup()`** --
+# hack/lib files load bashkit, whose libraries call `import`, so source bashkit's bootstrap
+# before the file under test. Without it, `import` runs ImageMagick's import(1), which hangs
+# waiting for a mouse click. Both can be sourced in setup(): functions and the files' `readonly`
+# constants are global, so they are still defined in each @test body.
 #
-#   @test "ignition_validate -h prints usage" {
-#     source hack/lib/ignition/ignition-validate.sh
-#     run ignition_validate -h
-#     assert_success
+#   setup() {
+#     common_setup
+#     source hack/vendor/bashkit/local/lib/bashkit/os/bk-bootstrap.sh
+#     source hack/lib/kubevirt/kubevirt.sh
 #   }
 #
-# `common_setup`/`common_teardown` (cwd + TEST_DIR) are unaffected by this and stay in
-# setup()/teardown() as normal -- they only use plain assignment/export, not declare/local.
+#   @test "kubevirt::deploy fails when the kustomize dir is missing" {
+#     run kubevirt::deploy "${TEST_DIR}/missing"
+#     assert_failure
+#     assert_output --partial "kustomize dir not found"
+#   }
+#
+# The bootstrap turns on errexit, nounset and pipefail for the test. A sourced file that set a
+# global with a plain `declare` at its top level would lose it here: bats runs setup() as a
+# function, so the variable would be local to it. hack/lib and bashkit use `readonly` or
+# `declare -g` for that reason (bashkit's docs/STYLEGUIDE.md §3.2).
