@@ -1,7 +1,7 @@
 ---
 variant: fcos
 version: 1.7.0
-# rick-staging runs as a KubeVirt VirtualMachine (see deploy/kubevirt/staging/vm.yaml)
+# rick-staging runs as a KubeVirt VirtualMachine (see pkg/workloads/fcos-vm/)
 # on the default pod network with masquerade binding, which assigns the guest's
 # eth0 an address via its own built-in DHCP server -- there is no LAN-routable
 # address to pin here, so this profile just accepts that DHCP lease.

@@ -134,7 +134,12 @@ K3D_CONFIG_DIR := deploy/k3d
 # Unimplemented yet
 # K3D_CONFIG_BASE := $(K3D_CONFIG_DIR)/base/base.yaml
 K3D_CONFIG_STAGING := $(K3D_CONFIG_DIR)/overlays/staging/staging.yaml
-KUBEVIRT_DIR_STAGING := deploy/kubevirt/staging
+
+PKG_OPERATORS_DIR := pkg/operators
+PKG_WORKLOADS_DIR := pkg/workloads
+
+KUBEVIRT_DIR_STAGING := $(PKG_WORKLOADS_DIR)/fcos-vm/overlays/staging
+KUBEVIRT_IGNITION_PAYLOAD_STAGING_PODMAN_SECRET_NAME := ignition-staging-kubevirt
 
 k3d-cluster-create-staging: ## Create the staging k3d cluster and install KubeVirt + CDI
 	hack/bin/k3d-cluster-manage.sh -f $(K3D_CONFIG_STAGING) -c
@@ -142,13 +147,13 @@ k3d-cluster-create-staging: ## Create the staging k3d cluster and install KubeVi
 k3d-cluster-delete-staging: ## Delete the staging k3d cluster
 	hack/bin/k3d-cluster-manage.sh -f $(K3D_CONFIG_STAGING) -d
 
-staging-vm-up: generate-ignition-staging k3d-cluster-create-staging ## Create/refresh the ignition-payload secret and apply the staging KubeVirt VirtualMachine
-	hack/bin/kubevirt-vm-up.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml \
-								-n $(KUBEVIRT_DIR_STAGING)/namespace.yaml \
-								-s ignition-staging
+staging-vm-up: generate-ignition-staging k3d-cluster-create-staging ## Create or update the staging KubeVirt VirtualMachine and its ignition Secret
+	hack/bin/kubevirt-vm-manage.sh -c \
+		-k $(KUBEVIRT_DIR_STAGING) \
+		-i $(KUBEVIRT_IGNITION_PAYLOAD_STAGING_PODMAN_SECRET_NAME)
 
 staging-vm-down: ## Delete the staging KubeVirt VirtualMachine (the k3d cluster keeps running; use k3d-cluster-delete-staging to remove it)
-	hack/bin/kubevirt-vm-down.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml
+	hack/bin/kubevirt-vm-manage.sh -d -k $(KUBEVIRT_DIR_STAGING)
 
 # Every git submodule under hack/ (bash-logger, bashkit, ...) is independently versioned with
 # its own lint tooling; exclude all of them here and lint each via its own skill/toolchain

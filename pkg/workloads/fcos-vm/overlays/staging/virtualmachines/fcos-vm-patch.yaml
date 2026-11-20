@@ -1,0 +1,16 @@
+---
+- op: replace
+  path: /metadata/name
+  value: fcos-rick-staging
+
+- op: add
+  path: /spec/template/spec/hostname
+  value: rick-staging
+
+- op: test
+  path: /spec/template/spec/volumes/1/name
+  value: cloudinitdisk
+
+- op: replace
+  path: /spec/template/spec/volumes/1/cloudInitConfigDrive/secretRef/name
+  value: ignition-payload-staging

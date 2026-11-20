@@ -49,14 +49,13 @@ Submodules:
 │   │       └── rpi4/    # Raspberry Pi 4 agent node
 │   ├── installer/       # Installer Makefile, downloaded FCOS ISOs, customised ISO variants
 │   ├── k3d/             # k3d cluster configs (staging today; prod later)
-│   ├── kubevirt/        # Per-overlay KubeVirt VirtualMachine/Namespace manifests
 ├── hack/
 │   ├── bin/             # Executable scripts (ignition gen, token gen, manifest gen…)
 │   ├── lib/             # Sourced shell libraries
 │   └── env/             # Environment files for build tooling
 ├── pkg/
 │   ├── operators/       # Kustomize + Helm configs for cluster operators
-│   ├── workloads/       # Application deployments
+│   ├── workloads/       # Application deployments, plus fcos-vm: the staging KubeVirt VM
 │   ├── containers/      # Custom container image Containerfiles (with Makefile)
 │   └── schemas/         # JSON value schemas for Helm chart validation
 └── docs/                # Extended documentation
@@ -171,6 +170,15 @@ Pass `DEBUG=1` to `kube-manifests-gen.sh` to enable `set -x` tracing in that scr
 | `k3s-tokens-generate-staging` | Generate k3s token secrets (staging) |
 | `k3s-tokens-generate-base` | Generate k3s token secrets (base) |
 
+#### Staging VM (k3d + KubeVirt)
+
+| Target | Description |
+|--------|-------------|
+| `staging-vm-up` | Create or update the staging KubeVirt VM and its ignition Secret (depends on `generate-ignition-staging` + `k3d-cluster-create-staging`) |
+| `staging-vm-down` | Delete the staging VM, leaving the k3d cluster running (not implemented yet: fails) |
+
+Both call `hack/bin/kubevirt-vm-manage.sh` (`-c` or `-d`) with `-k pkg/workloads/fcos-vm/overlays/staging`. With `-c` it applies that kustomization, then fills the Secret named by the VM's `cloudInitConfigDrive` volume (`ignition-payload-staging`) from the podman ignition secret passed with `-i`, which is how the FCOS guest receives its ignition config. Run `hack/bin/kubevirt-vm-manage.sh -h` for details, and see [docs/staging-vm.md](docs/staging-vm.md) for the provisioning flow and how long it takes.
+
 ---
 
 ### `pkg/containers/Makefile` — run as `make -C pkg/containers <target>`
@@ -234,7 +242,7 @@ deploy/butane/
       main.bu         # Root config; lists all .bu files to merge under .ignition.config.merge[].inline
       secrets.env     # Declares SECRET_FILES array pointing to $HOME key files
       storage/        # disks.bu, filesystems.bu, luks.bu, raid.bu
-    staging/          # Dev VM overlay (KubeVirt VM on a local k3d cluster, VM name rick-staging)
+    staging/          # Dev VM overlay (KubeVirt VM fcos-rick-staging on a local k3d cluster, hostname rick-staging)
     rpi4/             # Raspberry Pi 4 agent node
 ```
 
@@ -275,6 +283,7 @@ Tokens are pre-generated before any node boots and embedded into ignition config
 - [Kubernetes Operators and Workloads](docs/kubernetes.md) — what runs in the cluster
 - [Networking](docs/networking.md) — physical LAN, podman networks, ingress, DNS, firewall
 - [Node Provisioning](docs/node-provisioning.md) — end-to-end first-boot walkthrough
+- [Staging VM](docs/staging-vm.md) — KubeVirt VM on k3d: provisioning flow, measured timings, troubleshooting
 
 ---
 

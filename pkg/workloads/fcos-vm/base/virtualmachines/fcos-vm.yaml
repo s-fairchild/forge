@@ -2,13 +2,15 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: staging
-  namespace: rick-staging
+  name: fcos
+  namespace: fcos-vm
 spec:
   runStrategy: Always
+  # TODO Configure k3d local-path-provisioner class to be used for storing the os-disk volume
+  # TODO Configure k3d with appropriate container mounts to be used by this new storage class
   dataVolumeTemplates:
   - metadata:
-      name: fcos-os-disk-volume
+      name: fcos-stable-os-disk-volume
     spec:
       source:
         registry:
@@ -43,9 +45,11 @@ spec:
           requests:
             memory: 4096M
       volumes:
+      # TODO Configure k3d local-path-provisioner class to be used for storing the os-disk volume
+      # TODO Configure k3d with appropriate container mounts to be used by this new storage class
       - name: fcos-os-disk
         dataVolume:
-          name: fcos-os-disk-volume
+          name: fcos-stable-os-disk-volume
       - name: cloudinitdisk
         cloudInitConfigDrive:
           secretRef:

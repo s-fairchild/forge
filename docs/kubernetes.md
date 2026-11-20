@@ -136,6 +136,8 @@ Each operator and workload follows the standard kustomize pattern:
 | `pihole` | Network-wide DNS ad-blocker |
 | `v4l2rtspserver` | RTSP stream server for V4L2 camera devices |
 
+`pkg/workloads/fcos-vm/` is not an in-cluster workload: it is the staging KubeVirt `VirtualMachine` and its `Namespace`, applied to the outer k3d cluster by `hack/bin/kubevirt-vm-manage.sh` (`make staging-vm-up`). It has a `staging` overlay, so only its absence from `apps_enabled` keeps it out of the generated manifests; never add it there.
+
 ---
 
 ## Custom Container Images
