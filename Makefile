@@ -131,16 +131,16 @@ ignition-serve-prod: ## Serve the prod ignition config over HTTPS (run generate-
 		  -i ignition-prod
 
 K3D_CONFIG_DIR := deploy/k3d
-K3D_CONFIG_STAGING := $(K3D_CONFIG_DIR)/staging.yaml
+# Unimplemented yet
+# K3D_CONFIG_BASE := $(K3D_CONFIG_DIR)/base/base.yaml
+K3D_CONFIG_STAGING := $(K3D_CONFIG_DIR)/overlays/staging/staging.yaml
 KUBEVIRT_DIR_STAGING := deploy/kubevirt/staging
 
 k3d-cluster-create-staging: ## Create the staging k3d cluster and install KubeVirt + CDI
-	. hack/env/kubevirt-vm.env
-	hack/bin/k3d-cluster-up.sh -f $(K3D_CONFIG_STAGING)
+	hack/bin/k3d-cluster-manage.sh -f $(K3D_CONFIG_STAGING) -c
 
 k3d-cluster-delete-staging: ## Delete the staging k3d cluster
-	. hack/env/kubevirt-vm.env
-	hack/bin/k3d-cluster-down.sh -f $(K3D_CONFIG_STAGING)
+	hack/bin/k3d-cluster-manage.sh -f $(K3D_CONFIG_STAGING) -d
 
 staging-vm-up: generate-ignition-staging k3d-cluster-create-staging ## Create/refresh the ignition-payload secret and apply the staging KubeVirt VirtualMachine
 	hack/bin/kubevirt-vm-up.sh -f $(KUBEVIRT_DIR_STAGING)/vm.yaml \

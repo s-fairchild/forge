@@ -1,0 +1,34 @@
+# yaml-language-server: https://github.com/k3d-io/k3d/blob/main/pkg/config/v1alpha5/schema.json
+# https://k3d.io/v5.4.1/usage/configfile/
+---
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: kubevirt-staging
+
+# TODO Create mountpoints for each storage class so that the data is stored in a podman volume on the podman host.
+# TODO Create storage classes:
+#   * fcos-stable-os-disk-volume(s)
+#   * fcos-os-disk (data disk)
+
+servers: 1
+agents: 1
+image: docker.io/rancher/k3s:v1.35.5-k3s1
+network: k3d
+
+kubeAPI:
+  host: "host.containers.internal"
+  hostIP: "127.0.0.1"
+  hostPort: "6550"
+
+ports:
+  - port: 8080:80
+    nodeFilters:
+      - loadbalancer
+
+options:
+  k3s:
+    extraArgs:
+      - arg: --tls-san=host.containers.internal
+        nodeFilters:
+          - server:*
