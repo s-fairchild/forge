@@ -27,80 +27,80 @@ spec:
                   values:
                     - compute
       containers:
-      - name: jellyfin
-        # args:
-          # - --configdir
-          # - /usr/local/etc/jellyfin
-          # - --logdir
-          # - /usr/local/lib/log/jellyfin
-          # - --cachedir
-          # - /usr/local/lib/cache/jellyfin
-          # - --datadir
-          # - /usr/local/lib/jellyfin
-        env:
-        # For some reason (a bug?), these variables are not respected by linuxserver/jellyfin.
-        # Config defaults to /config, and all other paths below it.
-        # Oddly, JELLYFIN_PublishedServerUrl is used.
-        # https://jellyfin.org/docs/general/administration/configuration/#server-paths
-        #
-        # See for more information: https://jellyfin.org/docs/general/administration/configuration/
-        - name: JELLYFIN_PublishedServerUrl
-          value: https://jellyfin.app.rick.expresso.lan
-        # Reference: https://github.com/jellyfin/jellyfin-vue/wiki/Configuration#docker-based-setups
-        - name: DEFAULT_SERVERS
-          value: "['jellyfin.app.rick.expresso.lan', 'web-client.jellyfin.svc.cluster.local']"
-        - name: HISTORY_ROUTER_MODE
-          value: "1"
-        # References
-        #   - https://github.com/linuxserver/docker-jellyfin?tab=readme-ov-file#intel
-        #   - https://jellyfin.org/docs/general/administration/hardware-acceleration/intel
-        #   - https://github.com/linuxserver/docker-mods/tree/jellyfin-opencl-intel
-        - name: DOCKER_MODS
-          value: linuxserver/mods:jellyfin-opencl-intel
-        - name: PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: web-password
-              key: web.password.txt
-              optional: false
-        volumeMounts:
-        - name: cache
-          mountPath: /config/cache
-        - name: log
-          mountPath: /config/log
-        - name: transcodes
-          mountPath: /config/data/transcodes
-        - name: media
-          mountPath: /media
-        - name: config
-          mountPath: /config
-        - name: plugins
-          mountPath: /config/data/plugins
-        - name: data
-          mountPath: /config/data
-        - name: transcodes
-          mountPath: /config/cache/transcodes
-        - name: metadata
-          mountPath: /config/data/metadata
+        - name: jellyfin
+          # args:
+            # - --configdir
+            # - /usr/local/etc/jellyfin
+            # - --logdir
+            # - /usr/local/lib/log/jellyfin
+            # - --cachedir
+            # - /usr/local/lib/cache/jellyfin
+            # - --datadir
+            # - /usr/local/lib/jellyfin
+          env:
+            # For some reason (a bug?), these variables are not respected by linuxserver/jellyfin.
+            # Config defaults to /config, and all other paths below it.
+            # Oddly, JELLYFIN_PublishedServerUrl is used.
+            # https://jellyfin.org/docs/general/administration/configuration/#server-paths
+            #
+            # See for more information: https://jellyfin.org/docs/general/administration/configuration/
+            - name: JELLYFIN_PublishedServerUrl
+              value: https://jellyfin.app.rick.expresso.lan
+            # Reference: https://github.com/jellyfin/jellyfin-vue/wiki/Configuration#docker-based-setups
+            - name: DEFAULT_SERVERS
+              value: "['jellyfin.app.rick.expresso.lan', 'web-client.jellyfin.svc.cluster.local']"
+            - name: HISTORY_ROUTER_MODE
+              value: "1"
+            # References
+            #   - https://github.com/linuxserver/docker-jellyfin?tab=readme-ov-file#intel
+            #   - https://jellyfin.org/docs/general/administration/hardware-acceleration/intel
+            #   - https://github.com/linuxserver/docker-mods/tree/jellyfin-opencl-intel
+            - name: DOCKER_MODS
+              value: linuxserver/mods:jellyfin-opencl-intel
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: web-portal-auth
+                  key: WEB_PORTAL_AUTH_ADMIN
+                  optional: false
+          volumeMounts:
+            - name: cache
+              mountPath: /config/cache
+            - name: log
+              mountPath: /config/log
+            - name: transcodes
+              mountPath: /config/data/transcodes
+            - name: media
+              mountPath: /media
+            - name: config
+              mountPath: /config
+            - name: plugins
+              mountPath: /config/data/plugins
+            - name: data
+              mountPath: /config/data
+            - name: transcodes
+              mountPath: /config/cache/transcodes
+            - name: metadata
+              mountPath: /config/data/metadata
       volumes:
-      - name: cache
-        persistentVolumeClaim:
-          claimName: cache-pvc
-      - name: log
-        persistentVolumeClaim:
-          claimName: log-pvc
-      - name: transcodes
-        persistentVolumeClaim:
-          claimName: transcodes-pvc
-      - name: media
-        persistentVolumeClaim:
-          claimName: media-pvc
-      - name: config
-        persistentVolumeClaim:
-          claimName: config-pvc
-      - name: data
-        persistentVolumeClaim:
-          claimName: data-pvc
-      - name: metadata
-        persistentVolumeClaim:
-          claimName: metadata-pvc
+        - name: cache
+          persistentVolumeClaim:
+            claimName: cache-pvc
+        - name: log
+          persistentVolumeClaim:
+            claimName: log-pvc
+        - name: transcodes
+          persistentVolumeClaim:
+            claimName: transcodes-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: media-pvc
+        - name: config
+          persistentVolumeClaim:
+            claimName: config-pvc
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-pvc
+        - name: metadata
+          persistentVolumeClaim:
+            claimName: metadata-pvc

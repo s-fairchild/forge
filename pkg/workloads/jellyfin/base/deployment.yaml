@@ -37,59 +37,65 @@ spec:
           # getent group render | cut -d ':' -f 3
           # - 105
       containers:
-      - name: jellyfin
-        livenessProbe:
-          initialDelaySeconds: 120
-          httpGet: 
-            path: /health
-            port: web-client
-            scheme: HTTP
-        # Upstream release: https://github.com/jellyfin/jellyfin/releases/tag/v10.11.8
-        # Image build release: https://github.com/linuxserver/docker-jellyfin/releases/tag/10.11.8ubu2404-ls27
-        image: docker.io/linuxserver/jellyfin:10.11.8
-        env:
-        - name: DISABLE_SERVER_SELECTION
-          value: "1"
-        ports:
-        - name: web-client
-          containerPort: 8096
-          protocol: TCP
-        securityContext:
-          privileged: true
-          capabilities:
-            drop:
-            - NET_ADMIN
-            - CAP_MKNOD
-            - CAP_NET_RAW
-            - CAP_AUDIT_WRITE
-        volumeMounts:
-        - name: render
-          mountPath: /dev/dri/renderD128
-        resources:
-          requests:
-            memory: "1G"
-            cpu: "500m"
-          limits:
-            memory: "15G"
-            cpu: "5000m"
+        - name: jellyfin
+          livenessProbe:
+            initialDelaySeconds: 120
+            httpGet: 
+              path: /health
+              port: web-client
+              scheme: HTTP
+          # Upstream release: https://github.com/jellyfin/jellyfin/releases/tag/v10.11.8
+          # Image build release: https://github.com/linuxserver/docker-jellyfin/releases/tag/10.11.8ubu2404-ls27
+          image: docker.io/linuxserver/jellyfin:10.11.8
+          env:
+            - name: DISABLE_SERVER_SELECTION
+              value: "1"
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: web-portal-auth
+                  key: WEB_PORTAL_AUTH_ADMIN
+                  optional: true
+          ports:
+            - name: web-client
+              containerPort: 8096
+              protocol: TCP
+          securityContext:
+            privileged: true
+            capabilities:
+              drop:
+              - NET_ADMIN
+              - CAP_MKNOD
+              - CAP_NET_RAW
+              - CAP_AUDIT_WRITE
+          volumeMounts:
+            - name: render
+              mountPath: /dev/dri/renderD128
+          resources:
+            requests:
+              memory: "1G"
+              cpu: "500m"
+            limits:
+              memory: "15G"
+              cpu: "5000m"
       volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: data-pvc
-      - name: config
-        persistentVolumeClaim:
-          claimName: config-pvc
-      - name: plugins
-        persistentVolumeClaim:
-          claimName: plugins-pvc
-      # TODO mount render via intel device gpu operator
-      - name: render
-        hostPath:
-          path: /dev/dri/renderD128
-          type: CharDevice
-      - name: card1
-        hostPath:
-          path: /dev/dri/card1
-          type: CharDevice
+        - name: data
+          persistentVolumeClaim:
+            claimName: data-pvc
+        - name: config
+          persistentVolumeClaim:
+            claimName: config-pvc
+        - name: plugins
+          persistentVolumeClaim:
+            claimName: plugins-pvc
+        # TODO mount render via intel device gpu operator
+        - name: render
+          hostPath:
+            path: /dev/dri/renderD128
+            type: CharDevice
+        - name: card1
+          hostPath:
+            path: /dev/dri/card1
+            type: CharDevice
       dnsPolicy: ClusterFirst
       restartPolicy: Always

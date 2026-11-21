@@ -1,18 +1,20 @@
 ---
-resources:
-- ../../base
-- certificates/mariadb-motion-client-cert.yaml
-- ingress-route-tcp/rtsp0-ir-tcp.yaml
-- mariadb/connections/motion-connection.yaml
-- mariadb/connections/sqljobs-connection.yaml
-- mariadb/grants/motion-grant.yaml
-- mariadb/grants/sqljobs-grant.yaml
-- mariadb/sqljobs/sql-01-create-security-table-sqljob.yaml
-- mariadb/users/motion-user.yaml
-- mariadb/users/sqljobs-user.yaml
-- mariadb/database.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 
-- middlewares/webcontrol-svc-stripprefix-mw.yaml
+resources:
+  - ../../base
+  - certificates/mariadb-motion-client-cert.yaml
+  - ingress-route-tcp/rtsp0-ir-tcp.yaml
+  - mariadb/connections/motion-connection.yaml
+  - mariadb/connections/sqljobs-connection.yaml
+  - mariadb/grants/motion-grant.yaml
+  - mariadb/grants/sqljobs-grant.yaml
+  - mariadb/sqljobs/sql-01-create-security-table-sqljob.yaml
+  - mariadb/users/motion-user.yaml
+  - mariadb/users/sqljobs-user.yaml
+  - mariadb/database.yaml
+  - middlewares/webcontrol-svc-stripprefix-mw.yaml
 
 patches:
   - path: deployments/motion-deployment-patch.yaml
@@ -85,43 +87,43 @@ configMapGenerator:
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-system-conf.env
+      - configmaps/motion-system-conf.env
 
   - name: motion-image-conf
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-image-conf.env
+      - configmaps/motion-image-conf.env
 
   - name: motion-movies-conf
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-movies-conf.env
+      - configmaps/motion-movies-conf.env
 
   - name: motion-webcontrol-conf
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-webcontrol-conf.env
+      - configmaps/motion-webcontrol-conf.env
 
   - name: motion-stream-conf
     namespace: motion
     behavior: merge
     envs:
-    - configmaps/motion-stream-conf.env
+      - configmaps/motion-stream-conf.env
 
   - name: motion-cameras-cm
     namespace: motion
     behavior: create
     files:
-    - configmaps/camera1.conf
+      - configmaps/camera1.conf
 
   - name: sql-01-create-security-table
     namespace: motion
     behavior: create
     files:
-    - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
+      - jobs.sql=mariadb/sqljobs/sql/sql-01-create-security-table.sql
 
     # Move this into base if other overlays will be sharing sql statements
   - name: motion-conf-sql-statements-cm
@@ -129,18 +131,18 @@ configMapGenerator:
     behavior: create
     # SQL statements are placed in .sql files (rather than env files) to allow sql linting
     files:
-    - EVENT_START=mariadb/sql/event-start.sql
-    - EVENT_END=mariadb/sql/event-end.sql
-    - MOVIE_START=mariadb/sql/movie-start.sql
-    - MOVIE_END=mariadb/sql/movie-end.sql
-    - PIC_SAVE=mariadb/sql/pic-save.sql
+      - EVENT_START=mariadb/sql/event-start.sql
+      - EVENT_END=mariadb/sql/event-end.sql
+      - MOVIE_START=mariadb/sql/movie-start.sql
+      - MOVIE_END=mariadb/sql/movie-end.sql
+      - PIC_SAVE=mariadb/sql/pic-save.sql
 
 secretGenerator:
   - name: mariadb-motion-auth
     namespace: motion
     behavior: create
     envs:
-      - secrets/mariadb.env
+      - secrets/mariadb-motion-auth.env
     options:
       labels:
         k8s.mariadb.com/watch: ""
@@ -149,4 +151,4 @@ secretGenerator:
     namespace: motion
     behavior: create
     envs:
-    - secrets/motion-webcontrol-auth.env
+      - secrets/motion-webcontrol-auth.env

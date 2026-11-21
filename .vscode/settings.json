@@ -22,6 +22,7 @@
         "*.toml.example": "toml"
     },
     "cSpell.words": [
+        "PARMS",
         "TEMPERATUREUNIT",
         "virtualmachine",
         "virtualmachines",

@@ -3,26 +3,27 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- certificates/web-svc-certificate.yaml
+  - certificates/web-svc-certificate.yaml
+  - ingressroutes/web-svc-ir.yaml
+  - middlewares/web-svc-headers-mw.yaml
+  - middlewares/web-svc-https-redirect-mw.yaml
+  - middlewares/web-svc-secured-chain-mw.yaml
+  - middlewares/web-svc-stripprefix-mw.yaml
+  - pvc/cache-pvc.yaml
+  - pvc/plugins-pvc.yaml
+  - pvc/config-pvc.yaml
+  - pvc/data-pvc.yaml
+  - pvc/log-pvc.yaml
+  - pvc/media-pvc.yaml
+  - pvc/metadata-pvc.yaml
+  - pvc/transcodes-pvc.yaml
+  - services/web-svc-service.yaml
+  - deployment.yaml
+  - namespace.yaml
 
-- ingressroutes/web-svc-ir.yaml
-
-- middlewares/web-svc-headers-mw.yaml
-- middlewares/web-svc-https-redirect-mw.yaml
-- middlewares/web-svc-secured-chain-mw.yaml
-- middlewares/web-svc-stripprefix-mw.yaml
-
-- pvc/cache-pvc.yaml
-- pvc/plugins-pvc.yaml
-- pvc/config-pvc.yaml
-- pvc/data-pvc.yaml
-- pvc/log-pvc.yaml
-- pvc/media-pvc.yaml
-- pvc/metadata-pvc.yaml
-- pvc/transcodes-pvc.yaml
-
-- services/web-svc-service.yaml
-
-- deployment.yaml
-
-- namespace.yaml
+secretGenerator:
+  - name: web-portal-auth
+    namespace: jellyfin
+    behavior: create
+    literals:
+      - WEB_PORTAL_AUTH_ADMIN=

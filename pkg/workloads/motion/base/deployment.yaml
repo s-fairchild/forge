@@ -8,120 +8,93 @@ metadata:
     app: motion
 spec:
   replicas: 1
-
   selector:
     matchLabels:
       app: motion
-
   template:
     metadata:
       name: motion
       namespace: motion
       labels:
         app: motion
-
     spec:
       nodeSelector:
         kubernetes.io/os: linux
-
       restartPolicy: Always
       initContainers:
-      - name: envsubst
-        image: docker.io/steve51516/envsubst:v1.4.3
-        imagePullPolicy: IfNotPresent
-
-        command:
-        - /bin/sh
-        - -c
-
-        args:
-        - "envsubst -no-digit -no-unset -fail-fast -o /tmp/.motion/motion.conf  < /root/.motion/motion.conf"
-
-        envFrom:
-        - configMapRef:
-            name: motion-system-conf
-          prefix: SYSTEM_
-
-        - configMapRef:
-            name: motion-image-conf
-          prefix: IMAGE_
-
-        - configMapRef:
-            name: motion-movies-conf
-          prefix: MOVIE_
-
-        - configMapRef:
-            name: motion-webcontrol-conf
-          prefix: WEBCONTROL_
-
-        - configMapRef:
-            name: motion-stream-conf
-          prefix: STREAM_
-
-        volumeMounts:
-        - name: motion-conf
-          mountPath: /root/.motion
-          readOnly: true
-
-        - name: motion-conf-tmp
-          mountPath: /tmp/.motion
-
+        - name: envsubst
+          image: docker.io/steve51516/envsubst:v1.4.3
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - "envsubst -no-digit -no-unset -fail-fast -o /tmp/.motion/motion.conf  < /root/.motion/motion.conf"
+          envFrom:
+            - configMapRef:
+                name: motion-system-conf
+              prefix: SYSTEM_
+            - configMapRef:
+                name: motion-image-conf
+              prefix: IMAGE_
+            - configMapRef:
+                name: motion-movies-conf
+              prefix: MOVIE_
+            - configMapRef:
+                name: motion-webcontrol-conf
+              prefix: WEBCONTROL_
+            - secretRef:
+                name: motion-webcontrol-auth
+              prefix: WEBCONTROL_
+              optional: true
+            - configMapRef:
+                name: motion-stream-conf
+              prefix: STREAM_
+          volumeMounts:
+            - name: motion-conf
+              mountPath: /root/.motion
+              readOnly: true
+            - name: motion-conf-tmp
+              mountPath: /tmp/.motion
       containers:
-      - name: motion
-        # Documentation:
-        #   * https://motion-project.github.io/motionv5_config.html
-        #   * https://motion-project.github.io/motionv5_build.html
-        #   * https://motion-project.github.io/motionv5_examples.html
-        #
-        # Sources:
-        #   * https://github.com/Motion-Project/motion/tree/5.0
-        #   * https://hub.docker.com/repository/docker/steve51516/motion/tags
-        image: docker.io/steve51516/motion:5.0
-        imagePullPolicy: IfNotPresent
-
-        ports:
-        - containerPort: 80
-          name: webcontrol
-
-        volumeMounts:
-        - name: motion-conf-tmp
-          mountPath: /root/.motion
-          readOnly: true
-
-        - name: motion-conf-d
-          mountPath: /usr/local/var/lib/motion/conf.d
-          readOnly: true
-          recursiveReadOnly: IfPossible
-          mountPropagation: None
-
-        - name: recordings
-          mountPath: /var/motion
-          mountPropagation: HostToContainer
-
-        resources:
-          requests:
-            memory: "200Mi"
-            cpu: "5m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
-
+        - name: motion
+          image: docker.io/steve51516/motion:5.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: webcontrol
+          volumeMounts:
+            - name: motion-conf-tmp
+              mountPath: /root/.motion
+              readOnly: true
+            - name: motion-conf-d
+              mountPath: /usr/local/var/lib/motion/conf.d
+              readOnly: true
+              recursiveReadOnly: IfPossible
+              mountPropagation: None
+            - name: recordings
+              mountPath: /var/motion
+              mountPropagation: HostToContainer
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "5m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
       volumes:
-      - name: motion-conf
-        configMap:
-          name: motion-conf-cm
-          optional: false
-
-      - name: motion-conf-d
-        configMap:
-          name: motion-cameras-cm
-          optional: true
-
-      - name: motion-conf-tmp
-        emptyDir:
-          sizeLimit: 15Ki
-          medium: Memory
-
-      - name: recordings
-        persistentVolumeClaim:
-          claimName: recordings-pvc
+        - name: motion-conf
+          configMap:
+            name: motion-conf-cm
+            optional: false
+        - name: motion-conf-d
+          configMap:
+            name: motion-cameras-cm
+            optional: true
+        - name: motion-conf-tmp
+          emptyDir:
+            sizeLimit: 15Ki
+            medium: Memory
+        - name: recordings
+          persistentVolumeClaim:
+            claimName: recordings-pvc
