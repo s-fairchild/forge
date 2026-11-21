@@ -6,3 +6,43 @@ id = "sensitive-file-extension"
 description = "Key/cert/keyfile committed by path"
 path = '''(?i)\.(p12|pfx|jks|keystore|key|keyfile(\.gz)?|kdbx)$'''
 
+# Helper for kubernetes-secret-yaml-value below: marks a `kind: Secret` line.
+# skipReport keeps it from being reported on its own.
+[[rules]]
+id = "kubernetes-secret-kind"
+description = "Kubernetes Secret object marker"
+regex = '''(?im)^kind:[ \t]*["']?secret["']?[ \t]*$'''
+path = '''(?i)\.ya?ml$'''
+keywords = ["secret"]
+skipReport = true
+
+# The built-in kubernetes-secret-yaml rule reports only the FIRST key of each
+# Secret's data map. This reports every base64 value within 12 lines of a
+# `kind: Secret` line, whatever its key is named. Composite rules ([[rules.required]])
+# need gitleaks >= 8.28; in git scans only added lines are seen, so a commit that
+# only adds a key to an existing Secret is missed (generated-k3s-manifest covers
+# rendered manifests).
+[[rules]]
+id = "kubernetes-secret-yaml-value"
+description = "Base64 value in a Kubernetes Secret data map"
+regex = '''(?m)^[ \t]+[\w.-]+:[ \t]*["']?((?:[A-Za-z0-9+/]{4}){2,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)["']?[ \t]*$'''
+entropy = 3.5
+path = '''(?i)\.ya?ml$'''
+  [[rules.required]]
+  id = "kubernetes-secret-kind"
+  withinLines = 12
+
+# Rendered kustomize output is generated at build time and must never be committed.
+[[rules]]
+id = "generated-k3s-manifest"
+description = "Generated k3s manifest committed (may contain rendered Secrets)"
+path = '''(?:^|/)deploy/butane/.+/manifests/custom/[^/]+\.ya?ml$'''
+
+# secretGenerator sources live in gitignored secrets/ directories.
+[[rules]]
+id = "kustomize-secret-source"
+description = "Kustomize secretGenerator source file committed"
+path = '''(?:^|/)pkg/.+/secrets/[^/]+$'''
+  [[rules.allowlists]]
+  paths = ['''(?:^|/)secrets/\.gitignore$''']
+
