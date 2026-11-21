@@ -22,7 +22,10 @@
         "*.toml.example": "toml"
     },
     "cSpell.words": [
+        "TEMPERATUREUNIT",
         "virtualmachine",
-        "virtualmachines"
+        "virtualmachines",
+        "WEBPASSWORD",
+        "WEBTHEME"
     ],
 }

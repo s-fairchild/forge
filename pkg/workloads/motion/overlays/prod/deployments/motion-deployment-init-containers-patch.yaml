@@ -17,7 +17,7 @@
   path: /spec/template/spec/initContainers/0/envFrom/-
   value:
     secretRef:
-      name: motion-webcontrol-authentication
+      name: motion-webcontrol-auth
     prefix: WEBCONTROL_
 
 - op: add

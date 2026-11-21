@@ -14,7 +14,7 @@ spec:
 
   passwordSecretKeyRef:
     name: mariadb-motion-auth
-    key: sqljobs
+    key: SQLJOBS_USER_AUTH
 
   require:
     issuer: "/CN=root-ca"

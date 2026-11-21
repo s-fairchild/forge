@@ -10,10 +10,10 @@ patches:
   - path: configmaps/pihole-cname-records.yaml
 
 secretGenerator:
-  - name: web-password
+  - name: web-portal-auth
     namespace: pihole
     behavior: replace
-    files:
-      - secrets/web.password.txt
+    envs:
+      - secrets/web-portal-auth.env
     options:
       disableNameSuffixHash: true

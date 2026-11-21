@@ -30,7 +30,7 @@ spec:
   
   passwordSecretKeyRef:
     name: mariadb-motion-auth
-    key: motion
+    key: MOTION_USER_AUTH
 
   healthCheck:
     interval: 30s

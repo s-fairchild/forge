@@ -139,23 +139,14 @@ secretGenerator:
   - name: mariadb-motion-auth
     namespace: motion
     behavior: create
-    files:
-    - motion=secrets/mariadb-motion-auth.txt
+    envs:
+      - secrets/mariadb.env
     options:
       labels:
         k8s.mariadb.com/watch: ""
 
-  - name: mariadb-motion-auth
-    namespace: motion
-    behavior: merge
-    files:
-    - sqljobs=secrets/mariadb-motion-sqljobs-auth.txt
-    options:
-      labels:
-        k8s.mariadb.com/watch: ""
-
-  - name: motion-webcontrol-authentication
+  - name: motion-webcontrol-auth
     namespace: motion
     behavior: create
     envs:
-    - secrets/motion-webcontrol-authentication.txt
+    - secrets/motion-webcontrol-auth.env

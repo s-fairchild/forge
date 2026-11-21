@@ -12,9 +12,10 @@ resources:
   - configmaps/pihole-cname-records.yaml
 
 secretGenerator:
-  - name: web-password
+  - name: web-portal-auth
     namespace: pihole
-    files:
-      - secrets/web.password.txt
+    behavior: create
+    envs:
+      - secrets/web-portal-auth.env
     options:
       disableNameSuffixHash: true

@@ -30,7 +30,7 @@ spec:
 
   passwordSecretKeyRef:
     name: mariadb-motion-auth
-    key: sqljobs
+    key: SQLJOBS_USER_AUTH
 
   tlsClientCertSecretRef:
     name: mariadb-motion-client-cert

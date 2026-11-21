@@ -78,9 +78,9 @@ spec:
         - name: WEBPASSWORD
           valueFrom:
             secretKeyRef:
-              name: web-password
-              key: web.password.txt
-              optional: false
+              name: web-portal-auth
+              key: WEB_PORTAL_ADMIN_AUTH
+              optional: true
         resources:
           requests:
             memory: "100Mi"
